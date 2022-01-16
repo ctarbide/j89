@@ -1,525 +1,5 @@
-/**************************************************************************
- * This program is Copyright (C) 1986-2002 by Jonathan Payne.  JOVE is    *
- * provided by Jonathan and Jovehacks without charge and without          *
- * warranty.  You may copy, modify, and/or distribute JOVE, provided that *
- * this notice is included in all the source files and documentation.     *
- **************************************************************************/
-
-#include "jove.h"
-
-#ifdef IPROCS	/* the body is the rest of this file */
-
-#define MAX_BUSY_WAIT 3	/* seconds to ignore errors on pty */
-
-#include <signal.h>
-
-#include "re.h"
-#include "jctype.h"
-#include "disp.h"
-#include "fp.h"
-#include "sysprocs.h"
-#include "iproc.h"
-#include "ask.h"
-#include "extend.h"
-#include "fmt.h"
-#include "insert.h"
-#include "marks.h"
-#include "move.h"
-#include "proc.h"
-#include "wind.h"
-
-#ifdef USE_KILLPG
-# ifndef FULL_UNISTD
-extern int	UNMACRO(killpg) proto((int /*pgrp*/, int /*sig*/));
-# endif
-#else /* !USE_KILLPG */
-#define killpg(pid, sig)	kill(-(pid), (sig))
-#endif /* USE_KILLPG */
-
-struct process {
-	Process	p_next;
-#ifdef PIPEPROCS
-	int	p_toproc;	/* write end of pipe to process */
-	pid_t	p_portpid,	/* pid of direct child (the portsrv) */
-		p_pid;		/* pid of real child i.e. not portsrv */
-	bool	p_portlive;	/* is portsrv still live? */
-#else
-	int	p_fd;		/* file descriptor of pty? opened r/w */
-# define	p_portpid	p_pid	/* pid of direct child (the shell) */
-	pid_t	p_pid;		/* pid of child (the shell) */
-	time_t	p_start;	/* time we started this child */
-#endif
-	Buffer	*p_buffer;	/* add output to end of this buffer */
-	char	*p_name;	/* ... */
-	int	p_io_state;	/* state of communication with child and descendents */
-#		define IO_NEW	0	/* brand new, process has not yet sent output */
-#		define IO_RUNNING	1	/* just running */
-#		define IO_EOFED	2	/* we have sent EOF, or have received it */
-	int	p_child_state;	/* state of child process, as disclosed by SIGCHLD/wait */
-#		define C_LIVE	0	/* no news is good news */
-#		define C_STOPPED	1
-#		define C_EXITED	2
-#		define C_KILLED	3
-	int	p_reason;	/* If killed, p_reason is the signal;
-				   if exited, it is the the exit code */
-	Mark	*p_mark;	/* where output left us */
-};
-
-private void
-	proc_rec proto((Process, char *, size_t)),
-	proc_close proto ((Process)),
-	SendData proto((bool)),
-	obituary proto((register Process child, wait_status_t w));
-
-private bool
-	proc_kill proto((Process, int));
-
-#define child_dead(p)	((p)->p_child_state >= C_EXITED)
-#define io_eofed(p)	((p)->p_io_state == IO_EOFED)
-
-private bool
-dead(p)
-Process	p;
-{
-	return p == NULL || (io_eofed(p) && child_dead(p));
-}
-
-
-#define proc_cmd(p)	((p)->p_name)
-
-private Process	procs = NULL;
-
-private Process
-proc_pid(pid)
-pid_t	pid;
-{
-	register Process	p;
-
-	for (p = procs; ; p = p->p_next)
-		if (p == NULL || p->p_portpid == pid)
-			return p;
-}
-
-private const char *
-proc_bufname(p)
-Process	p;
-{
-	Buffer	*b = p->p_buffer;
-
-	return (b != NULL) ? b->b_name : "<Deleted>";
-}
-
-void
-ProcKill()
-{
-	(void) proc_kill(
-		buf_exists(ask_buf(curbuf, ALLOW_OLD | ALLOW_INDEX))->b_process,
-		SIGKILL);
-}
-
-private void
-make_argv(argv, ap)
-register char	*argv[];
-va_list	ap;
-{
-	register int	i = 0;
-
-	argv[i++] = va_arg(ap, char *);
-	argv[i++] = (char *)jbasename(argv[0]);	/* lose const (but it's safe) */
-	do {} while ((argv[i++] = va_arg(ap, char *)) != NULL);
-}
-
-/* environment manipulation for interactive processes */
-
-private Env iproc_env;
-private char IEnvExpBuf[LBSIZE];
-private char IEnvUnsetBuf[LBSIZE];
-
-/* Erase misleading knowledge of the terminal type from the environment.
- * The value of variable TERMCAP has two interpretations:
- * If it starts with /, it is a path to the database.
- * If it does not, it is the database entry.
- * Only happens in child.
- */
-private void
-set_process_env()
-{
-	static const char tcn[] = "TERMCAP";
-	const char *tc = getenv(tcn);
-
-	if (tc != NULL && tc[0] != '/')
-		junsetenv(&iproc_env, tcn);
-	environ = (char **) jenvdata(&iproc_env); /* avoid gcc warning */
-}
-
-void
-IprocEnvExport()
-{
-	jamstr(IEnvExpBuf, ask(IEnvExpBuf, ProcFmt));
-	jputenv(&iproc_env, IEnvExpBuf);
-}
-
-void
-IprocEnvShow()
-{
-	const char **p;
-	TOstart("i-shell environment");
-	for (p = jenvdata(&iproc_env); *p; p++) {
-	    Typeout("%s", *p);
-	}
-	TOstop();
-}
-
-void
-IprocEnvUnset()
-{
-	jamstr(IEnvUnsetBuf, ask(IEnvUnsetBuf, ProcFmt));
-	junsetenv(&iproc_env, IEnvUnsetBuf);
-}
-
-/* There are two very different implementation techniques: pipes and ptys.
- * The following two chunks of code implement the same operations using
- * the two techniques: the first uses pipes and the second uses ptys.
- */
-
-
-#include "ttystate.h"
-#ifdef PIPEPROCS
-
-char	Portsrv[FILESIZE];	/* path to portsrv program (in LibDir) */
-const char	*procarg0 = "jove-portsrv"; /* helpful identifying it in ps */
-
-int	NumProcs = 0;
-
-File	*ProcInput;
-private int	ProcOutput = -1;
-
-pid_t	kbd_pid = -1;
-
-void
-read_pipe_proc(pid, nbytes)
-pid_t	pid;
-register int	nbytes;
-{
-	register Process	p = proc_pid(pid);
-
-	jdbg("read_pipe_proc pid %D %d\n", (long) pid, nbytes);
-	if (p == NULL) {
-		writef("\riproc: unknown pid (%D)", (long) pid);
-	} else if (p->p_io_state == IO_NEW) {
-		/* first message: pid of real child, not of portsrv */
-		pid_t	rpid;
-
-		(void) f_readn(ProcInput, (char *) &rpid, sizeof(pid_t));
-		p->p_pid = rpid;
-		p->p_io_state = IO_RUNNING;
-		UpdModLine = YES;
-	} else if (nbytes == -1) {
-		/* okay to clean up this process */
-		wait_status_t	status;
-
-		(void) f_readn(ProcInput, (char *) &status, sizeof(status));
-		/* Reap portsrv process, if it still remains.
-		 * Note that any status for this process is uninteresting:
-		 * the interesting status came (just now) by pipe.
-		 */
-		while (p->p_portlive) {
-			wait_status_t	w;
-			pid_t	rpid = wait(&w);
-
-			if (rpid == -1) {
-				if (errno == ECHILD) {
-					/* oops: no children, not even portsrv */
-					p->p_portlive = NO;
-				}
-			} else {
-				kill_off(rpid, w);
-			}
-		}
-		proc_close(p);
-		obituary(p, status);
-	} else {
-		/* regular data */
-		while (nbytes > 0) {
-			char	ibuf[512+1];	/* NOTE: room for added NUL */
-			size_t n = f_readn(ProcInput, ibuf,
-				(size_t)jmin((int)(sizeof ibuf) - 1, nbytes));
-
-			nbytes -= n;
-			proc_rec(p, ibuf, n);
-		}
-	}
-}
-
-void
-ProcInt()
-{
-	(void) proc_kill(curbuf->b_process, SIGINT);
-}
-
-void
-ProcQuit()
-{
-	(void) proc_kill(curbuf->b_process, SIGQUIT);
-}
-
-private void
-proc_close(p)
-Process	p;
-{
-	if (p->p_toproc >= 0) {
-		jdbg("closing proc fd %d pid %D NumProcs %d\n",
-		     p->p_toproc, (long) (p->p_pid), NumProcs);
-		(void) close(p->p_toproc);
-		p->p_toproc = -1;	/* writes will fail */
-		NumProcs -= 1;
-		p->p_io_state = IO_EOFED;	/* process output EOF is tied to reaping */
-		UpdModLine = YES;
-	}
-}
-
-private void
-proc_write(p, buf, nbytes)
-Process	p;
-char	*buf;
-size_t	nbytes;
-{
-	if (p->p_toproc >= 0) {
-		while (nbytes != 0) {
-			JSSIZE_T	wr = write(p->p_toproc, (UnivConstPtr)buf, nbytes);
-
-			if (wr >= 0) {
-				nbytes -= wr;
-				buf += wr;
-			} else if (errno != EINTR) {
-				complain("[error writing to iproc: %d %s]", errno, strerror(errno));
-				/* NOTREACHED */
-			}
-		}
-	}
-}
-
-
-# ifdef STDARGS
-private void
-proc_strt(char *bufname, bool clobber, char *procname, ...)
-# else
-private /*VARARGS3*/ void
-proc_strt(bufname, clobber, procname, va_alist)
-	char	*bufname;
-	bool	clobber;
-	char	*procname;
-	va_dcl
-# endif
-{
-	Window	*owind = curwind;
-	int	toproc[2];
-	pid_t	pid;
-	Process	newp;
-	Buffer	*newbuf;
-	char	*argv[32];
-	va_list	ap;
-
-	untieDeadProcess(buf_exists(bufname));
-	isprocbuf(bufname);	/* make sure BUFNAME is either nonexistant
-				   or is of type B_PROCESS */
-	if (access(Portsrv, J_X_OK) < 0) {
-		complain("[Couldn't access %s: %s]", Portsrv, strerror(errno));
-		/* NOTREACHED */
-	}
-
-	dopipe(toproc);
-
-	jdbg("proc_strt NumProcs=%d buf \"%s\" proc \"%s\"\n",
-	     NumProcs, bufname, procname);
-	if (NumProcs++ == 0)
-		kbd_strt();	/* may create kbd process: must be done before fork */
-	switch (pid = fork()) {
-	case -1:
-		pipeclose(toproc);
-		if (--NumProcs == 0)
-			kbd_stop();
-		complain("[Fork failed: %s]", strerror(errno));
-		/* NOTREACHED */
-
-	case 0:
-		argv[0] = (char*)procarg0;
-		va_init(ap, procname);
-		make_argv(&argv[1], ap);
-		va_end(ap);
-		(void) dup2(toproc[0], 0);
-		(void) dup2(ProcOutput, 1);
-		(void) dup2(ProcOutput, 2);
-		pipeclose(toproc);
-		jcloseall();
-		set_process_env();
-		jdbg("ready to exec %s %s %s %s\n", Portsrv, argv[0],
-		     argv[1]? argv[1] : "(null)", argv[2]? argv[2] : "(null)");
-		execv(Portsrv, argv);
-		raw_complain("execl failed: %s", strerror(errno));
-		_exit(1);
-	}
-
-	newp = (Process) emalloc(sizeof *newp);
-	newp->p_next = procs;
-	newp->p_io_state = IO_NEW;
-	newp->p_child_state = C_LIVE;
-	newp->p_name = copystr(procname);
-	procs = newp;
-	newp->p_portpid = pid;
-	newp->p_pid = -1;
-	newp->p_portlive = YES;
-
-	newbuf = do_select((Window *)NULL, bufname);
-	newbuf->b_type = B_PROCESS;
-	newp->p_buffer = newbuf;
-	newbuf->b_process = newp;	/* sorta circular, eh? */
-	pop_wind(bufname, clobber, B_PROCESS);
-	ToLast();
-	if (!bolp())
-		LineInsert(1);
-	/* Pop_wind() after everything is set up; important!
-	 * Bindings won't work right unless newbuf->b_process is already
-	 * set up BEFORE NEWBUF is first SetBuf()'d.
-	 */
-	newp->p_mark = MakeMark(curline, curchar);
-
-	newp->p_toproc = toproc[1];
-	(void) close(toproc[0]);
-	SetWind(owind);
-}
-
-void
-closeiprocs()
-{
-	Process	p;
-
-	if (ProcOutput != -1)
-		close(ProcOutput);
-	for (p=procs; p!=NULL; p=p->p_next)
-		if (p->p_toproc >= 0)
-			close(p->p_toproc);
-}
-
-private void
-kbd_init()
-{
-	/* Initiate the keyboard process.
-	 * We only get here after a portsrv process has been started
-	 * so we know that the portsrv program must exist -- no need to test.
-	 */
-	int	p[2];
-
-	if (pipe(p) < 0) {
-	    complain("Cannot create pipe to kbd process! %s\n", strerror(errno));
-	    /* NOTREACHED */
-	}
-	ProcInput = fd_open("process-input", F_READ|F_LOCKED, p[0],
-			    (char *)NULL, 512);
-	ProcOutput = p[1];
-	switch (kbd_pid = fork()) {
-	case -1:
-		complain("Cannot fork kbd process! %s\n", strerror(errno));
-		/* NOTREACHED */
-
-	case 0:
-		(void) setsighandler(SIGINT, SIG_IGN);
-		(void) setsighandler(SIGALRM, SIG_IGN);
-		close(1);
-		if (dup(ProcOutput) < 0) {
-		    raw_complain("Cannot dup output fd: %s", strerror(errno));
-		    EXIT(-1);
-		}
-		jcloseall();
-		jdbg("ready to exec %s as %s --kbd\n", Portsrv, procarg0);
-		execl(Portsrv, procarg0, "--kbd", (char *)NULL);
-		raw_complain("kbd exec failed: %s", strerror(errno));
-		EXIT(-1);
-	}
-}
-
-/* kbd_stop() returns true if it changes the state of (i.e. stops)
- * the keyboard process.  This is so kbd stopping and starting in
- * pairs works - see finish() in jove.c.
- */
-private bool	kbd_state = NO;
-
-void
-kbd_strt()
-{
-	jdbg("kbd_strt state %d pid %D NumProcs %d\n",
-	     kbd_state, (long) kbd_pid, NumProcs);
-	if (!kbd_state) {
-		if (kbd_pid == -1)
-			kbd_init();
-		else
-			kill(kbd_pid, KBDSIG);
-		kbd_state = YES;
-	}
-}
-
-bool
-kbd_stop()
-{
-	jdbg("kbd_stop state %d pid %D NumProcs %d\n",
-	     kbd_state, (long) kbd_pid, NumProcs);
-	if (kbd_state) {
-		kbd_state = NO;
-		kill(kbd_pid, KBDSIG);
-		return YES;
-	}
-	return NO;
-}
-
-void
-kbd_kill()
-{
-	jdbg("kbd_kill state %d pid %D Numprocs %d\n",
-	     kbd_state, (long) kbd_pid, NumProcs);
-	if (kbd_pid != -1) {
-		kill(kbd_pid, SIGKILL);
-		kbd_pid = -1;
-	}
-}
-
-#else /* !PIPEPROCS */
-
-#include <sys/time.h>
-#include "select.h"
-
-# ifdef USE_OPENPTY	/* modern BSDs have openpty(3) */
-#  ifdef HAVE_LIBUTIL_H	/* but disagree about header! */
-#   include <libutil.h>
-#  else
-#   ifdef HAVE_PTY_H
-#    include <pty.h>
-#   else
-#    include <util.h>
-#   endif
-#  endif
-# endif
-
-# ifdef SVR4_PTYS
-#  include <stdlib.h>	/* for grantpt and unlockpt, at least in Solaris 2.3 */
-#  if _XOPEN_SOURCE >= 500
-    /* Linux/glibc no longer pretends to support STREAMS (XSR) (2008) */
-#   if defined(_XOPEN_STREAMS) && _XOPEN_STREAMS != -1
-#    include <stropts.h>
-#   endif
-#  else
-#   include <sys/stropts.h>
-#  endif
-  extern char	*ptsname proto((int /*filedes*/));	/* get name of slave */
-# endif
-
-# ifdef IRIX_PTYS
-#  include <sys/types.h>
-#  include <sys/stat.h>
-# endif
-
-void
-read_pty_proc(fd)
-register int	fd;
+__END_DECLS void 
+read_pty_proc (register int fd)
 {
 	register Process	p;
 	int	n;
@@ -579,8 +59,8 @@ register int	fd;
 	}
 }
 
-void
-ProcCont()
+void 
+ProcCont (void)
 {
 	Process	p = curbuf->b_process;
 
@@ -674,9 +154,8 @@ ProcCont()
 
 #  define kbd_sig(sig, tch, sch)	send_sig(sig)
 
-private void
-send_sig(sig)
-int	sig;
+private void 
+send_sig (int sig)
 {
 	Process	p;
 
@@ -719,9 +198,8 @@ int	sig;
 #   define send_oxc(tch, sfld)	send_xc(tc[NO].sfld)
 #  endif
 
-private void
-send_xc(c)
-char	c;
+private void 
+send_xc (int c)
 {
 	Process	p;
 
@@ -780,8 +258,8 @@ char	c;
 
 # endif /* defined(NO_TIOCREMOTE) || defined(NO_TIOCSIGNAL) */
 
-void
-ProcEof()
+void 
+ProcEof (void)
 {
 # ifdef NO_TIOCREMOTE
 	/* we have to write a char */
@@ -807,20 +285,20 @@ ProcEof()
 # endif /* !NO_TIOCREMOTE */
 }
 
-void
-ProcInt()
+void 
+ProcInt (void)
 {
 	kbd_sig(SIGINT, VINTR, t_intrc);
 }
 
-void
-ProcQuit()
+void 
+ProcQuit (void)
 {
 	kbd_sig(SIGQUIT, VQUIT, t_quitc);
 }
 
-void
-ProcStop()
+void 
+ProcStop (void)
 {
 # if (!defined(TERMIO) && !defined(TERMIOS)) || defined(VSUSP)
 	kbd_sig(SIGTSTP, VSUSP, t_suspc);
@@ -830,8 +308,8 @@ ProcStop()
 # endif
 }
 
-void
-ProcDStop()
+void 
+ProcDStop (void)
 {
 	/* we don't know how to send a dstop via TIOCSIGNAL/TIOCSIG */
 # if (!defined(TERMIO) && !defined(TERMIOS)) || defined(VDSUSP)
@@ -842,9 +320,8 @@ ProcDStop()
 # endif
 }
 
-private void
-proc_close(p)
-Process p;
+private void 
+proc_close (Process p)
 {
 	jdbg("proc_close %d %s\n", p->p_pid, p->p_name);
 	if (p->p_fd >= 0) {
@@ -1349,16 +826,17 @@ fail:
 volatile bool	procs_to_reap = NO;
 
 /*ARGSUSED*/
-SIGRESTYPE
-sigchld_handler(junk)
-int	UNUSED(junk);	/* needed for signal handler; not used */
+SIGRESTYPE 
+sigchld_handler (
+    int UNUSED (junk)	/* needed for signal handler; not used */
+)
 {
 	procs_to_reap = YES;
 	return SIGRESVALUE;
 }
 
-void
-reap_procs()
+void 
+reap_procs (void)
 {
 	wait_status_t	w;
 	register pid_t	pid;
@@ -1379,8 +857,8 @@ reap_procs()
 	}
 }
 
-void
-closeiprocs()
+void 
+closeiprocs (void)
 {
 	Process	p;
 
@@ -1395,8 +873,7 @@ closeiprocs()
 char	proc_prompt[128] = "^[^%$#]*[%$#] ";	/* VAR: process prompt */
 
 const char *
-pstate(p)
-Process	p;
+pstate (Process p)
 {
 	static const char	*const ios_name[] = { "New", "Running", "EOFed" };
 
@@ -1421,8 +898,8 @@ Process	p;
 	}
 }
 
-bool
-KillProcs()
+bool 
+KillProcs (void)
 {
 	register Process	p;
 	bool	asked = NO;
@@ -1445,9 +922,8 @@ KillProcs()
 /* VAR: dbx-mode parse string */
 char	dbx_parse_fmt[128] = "line \\([0-9]*\\) in \\{file\\|\\} *\"\\([^\"]*\\)\"";
 
-private void
-watch_input(m)
-Mark	*m;
+private void 
+watch_input (Mark *m)
 {
 	Bufpos	save;
 	char	fname[FILESIZE],
@@ -1528,10 +1004,8 @@ size_t	len;
 	SetBuf(saveb);
 }
 
-private bool
-proc_kill(p, sig)
-register Process	p;
-int	sig;
+private bool 
+proc_kill (register Process p, int sig)
 {
 	if (p == NULL) {
 		complain("[no process]");
@@ -1549,9 +1023,8 @@ int	sig;
 /* Free process CHILD.  Do all the necessary cleaning up (closing fd's,
  * etc.).
  */
-private void
-free_proc(child)
-Process	child;
+private void 
+free_proc (Process child)
 {
 	register Process
 		p,
@@ -1575,9 +1048,8 @@ Process	child;
 	free((UnivPtr) child);
 }
 
-void
-untieDeadProcess(b)
-register Buffer	*b;
+void 
+untieDeadProcess (register Buffer *b)
 {
 	if (b != NULL) {
 		register Process	p = b->b_process;
@@ -1599,8 +1071,8 @@ register Buffer	*b;
 	}
 }
 
-void
-ProcList()
+void 
+ProcList (void)
 {
 	register Process
 		p,
@@ -1629,9 +1101,8 @@ ProcList()
 	TOstop();
 }
 
-private void
-do_rtp(mp)
-register Mark	*mp;
+private void 
+do_rtp (register Mark *mp)
 {
 	register Process	p = curbuf->b_process;
 	LinePtr	line1 = curline,
@@ -1660,8 +1131,8 @@ register Mark	*mp;
 	}
 }
 
-void
-ProcNewline()
+void 
+ProcNewline (void)
 {
 #ifdef ABBREV
 	MaybeAbbrevExpand();
@@ -1669,8 +1140,8 @@ ProcNewline()
 	SendData(YES);
 }
 
-void
-ProcSendData()
+void 
+ProcSendData (void)
 {
 #ifdef ABBREV
 	MaybeAbbrevExpand();
@@ -1678,9 +1149,8 @@ ProcSendData()
 	SendData(NO);
 }
 
-private void
-SendData(newlinep)
-bool	newlinep;
+private void 
+SendData (bool newlinep)
 {
 	register Process	p = curbuf->b_process;
 	register char	*lp,
@@ -1758,8 +1228,8 @@ bool	newlinep;
 	}
 }
 
-void
-ShellProc()
+void 
+ShellProc (void)
 {
 	char	shbuf[20];
 	register Buffer	*b;
@@ -1776,8 +1246,8 @@ ShellProc()
 	pop_wind(shbuf, NO, -1);
 }
 
-void
-Iprocess()
+void 
+Iprocess (void)
 {
 	char	scratch[64],
 		*bnm;

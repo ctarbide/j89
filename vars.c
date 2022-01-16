@@ -40,9 +40,8 @@
 /* Needed to comfort MS Visual C */
 private int varcmp proto((UnivConstPtr p1, UnivConstPtr p2));
 
-private int
-varcmp(p1, p2)
-UnivConstPtr	p1, p2;
+private int 
+varcmp (UnivConstPtr p1, UnivConstPtr p2)
 {
 	const struct variable *v1 = (const struct variable *) p1;
 	const struct variable *v2 = (const struct variable *) p2;
@@ -68,8 +67,7 @@ size_t		vbufsize;
 }
 
 const data_obj *
-findvar(prompt)
-const char	*prompt;
+findvar (const char *prompt)
 {
 	static const char	*strings[elemsof(variables)];
 	static int	last = -1;

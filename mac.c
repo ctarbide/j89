@@ -154,8 +154,8 @@ bool
 
 /* Initialization Routines. */
 
-void
-getTERM()
+void 
+getTERM (void)
 {
 }
 
@@ -168,10 +168,8 @@ getTERM()
  * - it is MAC-only
  */
 
-private void
-InitMapBinds(km, kmc)
-data_obj	**km;
-char	kmc;
+private void 
+InitMapBinds (data_obj **km, int kmc)
 {
 	ZXchar i;
 
@@ -186,8 +184,8 @@ char	kmc;
 	}
 }
 
-private void
-InitBinds()
+private void 
+InitBinds (void)
 {
 	InitMapBinds(MainKeys, F_MAINMAP);
 	InitMapBinds(EscKeys, F_PREF1MAP);
@@ -200,8 +198,8 @@ private CursHandle cross;
 
 private void InitSysMenu proto((void));
 
-void
-InitEvents()
+void 
+InitEvents (void)
 {
 	window = theScreen;
 	InitSysMenu();
@@ -215,8 +213,8 @@ InitEvents()
 private void	tn_init proto((void));
 private int	getdir proto((void));
 
-void
-MacInit()
+void 
+MacInit (void)
 {
 	tn_init();
 	getdir();
@@ -225,9 +223,10 @@ MacInit()
 	InitBinds();
 }
 
-void
-ttysetattr(n)
-bool	n;	/* also used as subscript! */
+void 
+ttysetattr (
+    bool n	/* also used as subscript! */
+)
 {
 }
 
@@ -268,9 +267,10 @@ IOParam *p;
 
 /* Kludge to convert Macintosh error codes to something like Unix. */
 
-private int
-cvt_err(err)	/* some of these don't make sense... */
-int	err;
+private int 
+cvt_err (	/* some of these don't make sense... */
+    int err
+)
 {
 	switch(err) {
 	case noErr:
@@ -473,9 +473,8 @@ StringPtr nm;
 }
 
 
-int
-close(fd)
-int	fd;
+int 
+close (int fd)
 {
 	int err;
 	HParamBlockRec p;
@@ -631,9 +630,8 @@ int	whence;
 
 /* delete file, if it exists */
 
-int
-unlink(name)
-const char *name;
+int 
+unlink (const char *name)
 {
 	int fd, err;
 	HParamBlockRec p;
@@ -668,9 +666,10 @@ size_t size;
 	return n;
 }
 
-void
-dobell(n)	/* declared in term.h */
-int	n;
+void 
+dobell (	/* declared in term.h */
+    int n
+)
 {
 	while (--n >= 0)
 		SysBeep(5);
@@ -679,10 +678,8 @@ int	n;
 
 /* Simplified stat() routine emulates what is needed most. */
 
-int
-stat(fname, buf)
-const char *fname;
-struct stat *buf;
+int 
+stat (const char *fname, struct stat *buf)
 {
 	CInfoPBRec p;
 	StringPtr nm;
@@ -725,8 +722,8 @@ struct stat *buf;
  * number and directory number, and avoids "Working Directory Reference
  * Numbers", which are confusing.
  */
-private int
-getdir()	/* call this only once, during startup. */
+private int 
+getdir (void)	/* call this only once, during startup. */
 {
 	WDPBRec p;
 
@@ -742,10 +739,8 @@ getdir()	/* call this only once, during startup. */
 	return 0;
 }
 
-private int
-setdir(vol, dir)
-int	vol;
-long	dir;
+private int 
+setdir (int vol, long dir)
 {
 	WDPBRec p;
 
@@ -797,9 +792,8 @@ CInfoPBPtr	d;	/* info from directory */
 		&& (d->dirInfo.ioFlAttrib & 0x10) != 0;
 }
 
-int
-chdir(dir)
-const char *dir;
+int 
+chdir (const char *dir)
 {
 	CInfoPBRec d;
 
@@ -940,7 +934,7 @@ size_t	size;
 }
 
 char *
-gethome()		/* this will be startup directory */
+gethome (void)		/* this will be startup directory */
 {
 	static char *ret = NULL;
 	char	space[FILESIZE];
@@ -988,8 +982,8 @@ private WindowPtr
 private ListHandle
 	makelist proto((void));
 
-private void
-about_j()
+private void 
+about_j (void)
 {
 	WindowPtr OldWindow;
 
@@ -1056,8 +1050,8 @@ makedisplay()
 	return (WindowPtr) theDialog;
 }
 
-private void
-do_display()		/* draw necessary controls, lines */
+private void 
+do_display (void)		/* draw necessary controls, lines */
 {
 	Rect rViewF;		/* framing rect for list */
 	int offset;
@@ -1084,10 +1078,8 @@ makelist()
 	return LNew(&theListRect, &dataBounds, csize, 0, theWindow, 0, 0, 0, 1);
 }
 
-private void
-printbind(f, buf)
-const struct cmd *f;
-char *buf;
+private void 
+printbind (const struct cmd *f, char *buf)
 {
 	char c;
 
@@ -1121,8 +1113,8 @@ char *buf;
 	buf[8] = '\0';
 }
 
-private void
-do_list()
+private void 
+do_list (void)
 {
 	int row, col;
 	const struct cmd *f;
@@ -1170,8 +1162,8 @@ short *itemHit;
 }
 
 
-void
-do_events()
+void 
+do_events (void)
 {
 	short item;
 	bool done = NO;
@@ -1211,8 +1203,8 @@ private void
 	AdjustScrollBar proto((Window *w)),
 	drawfluff proto((void));
 
-void
-docontrols()	/* called from redisplay routines */
+void 
+docontrols (void)	/* called from redisplay routines */
 {
 	Window *w;
 	int top;
@@ -1240,9 +1232,10 @@ docontrols()	/* called from redisplay routines */
 }
 
 
-private void
-MakeScrollBar(w)	/* set up control */
-Window *w;
+private void 
+MakeScrollBar (	/* set up control */
+    Window *w
+)
 {
 	Rect BarRect;
 	int wheight, wtop;
@@ -1258,9 +1251,10 @@ Window *w;
 		MINC, MAXC, scrollBarProc, (long)w);
 }
 
-private void
-AdjustScrollBar(w)	/* redo existing control */
-Window *w;
+private void 
+AdjustScrollBar (	/* redo existing control */
+    Window *w
+)
 {
 	ControlHandle handle = w->w_control;;
 
@@ -1278,15 +1272,16 @@ Window *w;
 
 private int ltoc proto((void));	/* calculate ctlvalue for line position */
 
-void
-SetScrollBar(w)	/* set value of the bar */
-Window *w;
+void 
+SetScrollBar (	/* set value of the bar */
+    Window *w
+)
 {
 	SetCtlValue(w->w_control, ltoc());
 }
 
-private void
-drawfluff()		/* draw controls and dividers */
+private void 
+drawfluff (void)		/* draw controls and dividers */
 {
 	Window *w = fwind;
 
@@ -1294,9 +1289,8 @@ drawfluff()		/* draw controls and dividers */
 	DrawGrowIcon(theScreen);
 }
 
-void
-RemoveScrollBar(w)
-Window *w;
+void 
+RemoveScrollBar (Window *w)
 {
 	if (w->w_control != NULL)
 		DisposeControl(w->w_control);
@@ -1339,8 +1333,8 @@ int part;
 
 private long npos;	/* number of lines in buffer */
 
-private int
-ltoc()	/* calculate ctlvalue for line position */
+private int 
+ltoc (void)	/* calculate ctlvalue for line position */
 {
 	long ipos = LinesTo(curbuf->b_first, curline) + 1;
 
@@ -1348,9 +1342,10 @@ ltoc()	/* calculate ctlvalue for line position */
 	return (int) ((ipos * MAXC) / npos);
 }
 
-private LinePtr
-ctol(ctlv)	/* find buffer line for ctlvalue */
-int ctlv;
+private LinePtr 
+ctol (	/* find buffer line for ctlvalue */
+    int ctlv
+)
 {
 	return next_line(curbuf->b_first, (long) ((npos * ctlv)/MAXC));
 }
@@ -1496,8 +1491,9 @@ WindowPtr window;
 }
 
 private Window *
-rtowind(row)	/* return jove window row is in */
-int row;
+rtowind (	/* return jove window row is in */
+    int row
+)
 {
 	Window *w = fwind;
 
@@ -1510,10 +1506,11 @@ int row;
 	return NULL;
 }
 
-private LinePtr
-windtol(w, row)		/* return line for row in window */
-Window *w;
-int row;
+private LinePtr 
+windtol (		/* return line for row in window */
+    Window *w,
+    int row
+)
 {
 	LinePtr l = w->w_top;
 
@@ -1524,8 +1521,8 @@ int row;
 
 private int	ptoxy proto((Point, int *, int *));	/* convert Point to terminal x, y coordinate */
 
-private bool
-findtext()		/* locate and move the point to match the mouse */
+private bool 
+findtext (void)		/* locate and move the point to match the mouse */
 {
 	int row, col;
 	int offset;
@@ -1633,8 +1630,8 @@ private void
 	SetBufMenu proto((void)),
 	MarkModes proto((void));
 
-private void
-CheckEvents()
+private void 
+CheckEvents (void)
 {
 	EventRecord theEvent;
 	static long time = 0;
@@ -1674,8 +1671,8 @@ CheckEvents()
 
 private void InitLocalMenus proto((void));
 
-private void
-InitSysMenu()
+private void 
+InitSysMenu (void)
 {
 	SysMenu = NewMenu(SYS_ID, "\p\24");
 	AppendMenu(SysMenu, "\pAbout Jove");
@@ -1916,8 +1913,8 @@ EventRecord *event;
 	nchars++;
 }
 
-private ZXchar
-rawgetc()
+private ZXchar 
+rawgetc (void)
 {
 	static int cptr = 0;
 	ZXchar c;
@@ -1943,8 +1940,8 @@ rawgetc()
 	return c;
 }
 
-bool
-rawchkc()
+bool 
+rawchkc (void)
 {
 	if (EventCmd) {
 		longjmp(auxjmp, 1);
@@ -1999,8 +1996,8 @@ ParmBlkPtr p;
 	return r;
 }
 
-private void
-check_dir()
+private void 
+check_dir (void)
 {
 	if (cur_vol != 0 - SFSaveDisk || cur_dir != CurDirStore) {
 		char	space[FILESIZE];
@@ -2013,8 +2010,9 @@ check_dir()
 }
 
 char *
-gfile(namebuf)	/* return a filename to get */
-char *namebuf;
+gfile (	/* return a filename to get */
+    char *namebuf
+)
 {
 	SFReply frec;
 	char ans[FILESIZE];
@@ -2037,8 +2035,7 @@ char *namebuf;
 }
 
 char *
-pfile(namebuf)
-char *namebuf;
+pfile (char *namebuf)
 {
 	SFReply frec;
 	StringPtr nm;
@@ -2069,9 +2066,8 @@ char *namebuf;
 
 /* getArgs() returns an argument list based on documents clicked on by the user. */
 
-int
-getArgs(avp)
-char ***avp;
+int 
+getArgs (char ***avp)
 {
 	int argc, old_vol;
 	short nargs, type;
@@ -2134,8 +2130,8 @@ private void
 	InitMenu proto((struct menu *M)),
 	make_edits proto((int menu));
 
-private void
-InitLocalMenus()
+private void 
+InitLocalMenus (void)
 {
 	int i;
 
@@ -2146,9 +2142,8 @@ InitLocalMenus()
 	}
 }
 
-private void
-InitMenu(M)
-struct menu *M;
+private void 
+InitMenu (struct menu *M)
 {
 	int i;
 	StringPtr ps;
@@ -2188,9 +2183,8 @@ struct menu *M;
 
 private void	MacSetVar proto((struct variable *vp, int mnu, int itm));
 
-private void
-ProcMenu(menuno, itemno)
-int menuno, itemno;
+private void 
+ProcMenu (int menuno, int itemno)
 {
 	int i;
 	data_obj *d;
@@ -2218,9 +2212,10 @@ int menuno, itemno;
 }
 
 
-private void
-make_edits(menu)	/* add dummy edit menu */
-int menu;
+private void 
+make_edits (	/* add dummy edit menu */
+    int menu
+)
 {
 	MenuHandle M;
 	int item;
@@ -2233,8 +2228,8 @@ int menu;
 	DisableItem(M, 0);
 }
 
-void
-menus_off()
+void 
+menus_off (void)
 {
 	int i;
 
@@ -2251,8 +2246,8 @@ menus_off()
 	Keyonly = YES;
 }
 
-void
-menus_on()
+void 
+menus_on (void)
 {
 	int i;
 
@@ -2270,9 +2265,7 @@ menus_on()
 }
 
 private char *
-BufMPrint(b, i)
-Buffer	*b;
-int	i;
+BufMPrint (Buffer *b, int i)
 {
 	char *p;
 	char *nm = filename(b);
@@ -2304,8 +2297,8 @@ int	i;
 	return p;
 }
 
-private void
-SetBufMenu()
+private void 
+SetBufMenu (void)
 {
 	Buffer *b;
 	int i, j, stop;
@@ -2344,10 +2337,12 @@ SetBufMenu()
 	}
 }
 
-private void
-MacSetVar(vp, mnu, itm)	/* Set a variable from the menu */
-struct variable *vp;
-int mnu, itm;
+private void 
+MacSetVar (	/* Set a variable from the menu */
+    struct variable *vp,
+    int mnu,
+    int itm
+)
 {
 	if ((vp->v_flags & V_TYPEMASK) == V_BOOL) {
 		/* toggle the value */
@@ -2361,8 +2356,8 @@ int mnu, itm;
 	}
 }
 
-private void
-MarkModes()
+private void 
+MarkModes (void)
 {
 	int mnu, itm;
 	data_obj *d;
@@ -2390,10 +2385,12 @@ MarkModes()
 	}
 }
 
-void
-MarkVar(vp, mnu, itm)	/* mark a boolean menu item */
-const struct variable *vp;
-int mnu, itm;
+void 
+MarkVar (	/* mark a boolean menu item */
+    const struct variable *vp,
+    int mnu,
+    int itm
+)
 {
 	if (mnu == -1) {		/* we don't know the item... slow */
 		for (mnu = 0; ; mnu++) {
@@ -2418,27 +2415,24 @@ int mnu, itm;
  * a pascal-style string as an argument. See do_sputc() in screen.c.
  */
 
-void
-Placur(line, col)
-int line, col;
+void 
+Placur (int line, int col)
 {
 	CapCol = col;
 	CapLine = line;
 	putcurs(line, col, YES);
 }
 
-void
-NPlacur(line, col)
-int line, col;
+void 
+NPlacur (int line, int col)
 {
 	CapCol = col;
 	CapLine = line;
 	putcurs(line, col, NO);
 }
 
-void
-i_lines(top, bottom, num)
-int top, bottom, num;
+void 
+i_lines (int top, int bottom, int num)
 {
 	Placur(bottom - num + 1, 0);
 	dellines(num, bottom);
@@ -2446,9 +2440,8 @@ int top, bottom, num;
 	inslines(num, bottom);
 }
 
-void
-d_lines(top, bottom, num)
-int top, bottom, num;
+void 
+d_lines (int top, int bottom, int num)
 {
 	Placur(top, 0);
 	dellines(num, bottom);
@@ -2488,33 +2481,29 @@ private WindowRecord myWindowRec;
 #define maxadjust(r) OffsetRect((r), 0, 2)
 
 private char *
-conv_p_curs(row, col)
-int	row,
-	col;
+conv_p_curs (int row, int col)
 {
 	return p_scr + (row * (CO)) + col;
 }
 
 #ifdef NEVER
-private void
-INSmode(new)
-bool new;
+private void 
+INSmode (bool new)
 {
 	insert = new;
 }
 #endif
 
-void
-SO_effect(new)
-bool new;
+void 
+SO_effect (bool new)
 {
 	theScreen->txMode = new? notSrcCopy : srcCopy;
 }
 
 private void	init_slate proto((void));
 
-private void
-tn_init()
+private void 
+tn_init (void)
 {
 #ifdef NEVER
 	INSmode(NO);
@@ -2524,8 +2513,8 @@ tn_init()
 	ShowPen();
 }
 
-void
-clr_page()	/* clear and home function */
+void 
+clr_page (void)	/* clear and home function */
 {
 	Rect r;
 
@@ -2537,10 +2526,8 @@ clr_page()	/* clear and home function */
 	drawfluff();
 }
 
-private void
-putcurs(row, col, vis)
-unsigned	row, col;
-bool	vis;
+private void 
+putcurs (unsigned row, unsigned col, bool vis)
 {
 	active();
 	curset(NO);
@@ -2549,9 +2536,8 @@ bool	vis;
 	curset(vis);
 }
 
-private void
-curset(invert)
-bool	invert;
+private void 
+curset (bool invert)
 {
 	int
 		colpix = tcol * width,
@@ -2571,8 +2557,8 @@ bool	invert;
 	MoveTo(colpix, rowpix + height - descent);
 }
 
-void
-clr_eoln()
+void 
+clr_eoln (void)
 {
 		Rect r;
 
@@ -2586,8 +2572,8 @@ clr_eoln()
 }
 
 #ifdef NEVER
-private void
-delchars()
+private void 
+delchars (void)
 {
 	Rect r;
 	RgnHandle updateRgn;
@@ -2606,9 +2592,8 @@ delchars()
 }
 #endif /* NEVER */
 
-private void
-dellines(n, bot)
-int n, bot;
+private void 
+dellines (int n, int bot)
 {
 	RgnHandle updateRgn = NewRgn();
 	Rect r;
@@ -2625,9 +2610,8 @@ int n, bot;
 	putcurs(trow, 0, YES);	/* ??? "YES" guess by DHR */
 }
 
-private void
-inslines(n, bot)
-int n, bot;
+private void 
+inslines (int n, int bot)
 {
 	RgnHandle updateRgn = NewRgn();
 	Rect r;
@@ -2674,8 +2658,8 @@ size_t	len;
 
 private Rect myBoundsRect;
 
-private void
-init_slate()
+private void 
+init_slate (void)
 {
 	FontInfo f;
 
@@ -2730,8 +2714,8 @@ init_slate()
 	PenNormal();
 }
 
-private void
-p_refresh()
+private void 
+p_refresh (void)
 {
 	int lineno;
 
@@ -2753,11 +2737,13 @@ p_refresh()
 }
 
 
-private bool
-wc_adjust(w, h, wcf, init)		/* adjust window config to look nice */
-int w, h;
-struct wind_config *wcf;
-int init;
+private bool 
+wc_adjust (		/* adjust window config to look nice */
+    int w,
+    int h,
+    struct wind_config *wcf,
+    int init
+)
 {
 	static int LIMIT_R, LIMIT_C;
 	int rows, cols;
@@ -2778,20 +2764,20 @@ int init;
 	return YES;
 }
 
-private int
-getCO()	/* so that jove knows params */
+private int 
+getCO (void)	/* so that jove knows params */
 {
 	return wc->w_cols;
 }
 
-private int
-getLI()
+private int 
+getLI (void)
 {
 	return wc->w_rows;
 }
 
-void
-ttsize()
+void 
+ttsize (void)
 {
 	/* ??? We really ought to wait until the screen is big enough:
 	 * at least three lines high (one line each for buffer, mode,
@@ -2809,8 +2795,8 @@ ttsize()
 	ILI = LI - 1;
 }
 
-private void
-SetBounds()
+private void 
+SetBounds (void)
 {
 	SetRect(&myBoundsRect,
 		qd.screenBits.bounds.left + 3,
@@ -2819,16 +2805,16 @@ SetBounds()
 		qd.screenBits.bounds.top + 40 + wc_std.w_height);
 }
 
-private void
-Set_std()
+private void 
+Set_std (void)
 {
 	(void) wc_adjust(qd.screenBits.bounds.right - qd.screenBits.bounds.left - 6,
 		qd.screenBits.bounds.bottom - qd.screenBits.bounds.top - 42,
 		&wc_std, 1);
 }
 
-private void
-Reset_std()
+private void 
+Reset_std (void)
 {
 	Set_std();
 	std_state(theScreen) = myBoundsRect;

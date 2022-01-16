@@ -28,9 +28,8 @@ private bool	UnsavedMacros = NO;	/* are there any macros that need saving to a f
 struct macro	*macros = NULL;		/* macros */
 bool	InMacDefine = NO;
 
-private void
-add_mac(new)
-struct macro	*new;
+private void 
+add_mac (struct macro *new)
 {
 	register struct macro	*mp,
 				*prev = NULL;
@@ -61,27 +60,26 @@ struct m_thread {
 private struct m_thread	*mac_stack = NULL;
 
 private struct m_thread *
-alloc_mthread()
+alloc_mthread (void)
 {
 	return (struct m_thread *) emalloc(sizeof (struct m_thread));
 }
 
-private void
-free_mthread(t)
-struct m_thread	*t;
+private void 
+free_mthread (struct m_thread *t)
 {
 	free((UnivPtr) t);
 }
 
-void
-unwind_macro_stack()
+void 
+unwind_macro_stack (void)
 {
 	while (mac_stack != NULL)
 		pop_macro_stack();
 }
 
-private void
-pop_macro_stack()
+private void 
+pop_macro_stack (void)
 {
 	register struct m_thread	*m;
 
@@ -92,10 +90,8 @@ pop_macro_stack()
 	free_mthread(m);
 }
 
-private void
-push_macro_stack(m, count)
-register struct macro	*m;
-int	count;
+private void 
+push_macro_stack (register struct macro *m, int count)
 {
 	register struct m_thread	*t;
 
@@ -117,9 +113,8 @@ int	count;
 	t->mt_count = count;
 }
 
-void
-do_macro(mac)
-struct macro	*mac;
+void 
+do_macro (struct macro *mac)
 {
 	push_macro_stack(mac, arg_value());
 }
@@ -131,15 +126,14 @@ private struct macro	KeyMacro = {	/* Macro used for defining */
 private int	kmac_len;
 private int	kmac_buflen = 0;
 
-void
-mac_init()
+void 
+mac_init (void)
 {
 	add_mac(&KeyMacro);
 }
 
-void
-mac_putc(c)
-DAPchar	c;
+void 
+mac_putc (DAPchar c)
 {
 	if (kmac_len >= kmac_buflen) {
 		KeyMacro.m_body = erealloc((UnivPtr) KeyMacro.m_body, (size_t) kmac_buflen + 16);
@@ -148,21 +142,21 @@ DAPchar	c;
 	KeyMacro.m_body[kmac_len++] = c;
 }
 
-void
-note_dispatch()
+void 
+note_dispatch (void)
 {
 	if (kmac_len > 0)
 		KeyMacro.m_len = kmac_len - 1;
 }
 
-bool
-in_macro()
+bool 
+in_macro (void)
 {
 	return (mac_stack != NULL);
 }
 
-ZXchar
-mac_getc()
+ZXchar 
+mac_getc (void)
 {
 	struct m_thread	*mthread;
 	struct macro	*m;
@@ -180,12 +174,13 @@ mac_getc()
 	return ZXC(m->m_body[mthread->mt_offset++]);
 }
 
-private void
-MacDef(m, name, len, body)
-struct macro	*m;	/* NULL, or def to overwrite */
-const char	*name;	/* must be stable if m isn't NULL */
-int	len;
-char	*body;
+private void 
+MacDef (
+    struct macro *m,	/* NULL, or def to overwrite */
+    const char *name,	/* must be stable if m isn't NULL */
+    int len,
+    char *body
+)
 {
 	if (m == NULL) {
 		m = (struct macro *) emalloc(sizeof *m);
@@ -206,8 +201,8 @@ char	*body;
 		UnsavedMacros = YES;
 }
 
-void
-NameMac()
+void 
+NameMac (void)
 {
 	char	*name = NULL;
 	struct macro	*m;
@@ -229,16 +224,14 @@ NameMac()
 	MacDef(m, name, KeyMacro.m_len, KeyMacro.m_body);
 }
 
-void
-RunMacro()
+void 
+RunMacro (void)
 {
 	do_macro((struct macro *) findmac(ProcFmt));
 }
 
-private void
-pr_putc(c, fp)
-ZXchar	c;
-File	*fp;
+private void 
+pr_putc (ZXchar c, File *fp)
 {
 	if (c == '\\' || c == '^') {
 		f_putc('\\', fp);
@@ -253,8 +246,8 @@ File	*fp;
 	}
 }
 
-void
-WriteMacs()
+void 
+WriteMacs (void)
 {
 	struct macro	*m;
 	char
@@ -279,8 +272,8 @@ WriteMacs()
 	UnsavedMacros = NO;
 }
 
-void
-DefKBDMac()
+void 
+DefKBDMac (void)
 {
 	struct macro	*m = ask_macname(ProcFmt,
 		ALLOW_OLD | ALLOW_INDEX | ALLOW_NEW);
@@ -311,8 +304,8 @@ DefKBDMac()
 	MacDef(m, macro_name, len, macro_buffer);
 }
 
-void
-Remember()
+void 
+Remember (void)
 {
 	/* We're already executing the macro; ignore any attempts
 	 * to define the keyboard macro while we are executing.
@@ -330,8 +323,8 @@ Remember()
 	}
 }
 
-void
-Forget()
+void 
+Forget (void)
 {
 	UpdModLine = YES;
 	if (InMacDefine) {
@@ -343,21 +336,21 @@ Forget()
 	}
 }
 
-void
-ExecMacro()
+void 
+ExecMacro (void)
 {
 	do_macro(&KeyMacro);
 }
 
-void
-MacInter()
+void 
+MacInter (void)
 {
 	if (Asking)
 		Interactive = YES;
 }
 
-bool
-ModMacs()
+bool 
+ModMacs (void)
 {
 	return UnsavedMacros;
 }
@@ -369,9 +362,7 @@ ModMacs()
  */
 
 private struct macro *
-ask_macname(prompt, flags)
-const char	*prompt;
-int flags;
+ask_macname (const char *prompt, int flags)
 {
 	const char	*strings[100];
 	register const char	**strs = strings;
@@ -397,8 +388,7 @@ int flags;
 }
 
 const data_obj *
-findmac(prompt)
-const char	*prompt;
+findmac (const char *prompt)
 {
 	return (data_obj *)ask_macname(prompt, ALLOW_OLD | ALLOW_INDEX);
 }

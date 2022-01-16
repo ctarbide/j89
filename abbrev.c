@@ -39,9 +39,8 @@ private struct abbrev	*A_tables[NMAJORS + 1][HASHSIZE];	/* Must be zeroed! */
 
 bool AutoCaseAbbrev = YES;	/* VAR: automatically do case on abbreviations */
 
-private unsigned int
-hash(a)
-register const char	*a;
+private unsigned int 
+hash (register const char *a)
 {
 	register unsigned int	hashval = 0;
 	register char	c;
@@ -52,9 +51,8 @@ register const char	*a;
 	return hashval;
 }
 
-private void
-def_abbrev(table)
-struct abbrev	*table[HASHSIZE];
+private void 
+def_abbrev (struct abbrev *table[HASHSIZE])
 {
 	char	abbrev[100],
 		phrase[100];
@@ -65,9 +63,7 @@ struct abbrev	*table[HASHSIZE];
 }
 
 private struct abbrev *
-lookup_abbrev(table, abbrev)
-register struct abbrev	*table[HASHSIZE];
-register const char	*abbrev;
+lookup_abbrev (register struct abbrev *table[HASHSIZE], register const char *abbrev)
 {
 	register struct abbrev	*ap;
 	unsigned int	h;
@@ -79,11 +75,8 @@ register const char	*abbrev;
 	return ap;
 }
 
-private void
-define(table, abbrev, phrase)
-register struct abbrev	*table[HASHSIZE];
-char	*abbrev,
-	*phrase;
+private void 
+define (register struct abbrev *table[HASHSIZE], char *abbrev, char *phrase)
 {
 	register struct abbrev	*ap;
 
@@ -103,8 +96,8 @@ char	*abbrev,
 	ap->a_phrase = copystr(phrase);
 }
 
-void
-AbbrevExpand()
+void 
+AbbrevExpand (void)
 {
 	char	wordbuf[100];
 	register char
@@ -160,9 +153,8 @@ private const char	*const mode_names[NMAJORS + 1] = {
 	"Global"
 };
 
-private void
-save_abbrevs(file)
-char	*file;
+private void 
+save_abbrevs (char *file)
 {
 	File	*fp;
 	struct abbrev	*ap,
@@ -186,9 +178,8 @@ char	*file;
 	add_mess(" %d written.", count);
 }
 
-private void
-rest_abbrevs(file)
-char	*file;
+private void 
+rest_abbrevs (char *file)
 {
 	int
 		mode = -1,	/* Should be ++'d immediately */
@@ -218,36 +209,36 @@ char	*file;
 	message(NullStr);
 }
 
-void
-DefGAbbrev()
+void 
+DefGAbbrev (void)
 {
 	def_abbrev(A_tables[GLOBAL]);
 }
 
-void
-DefMAbbrev()
+void 
+DefMAbbrev (void)
 {
 	def_abbrev(A_tables[curbuf->b_major]);
 }
 
-void
-SaveAbbrevs()
+void 
+SaveAbbrevs (void)
 {
 	char	filebuf[FILESIZE];
 
 	save_abbrevs(ask_file((char *)NULL, (char *)NULL, filebuf));
 }
 
-void
-RestAbbrevs()
+void 
+RestAbbrevs (void)
 {
 	char	filebuf[FILESIZE];
 
 	rest_abbrevs(ask_file((char *)NULL, (char *)NULL, filebuf));
 }
 
-void
-EditAbbrevs()
+void 
+EditAbbrevs (void)
 {
 	char	tname[128];
 	static const char	EditName[] = "Abbreviation Edit";
@@ -289,8 +280,8 @@ EditAbbrevs()
 		SetBuf(do_select(curwind, obuf->b_name));
 }
 
-void
-BindMtoW()
+void 
+BindMtoW (void)
 {
 	struct abbrev	*ap;
 	const char	*word = ask((char *)NULL, "Word: ");

@@ -46,9 +46,8 @@ typedef struct {
 	int	d_fd;		/* File descriptor for this directory */
 } DIR;
 
-private int
-closedir(dp)
-DIR	*dp;
+private int 
+closedir (DIR *dp)
 {
 	(void) close(dp->d_fd);
 	free((UnivPtr) dp);
@@ -56,8 +55,7 @@ DIR	*dp;
 }
 
 private DIR *
-opendir(dir)
-const char	*dir;
+opendir (const char *dir)
 {
 	int	fd;
 
@@ -278,10 +276,8 @@ int	(*sorter) ptrproto((UnivConstPtr, UnivConstPtr));
 
 #endif /* WIN32 */
 
-void
-freedir(nmptr, nentries)
-char	***nmptr;
-int	nentries;
+void 
+freedir (char ***nmptr, int nentries)
 {
 	char	**ourarray = *nmptr;
 

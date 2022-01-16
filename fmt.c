@@ -64,10 +64,8 @@ va_list	ap;
 
 /* pretty-print character c into buffer cp (up to PPWIDTH bytes) */
 
-void
-PPchar(c, cp)
-ZXchar	c;
-char	*cp;
+void 
+PPchar (ZXchar c, char *cp)
 {
 	if (jisprint(c)) {
 		cp[0] = c;
@@ -95,10 +93,8 @@ private struct fmt_state {
 } current_fmt;
 
 /* TODO: Make this unsigned long when we dump support for pre-ANSI C (use flag to ask for sign?) */
-private void
-putld(d, base)
-long	d;
-int	base;
+private void 
+putld (long d, int base)
 {
 	static const char	chars[] = {'0', '1', '2', '3', '4', '5', '6',
 				    '7', '8', '9', 'a', 'b', 'c', 'd',
@@ -135,9 +131,8 @@ int	base;
 		pad(current_fmt.padc, current_fmt.width - len);
 }
 
-private void
-fmt_puts(str)
-const char	*str;
+private void 
+fmt_puts (const char *str)
 {
 	int	len;
 	register const char	*cp;
@@ -158,10 +153,8 @@ const char	*str;
 		pad(' ', current_fmt.width - len);
 }
 
-private void
-pad(c, amount)
-register DAPchar	c;
-register int	amount;
+private void 
+pad (register DAPchar c, register int amount)
 {
 	while (c && --amount >= 0)
 		f_putc(c, current_fmt.iop);

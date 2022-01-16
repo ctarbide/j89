@@ -22,8 +22,8 @@ bool
 	TABS = NO;		/* terminal supports tabs */
 
 #ifndef UNIX
-void
-settout()
+void 
+settout (void)
 {
 # ifndef NO_JSTDOUT
 	flushscreen();		/* flush the one character buffer */

@@ -40,8 +40,8 @@ private int
 	i_line,
 	i_col;
 
-void
-make_scr()
+void 
+make_scr (void)
 {
 	register int	i;
 	register struct screenline	*ns;
@@ -132,10 +132,8 @@ make_scr()
 	cl_scr(NO);
 }
 
-void
-clrline(cp1, cp2)
-register char	*cp1,
-		*cp2;
+void 
+clrline (register char *cp1, register char *cp2)
 {
 	while (cp1 < cp2)
 		*cp1++ = ' ';
@@ -155,16 +153,16 @@ register char	*cp1,
 private unsigned char sput_buf[255];
 private size_t sput_len = 0;
 
-private void
-sput_start()
+private void 
+sput_start (void)
 {
 /*	if (i_line != CapLine || i_col != CapCol) */
 		NPlacur(i_line, i_col);
 	sput_len = 0;
 }
 
-private void
-sput_end()
+private void 
+sput_end (void)
 {
 	if (sput_len != 0) {
 		writetext(sput_buf, sput_len);
@@ -172,9 +170,8 @@ sput_end()
 	}
 }
 
-private void
-sputc(c)
-register char c;
+private void 
+sputc (int c)
 {
 	/* if line gets too long for sput_buf, ignore subsequent chars */
 	if (sput_len < sizeof(sput_buf)) {
@@ -210,9 +207,8 @@ private bool	ChangeEffect = NO;
 }
 # endif /* !IBMPCDOS */
 
-private void
-do_sputc(c)
-register char	c;
+private void 
+do_sputc (int c)
 {
 	if (CharChanged(c)) {
 # ifdef ID_CHAR
@@ -239,11 +235,12 @@ register char	c;
 
 private void	(*real_effect) ptrproto((bool));
 
-private void
-do_hlsputc(hl, oldhl, c)
-register const struct LErange *hl;	/* desired highlighting */
-register const struct LErange *oldhl;	/* previous highlighting */
-char c;
+private void 
+do_hlsputc (
+    register const struct LErange *hl,	/* desired highlighting */
+    register const struct LErange *oldhl,	/* previous highlighting */
+    int c
+)
 {
 	/* assert: hl != NULL && oldhl != NULL
 	 * In other words, hl and oldhl must point to real LErange structs.
@@ -288,8 +285,8 @@ char c;
 
 #endif /* HIGHLIGHTING */
 
-void
-cl_eol()
+void 
+cl_eol (void)
 {
 	if (cursor == Curline->s_line)
 		LEclear(Curline);	/* in case swrite was not called (hack!) */
@@ -317,9 +314,8 @@ cl_eol()
 	}
 }
 
-void
-cl_scr(doit)
-bool doit;
+void 
+cl_scr (bool doit)
 {
 	register int	i;
 	register struct screenline	*sp = Screen;
@@ -349,7 +345,7 @@ union LEspace {
 private union LEspace *LEfreeHead = NULL;
 
 private struct LErange *
-LEnew()
+LEnew (void)
 {
 	struct LErange	*ret;
 
@@ -364,9 +360,8 @@ LEnew()
 
 #endif /* HIGHLIGHTING */
 
-private void
-LEclear(sl)
-struct screenline *sl;
+private void 
+LEclear (struct screenline *sl)
 {
 #ifdef HIGHLIGHTING
 	if (sl->s_effects != NOEFFECT) {
@@ -386,11 +381,8 @@ struct screenline *sl;
  * displayable characters.
  */
 
-bool
-swrite(line, hl, abortable)
-register char	*line;
-LineEffects	hl;
-bool	abortable;
+bool 
+swrite (register char *line, LineEffects hl, bool abortable)
 {
 	register int	n = cursend - cursor;
 	bool	aborted = NO;
@@ -533,10 +525,8 @@ bool	abortable;
 	return !aborted;
 }
 
-void
-i_set(nline, ncol)
-register int	nline,
-		ncol;
+void 
+i_set (register int nline, register int ncol)
 {
 	Curline = &Screen[nline];
 	cursor = Curline->s_line + ncol;
@@ -545,17 +535,16 @@ register int	nline,
 	i_col = ncol;
 }
 
-void
-SO_off()
+void 
+SO_off (void)
 {
 	SO_effect(NO);
 }
 
 #ifdef TERMCAP
 
-void
-SO_effect(on)
-bool	on;
+void 
+SO_effect (bool on)
 {
 	/* If there are magic cookies, then WHERE the SO string is
 	 * printed decides where the SO actually starts on the screen.
@@ -572,9 +561,8 @@ bool	on;
 }
 
 # ifdef HIGHLIGHTING
-void
-US_effect(on)
-bool	on;
+void 
+US_effect (bool on)
 {
 	if (UG == 0)	/* not used if magic cookies */
 		putpad(on? US : UE, 1);
@@ -587,11 +575,8 @@ bool	on;
  * alone (at least they won't look any different when we are done).
  * This changes the screen array AND does the physical changes.
  */
-void
-v_ins_line(num, top, bottom)
-int num,
-    top,
-    bottom;
+void 
+v_ins_line (int num, int top, int bottom)
 {
 	register int	i;
 
@@ -624,11 +609,8 @@ int num,
 /* Delete `num' lines starting at `top' leaving the lines below `bottom'
  * alone.  This updates the internal image as well as the physical image.
  */
-void
-v_del_line(num, top, bottom)
-int num,
-    top,
-    bottom;
+void 
+v_del_line (int num, int top, int bottom)
 {
 	register int	i;
 
@@ -717,39 +699,32 @@ private struct cursaddr	WarpDirect[] = {
 # define LowLine()	{ putpad(LL, 1); CapLine = ILI; CapCol = 0; }
 # define PrintHo()	{ putpad(HO, 1); CapLine = CapCol = 0; }
 
-private void
-GoDirect(line, col)
-register int	line,
-		col;
+private void 
+GoDirect (register int line, register int col)
 {
 	putpad(Cmstr, 1);
 	CapLine = line;
 	CapCol = col;
 }
 
-private void
-RetTab(col)
-register int	col;
+private void 
+RetTab (register int col)
 {
 	scr_putchar('\r');
 	CapCol = 0;
 	ForTab(col);
 }
 
-private void
-HomeGo(line, col)
-int line,
-    col;
+private void 
+HomeGo (int line, int col)
 {
 	PrintHo();
 	DownMotion(line);
 	ForTab(col);
 }
 
-private void
-BottomUp(line, col)
-register int	line,
-		col;
+private void 
+BottomUp (register int line, register int col)
 {
 	LowLine();
 	UpMotion(line);
@@ -761,9 +736,8 @@ register int	line,
  * to it.
  * Note: changes to this routine must be matched by changes in ForNum.
  */
-private void
-ForTab(to)
-int	to;
+private void 
+ForTab (int to)
 {
 	if ((to > CapCol+1) && TABS && (phystab > 0)) {
 		register int	tabgoal,
@@ -810,9 +784,8 @@ int	to;
 	}
 }
 
-private void
-DownMotion(destline)
-register int	destline;
+private void 
+DownMotion (register int destline)
 {
 	register int	nlines = destline - CapLine;
 
@@ -822,9 +795,8 @@ register int	destline;
 	}
 }
 
-private void
-UpMotion(destline)
-register int	destline;
+private void 
+UpMotion (register int destline)
 {
 	register int	nchars = CapLine - destline;
 
@@ -836,10 +808,8 @@ register int	destline;
 
 private int ForNum proto((int from, int to));
 
-void
-Placur(line, col)
-int line,
-    col;
+void 
+Placur (int line, int col)
 {
 # define CursMin(which,addrs,max)	{ \
 	register int	best = 0, \
@@ -947,10 +917,8 @@ int line,
  * An exception is that any cost for leaving insert mode has been
  * accounted for by our caller.
  */
-private int
-ForNum(from, to)
-register int	from;
-int to;
+private int 
+ForNum (register int from, int to)
 {
 	register int	tabgoal,
 			pts = phystab;
@@ -976,11 +944,8 @@ int to;
 	return ntabs + (from>to? from-to : to-from);
 }
 
-void
-i_lines(top, bottom, num)
-int top,
-    bottom,
-    num;
+void 
+i_lines (int top, int bottom, int num)
 {
 	if (CS) {
 		putpad(targ2(CS, bottom, top), 1);
@@ -997,11 +962,8 @@ int top,
 	}
 }
 
-void
-d_lines(top, bottom, num)
-int top,
-    bottom,
-    num;
+void 
+d_lines (int top, int bottom, int num)
 {
 	if (CS) {
 		putpad(targ2(CS, bottom, top), 1);

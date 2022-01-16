@@ -76,8 +76,8 @@ private struct error	*cur_error = NULL,
  * If it deleted, we keep it (dormant) in case it will be pasted back
  * into the same buffer.
  */
-void
-ChkErrorLines()
+void 
+ChkErrorLines (void)
 {
 	register struct error	*e;
 	struct error	*prev = NULL;
@@ -109,12 +109,7 @@ ChkErrorLines()
  * parse-{C,LINT}-errors and for the spell-buffer command
  */
 private struct error *
-AddError(laste, errline, buf, line, charpos)
-struct error	*laste;
-LinePtr	errline,
-	line;
-Buffer	*buf;
-int	charpos;
+AddError (struct error *laste, LinePtr errline, Buffer *buf, LinePtr line, int charpos)
 {
 	struct error	*new = (struct error *) emalloc(sizeof *new);
 
@@ -136,10 +131,8 @@ int	charpos;
 	return new;
 }
 
-void
-get_FL_info(fname, lineno)
-char	*fname,
-	*lineno;
+void 
+get_FL_info (char *fname, char *lineno)
 {
 	putmatch(1, fname, (size_t)FILESIZE);
 	putmatch(2, lineno, (size_t)FILESIZE);
@@ -153,8 +146,8 @@ char	*fname,
 
 /* Free up all the errors */
 
-void
-ErrFree()
+void 
+ErrFree (void)
 {
 	cur_error = NULL;
 	while (errorlist != NULL) {
@@ -170,8 +163,8 @@ ErrFree()
  * will work for any kind of output that prints a file name and a line
  * number on the same line.
  */
-void
-ErrParse()
+void 
+ErrParse (void)
 {
 	struct RE_block	re_blk;
 	Bufpos	*bp;
@@ -208,8 +201,8 @@ ErrParse()
 		ShowErr();
 }
 
-private void
-NeedErrors()
+private void 
+NeedErrors (void)
 {
 	if (cur_error == NULL) {
 		complain("No errors!");
@@ -217,8 +210,8 @@ NeedErrors()
 	}
 }
 
-private bool
-ErrorHasReferents()
+private bool 
+ErrorHasReferents (void)
 {
 	return inlist(cur_error->er_buf->b_first, cur_error->er_text)
 		&& inlist(perr_buf->b_first, cur_error->er_mess);
@@ -228,9 +221,8 @@ ErrorHasReferents()
  * one window and the buffer with the error in another window.
  * It checks to make sure that the error actually exists.
  */
-private void
-ToError(forward)
-bool	forward;
+private void 
+ToError (bool forward)
 {
 	register struct error	*e = cur_error;
 	int	num = arg_value();
@@ -250,23 +242,22 @@ bool	forward;
 	}
 }
 
-void
-NextError()
+void 
+NextError (void)
 {
 	ToError(YES);
 }
 
-void
-PrevError()
+void 
+PrevError (void)
 {
 	ToError(NO);
 }
 
 int	EWSize = 20;	/* VAR: percentage of screen to make the error window */
 
-private void
-set_wsize(wsize)
-int	wsize;
+private void 
+set_wsize (int wsize)
 {
 	wsize = (LI * wsize) / 100;
 	if (wsize >= 1 && !one_windp())
@@ -277,8 +268,8 @@ int	wsize;
  * in one window, and the buffer containing the actual error in another
  * window.
  */
-void
-ShowErr()
+void 
+ShowErr (void)
 {
 	Window	*err_wind,
 		*buf_wind;
@@ -325,8 +316,7 @@ char	ShcomBuf[LBSIZE];
  * will return the buffer name "fgrep".
  */
 char *
-MakeName(command)
-char	*command;
+MakeName (char *command)
 {
 	static char	bnm[FILESIZE];
 	register char	*cp = bnm,
@@ -369,8 +359,8 @@ private void
 
 private char	make_cmd[LBSIZE] = "make";
 
-void
-MakeErrors()
+void 
+MakeErrors (void)
 {
 	Window	*old = curwind;
 
@@ -405,9 +395,8 @@ MakeErrors()
 
 # ifdef SPELL
 
-private void
-SpelParse(bname)
-const char	*bname;
+private void 
+SpelParse (const char *bname)
 {
 	Buffer	*buftospel,
 		*wordsb;
@@ -448,8 +437,8 @@ const char	*bname;
 	ShowErr();
 }
 
-void
-SpelBuffer()
+void 
+SpelBuffer (void)
 {
 	static const char	Spell[] = "Spell";
 	const char *cp;
@@ -481,8 +470,8 @@ SpelBuffer()
 	SpelParse(Spell);
 }
 
-void
-SpelWords()
+void 
+SpelWords (void)
 {
 	Buffer	*wordsb = curbuf;
 	const char	*buftospel = ask_buf((Buffer *)NULL, ALLOW_OLD | ALLOW_INDEX);
@@ -493,8 +482,8 @@ SpelWords()
 
 # endif /* SPELL */
 
-void
-ShToBuf()
+void 
+ShToBuf (void)
 {
 	char	bnm[128],
 		cmd[LBSIZE];
@@ -504,23 +493,23 @@ ShToBuf()
 	DoShell(bnm, cmd);
 }
 
-void
-ShellCom()
+void 
+ShellCom (void)
 {
 	jamstr(ShcomBuf, ask(ShcomBuf, ProcFmt));
 	DoShell(MakeName(ShcomBuf), ShcomBuf);
 }
 
-void
-ShNoBuf()
+void 
+ShNoBuf (void)
 {
 	jamstr(ShcomBuf, ask(ShcomBuf, ProcFmt));
 	com_finish(UnixToBuf(UTB_SH|UTB_FILEARG, (char *)NULL, (char *)NULL,
 		ShcomBuf), ShcomBuf);
 }
 
-void
-Shtypeout()
+void 
+Shtypeout (void)
 {
 	wait_status_t	status;
 
@@ -549,10 +538,8 @@ Shtypeout()
  * give a numeric argument, in which case it inserts the output at the
  * current position in the buffer.
  */
-private void
-DoShell(bnm, command)
-char	*bnm,
-	*command;
+private void 
+DoShell (char *bnm, char *command)
 {
 	Window	*savewp = curwind;
 
@@ -564,10 +551,8 @@ char	*bnm,
 	SetWind(savewp);
 }
 
-private void
-com_finish(status, cmd)
-wait_status_t	status;
-char	*cmd;
+private void 
+com_finish (wait_status_t status, char *cmd)
 {
 #ifdef MSDOS_PROCS
 	if (status < 0)
@@ -594,9 +579,10 @@ char	*cmd;
  */
 pid_t	ChildPid;
 
-void
-dowait(status)
-wait_status_t	*status;	/* may be NULL */
+void 
+dowait (
+    wait_status_t *status	/* may be NULL */
+)
 {
 # ifdef IPROCS
 	while (DeadPid != ChildPid) {
@@ -645,15 +631,15 @@ private Env proc_env;
 private char PEnvExpBuf[LBSIZE];
 private char PEnvUnsetBuf[LBSIZE];
 
-void
-ProcEnvExport()
+void 
+ProcEnvExport (void)
 {
 	jamstr(PEnvExpBuf, ask(PEnvExpBuf, ProcFmt));
 	jputenv(&proc_env, PEnvExpBuf);
 }
 
-void
-ProcEnvShow()
+void 
+ProcEnvShow (void)
 {
 	const char **p;
 	TOstart("subshell environment");
@@ -663,8 +649,8 @@ ProcEnvShow()
 	TOstop();
 }
 
-void
-ProcEnvUnset()
+void 
+ProcEnvUnset (void)
 {
 	jamstr(PEnvUnsetBuf, ask(PEnvUnsetBuf, ProcFmt));
 	junsetenv(&proc_env, PEnvUnsetBuf);
@@ -691,12 +677,13 @@ ProcEnvUnset()
  * Only if UTB_DISP and bnm is non-NULL are UTB_ERRWIN and
  * UTB_CLOBBER meaningful.
  */
-wait_status_t
-UnixToBuf(flags, bnm, InFName, cmd)
-	int	flags;	/* bunch of booleans: see UTB_* in proc.h */
-	const char	*bnm;	/* buffer name (NULL means none) */
-	const char	*InFName;	/* name of file for process stdin (NULL means none) */
-	const char	*cmd;	/* command to run */
+wait_status_t 
+UnixToBuf (
+    int flags,	/* bunch of booleans: see UTB_* in proc.h */
+    const char *bnm,	/* buffer name (NULL means none) */
+    const char *InFName,	/* name of file for process stdin (NULL means none) */
+    const char *cmd	/* command to run */
+)
 {
 #ifndef MSDOS_PROCS
 	int	p[2];
@@ -1017,11 +1004,8 @@ UnixToBuf(flags, bnm, InFName, cmd)
 /* Send the current region to CMD and insert the output from the
  * command into OUT_BUF.
  */
-private void
-RegToUnix(outbuf, cmd, wrap)
-Buffer	*outbuf;
-char	*cmd;
-bool	wrap;
+private void 
+RegToUnix (Buffer *outbuf, char *cmd, bool wrap)
 {
 	Mark	*m = CurMark();
 	static char	tname[FILESIZE];
@@ -1058,8 +1042,8 @@ bool	wrap;
 		com_finish(status, cmd);
 }
 
-void
-FilterRegion()
+void 
+FilterRegion (void)
 {
 	static char FltComBuf[LBSIZE];
 
@@ -1068,9 +1052,8 @@ FilterRegion()
 	this_cmd = UNDOABLECMD;
 }
 
-void
-isprocbuf(bnm)
-const char	*bnm;
+void 
+isprocbuf (const char *bnm)
 {
 	Buffer	*bp;
 

@@ -15,9 +15,8 @@
 
 private int	line_pos;
 
-void
-f_char(n)
-register long	n;
+void 
+f_char (register long n)
 {
 	if (n < 0) {
 		b_char(-n);
@@ -34,9 +33,8 @@ register long	n;
 	}
 }
 
-void
-b_char(n)
-register long	n;
+void 
+b_char (register long n)
 {
 	if (n < 0) {
 		f_char(-n);
@@ -54,20 +52,20 @@ register long	n;
 	}
 }
 
-void
-ForChar()
+void 
+ForChar (void)
 {
 	f_char(arg_value());
 }
 
-void
-BackChar()
+void 
+BackChar (void)
 {
 	b_char(arg_value());
 }
 
-void
-NextLine()
+void 
+NextLine (void)
 {
 	if ((curline == curbuf->b_last) && eolp()) {
 		complain(NullStr);
@@ -76,8 +74,8 @@ NextLine()
 	line_move(FORWARD, arg_value(), YES);
 }
 
-void
-PrevLine()
+void 
+PrevLine (void)
 {
 	if ((curline == curbuf->b_first) && bolp()) {
 		complain(NullStr);
@@ -90,11 +88,8 @@ PrevLine()
  * being called from NextLine() or PrevLine(), in which case it tries
  * to line up the column with the column of the current line
  */
-void
-line_move(dir, n, line_cmd)
-int	dir;
-long	n;
-bool	line_cmd;
+void 
+line_move (int dir, long n, bool line_cmd)
 {
 	LinePtr	(*proc) ptrproto((LinePtr, long)) =
 		(dir == FORWARD) ? next_line : prev_line;
@@ -130,10 +125,8 @@ bool	line_cmd;
  * each thinks it knows how characters are displayed.
  */
 
-int
-how_far(line, col)
-LinePtr	line;
-int	col;
+int 
+how_far (LinePtr line, int col)
 {
 	register char	*lp;
 	register int	pos;
@@ -160,27 +153,27 @@ int	col;
 	return lp - base - 1;
 }
 
-void
-Bol()
+void 
+Bol (void)
 {
 	curchar = 0;
 }
 
-void
-Eol()
+void 
+Eol (void)
 {
 	curchar = length(curline);
 }
 
-void
-Eof()
+void 
+Eof (void)
 {
 	PushPntp(curbuf->b_last);
 	ToLast();
 }
 
-void
-Bof()
+void 
+Bof (void)
 {
 	PushPntp(curbuf->b_first);
 	ToFirst();
@@ -190,9 +183,8 @@ Bof()
  * with all the kludgery involved with paragraphs, and moving backwards
  * is particularly yucky.
  */
-private void
-to_sent(dir)
-int	dir;
+private void 
+to_sent (int dir)
 {
 	for (;;) {
 		Bufpos
@@ -238,8 +230,8 @@ int	dir;
 	}
 }
 
-void
-Bos()
+void 
+Bos (void)
 {
 	register int	num = arg_value();
 
@@ -255,8 +247,8 @@ Bos()
 	}
 }
 
-void
-Eos()
+void 
+Eos (void)
 {
 	register int	num = arg_value();
 
@@ -272,9 +264,8 @@ Eos()
 	}
 }
 
-void
-f_word(num)
-register long	num;
+void 
+f_word (register long num)
 {
 	if (num < 0) {
 		while (++num <= 0) {
@@ -299,14 +290,14 @@ register long	num;
 	this_cmd = OTHER_CMD;	/* Semi kludge to stop some unfavorable behavior */
 }
 
-void
-ForWord()
+void 
+ForWord (void)
 {
 	f_word(arg_value());
 }
 
-void
-BackWord()
+void 
+BackWord (void)
 {
 	f_word(-arg_value());
 }

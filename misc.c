@@ -19,15 +19,15 @@
 #include "move.h"
 #include "para.h"
 
-void
-prCTIME()
+void 
+prCTIME (void)
 {
 	f_mess(": %f %s", get_time((time_t *)NULL, (char *)NULL, 0, -1));
 	stickymsg = YES;
 }
 
-void
-ChrToOct()
+void 
+ChrToOct (void)
 {
 	ZXchar	c = ask_ks();
 
@@ -40,8 +40,8 @@ ChrToOct()
 #endif
 }
 
-void
-StrLength()
+void 
+StrLength (void)
 {
 	static const char	inquotes[] = "Where are the quotes?";
 	char	*cp;
@@ -87,8 +87,8 @@ StrLength()
 
 /* Transpose cur_char with cur_char - 1 */
 
-void
-TransChar()
+void 
+TransChar (void)
 {
 	char	before;
 
@@ -106,8 +106,8 @@ TransChar()
 
 /* Switch current line with previous one */
 
-void
-TransLines()
+void 
+TransLines (void)
 {
 	daddr	old_prev;
 
@@ -134,8 +134,8 @@ TransLines()
 
 /* exit-jove command */
 
-void
-Leave()
+void 
+Leave (void)
 {
 	longjmp(mainjmp, JMP_QUIT);
 	/* NOTREACHED */
@@ -146,8 +146,8 @@ Leave()
  * right of the cursor is white space, we delete the line separator
  * as if we were at the end of the line.
  */
-void
-KillEOL()
+void 
+KillEOL (void)
 {
 	LinePtr	line2;
 	int	char2;
@@ -179,8 +179,8 @@ KillEOL()
 
 /* kill to beginning of sentence */
 
-void
-KillBos()
+void 
+KillBos (void)
 {
 	negate_arg();
 	KillEos();
@@ -188,8 +188,8 @@ KillBos()
 
 /* Kill to end of sentence */
 
-void
-KillEos()
+void 
+KillEos (void)
 {
 	LinePtr	line1;
 	int	char1;
@@ -200,8 +200,8 @@ KillEos()
 	reg_kill(line1, char1, YES);
 }
 
-void
-KillExpr()
+void 
+KillExpr (void)
 {
 	LinePtr	line1;
 	int	char1;
@@ -212,8 +212,8 @@ KillExpr()
 	reg_kill(line1, char1, YES);
 }
 
-void
-Yank()
+void 
+Yank (void)
 {
 	LinePtr	line,
 		lp;
@@ -231,15 +231,15 @@ Yank()
 	SetDot(dot);
 }
 
-void
-ToIndent()
+void 
+ToIndent (void)
 {
 	Bol();
 	skip_wht_space();
 }
 
-void
-skip_wht_space()
+void 
+skip_wht_space (void)
 {
 	register char	*cp = linebuf + curchar;
 
@@ -251,8 +251,8 @@ skip_wht_space()
 /* GoLine -- go to a line, usually wired to goto-line, ESC g or ESC G.
  * If no argument is specified it asks for a line number.
  */
-void
-GoLine()
+void 
+GoLine (void)
 {
 	LinePtr	newline;
 
@@ -266,14 +266,14 @@ GoLine()
 	SetLine(newline);
 }
 
-void
-NotModified()
+void 
+NotModified (void)
 {
 	unmodify();
 }
 
-void
-SetLMargin()
+void 
+SetLMargin (void)
 {
 	int	lmarg = calc_pos(linebuf, curchar);
 
@@ -284,8 +284,8 @@ SetLMargin()
 	LMargin = lmarg;
 }
 
-void
-SetRMargin()
+void 
+SetRMargin (void)
 {
 	int	rmarg = calc_pos(linebuf, curchar);
 

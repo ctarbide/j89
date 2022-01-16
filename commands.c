@@ -44,9 +44,8 @@ const char	*ProcFmt = ": %f ";
 
 private int cmdcmp proto((UnivConstPtr p1, UnivConstPtr p2)); /* Needed to comfort MS Visual C */
 
-private int
-cmdcmp(p1, p2)
-UnivConstPtr	p1, p2;
+private int 
+cmdcmp (UnivConstPtr p1, UnivConstPtr p2)
 {
 	const struct cmd *c1 = (const struct cmd *) p1;
 	const struct cmd *c2 = (const struct cmd *) p2;
@@ -54,8 +53,7 @@ UnivConstPtr	p1, p2;
 }
 
 const data_obj *
-findcom(prompt)
-const char	*prompt;
+findcom (const char *prompt)
 {
 	if (InJoverc) {
 		 /* for faster startup, skip using the minibuffer. */
@@ -100,8 +98,7 @@ const char	*prompt;
 }
 
 const struct cmd *
-FindCmd(proc)
-register cmdproc_t proc;
+FindCmd (register cmdproc_t proc)
 {
 	register const struct cmd	*cp;
 
@@ -111,9 +108,8 @@ register cmdproc_t proc;
 	return NULL;
 }
 
-void
-ExecCmd(cp)
-register const data_obj	*cp;
+void 
+ExecCmd (register const data_obj *cp)
 {
 	LastCmd = cp;
 	if (cp->Type & MAJOR_MODE) {

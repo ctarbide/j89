@@ -139,9 +139,7 @@ private JTLevel jtc_emu[] = {
 };
 
 char *
-jtcarg1(fmt, p)
-const char *fmt;
-int p;
+jtcarg1 (const char *fmt, int p)
 {
 	if (fmt)
 		swritef(jtarg, sizeof jtarg, fmt, p);
@@ -157,9 +155,7 @@ int p;
  * hardwires the %i behaviour from terminfo/termcap
  */
 char *
-jtcarg2(fmt, destcol, destline)
-const char *fmt;
-int destcol, destline;
+jtcarg2 (const char *fmt, int destcol, int destline)
 {
 	if (fmt)
 		swritef(jtarg, sizeof jtarg, fmt, destline+1, destcol+1);
@@ -174,9 +170,8 @@ int destcol, destline;
  * termcap.  A jdelay function ought to be factored out of jove.c
  * and moved to unix.c, ibmpcdos.c, win32.c, mac.c.
  */
-void
-jdelay(delay)
-int delay;
+void 
+jdelay (int delay)
 {
 	struct timeval	timer;
 	fd_set	readfds;
@@ -211,10 +206,8 @@ void (*putfunc) proto((int));
 	if (needflush) flushscreen();
 }
 
-int
-tgetent(buf, tenv)
-char *buf;
-const char *tenv;
+int 
+tgetent (char *buf, const char *tenv)
 {
 	const char *jtcenv = getenv("JOVEVT");
 	if (jtcenv != NULL) {
@@ -251,9 +244,8 @@ const char *tenv;
 #define capeq(cap, val) (cap[0] == val[0] && cap[1] == val[1] && \
 			 cap[2] == val[2] && cap[2] == '\0')
 
-int
-tgetflag(capname)
-const char *capname;
+int 
+tgetflag (const char *capname)
 {
 	if (capeq(capname, "mi") && jtlev >= VT125)
 		return YES; /* terminfo for vt102 does not have move-in-insert */
@@ -268,9 +260,8 @@ const char *capname;
 }
 
 
-int
-tgetnum(capname)
-const char *capname;
+int 
+tgetnum (const char *capname)
 {
 	if (capeq(capname, "co")) {
 		return JVTCOLS;
@@ -285,9 +276,7 @@ const char *capname;
 }
 
 const char *
-tgetstr(capname, area)
-const char *capname;
-char **area;
+tgetstr (const char *capname, char **area)
 {
 	JTermcap *j;
 	for (j = jtc; j < jtc + (sizeof(jtc)/sizeof(jtc[0])); j++) {
@@ -309,9 +298,8 @@ char **area;
  */
 
 /* make terminfo string printable */
-void
-puts_encoded(s)
-const char *s;
+void 
+puts_encoded (const char *s)
 {
 	unsigned c;
 	if (s) while ((c = (*s++)&0xff) != '\0') {
@@ -334,19 +322,16 @@ const char *s;
 	printf("\n");
 }
 
-void
-xtputs(delay, s, li)
-int delay, li;
-const char *s;
+void 
+xtputs (int delay, const char *s, int li)
 {
 	tputs(s, li, putchar);
 	fflush(stdout);
 	jdelay(delay);
 }
 
-int main(argc, argv)
-int argc;
-char **argv;
+int 
+main (int argc, char **argv)
 {
 	int i, j;
 	static const char *capn[] = {"co", "li", "it", "ug", "sg", "xx"};

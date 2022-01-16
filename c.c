@@ -23,10 +23,8 @@
 private void
 	FindMatch proto((int));
 
-private bool
-backslashed(lp, cpos)
-register char	*lp;
-register int	cpos;
+private bool 
+backslashed (register char *lp, register int cpos)
 {
 	register int	cnt = 0;
 
@@ -42,8 +40,8 @@ private int	mp_kind;
 #define MP_UNBALANCED	2
 #define MP_INCOMMENT	3
 
-void
-mp_error()
+void 
+mp_error (void)
 {
 	switch (mp_kind) {
 	case MP_MISMATCH:
@@ -76,11 +74,7 @@ mp_error()
  * only ones that insist on getting the "true" story.
  */
 Bufpos *
-m_paren(p_type, dir, can_mismatch, can_stop)
-DAPchar	p_type;
-register int	dir;
-bool	can_mismatch;
-bool	can_stop;
+m_paren (DAPchar p_type, register int dir, bool can_mismatch, bool can_stop)
 {
 	static Bufpos	ret;
 	Bufpos	savedot;
@@ -204,10 +198,8 @@ bool	can_stop;
 	return NULL;
 }
 
-private void
-do_expr(dir, skip_words)
-register int	dir;
-bool	skip_words;
+private void 
+do_expr (register int dir, bool skip_words)
 {
 	register char	syntax = (dir == FORWARD) ? C_BRA : C_KET;
 
@@ -244,8 +236,8 @@ bool	skip_words;
 	}
 }
 
-void
-FSexpr()
+void 
+FSexpr (void)
 {
 	register int	num = arg_value();
 
@@ -257,8 +249,8 @@ FSexpr()
 		do_expr(FORWARD, NO);
 }
 
-void
-FList()
+void 
+FList (void)
 {
 	register int	num = arg_value();
 
@@ -270,8 +262,8 @@ FList()
 		do_expr(FORWARD, YES);
 }
 
-void
-BSexpr()
+void 
+BSexpr (void)
 {
 	register int	num = arg_value();
 
@@ -283,8 +275,8 @@ BSexpr()
 		do_expr(BACKWARD, NO);
 }
 
-void
-BList()
+void 
+BList (void)
 {
 	register int	num = arg_value();
 
@@ -296,8 +288,8 @@ BList()
 		do_expr(BACKWARD, YES);
 }
 
-void
-BUpList()
+void 
+BUpList (void)
 {
 	register int	num = arg_value();
 	Bufpos	*mp;
@@ -315,8 +307,8 @@ BUpList()
 	}
 }
 
-void
-FDownList()
+void 
+FDownList (void)
 {
 	register int	num = arg_value();
 	Bufpos	*sp;
@@ -343,9 +335,8 @@ FDownList()
 /* Move to the matching brace or paren depending on the current position
  * in the buffer.
  */
-private void
-FindMatch(dir)
-int	dir;
+private void 
+FindMatch (int dir)
 {
 	register Bufpos	*bp;
 	register char	c = linebuf[curchar];
@@ -376,8 +367,7 @@ int	CArgIndent = ALIGN_ARGS;	/* VAR: how to indent arguments to C functions */
 
 /* indent for C code */
 Bufpos *
-c_indent(brace)
-bool	brace;
+c_indent (bool brace)
 {
 	Bufpos	*bp;
 	int	new_indent = 0,
@@ -465,9 +455,8 @@ bool	brace;
 	return bp;
 }
 
-private void
-re_indent(incr)
-int	incr;
+private void 
+re_indent (int incr)
 {
 	LinePtr	l1, l2, lp;
 	int	c1, c2;
@@ -492,14 +481,14 @@ int	incr;
 	SetDot(&savedot);
 }
 
-void
-LRShift()
+void 
+LRShift (void)
 {
 	re_indent(-arg_or_default(CIndIncrmt));
 }
 
-void
-RRShift()
+void 
+RRShift (void)
 {
 	re_indent(arg_or_default(CIndIncrmt));
 }
@@ -510,10 +499,8 @@ char	CmtFmt[80] = "/*%n%! * %c%!%n */";	/* VAR: comment format */
 
 /* Strip leading and trailing white space.  Skip over any imbedded '\n's. */
 
-private void
-strip_c(from, to)
-char	*from,
-	*to;
+private void 
+strip_c (char *from, char *to)
 {
 	register char
 		*fr_p = from,
@@ -546,8 +533,8 @@ private bool	nl_in_close_c;
 /* Fill in the data structures above from the format string.  Don't return
  * if there's trouble.
  */
-private void
-parse_cmt_fmt()
+private void 
+parse_cmt_fmt (void)
 {
 
 	static char	*const component[] = {
@@ -620,8 +607,8 @@ parse_cmt_fmt()
 	strip_c(close_c, close_pat);
 }
 
-void
-FillComment()
+void 
+FillComment (void)
 {
 	int	saveRMargin,
 		indent_pos;

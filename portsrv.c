@@ -53,9 +53,10 @@ SIGHANDLERTYPE	handler;
 private SIGRESTYPE strt_read proto((int));
 private volatile bool wait_for_sig = NO;
 
-private SIGRESTYPE
-hold_read(junk)
-int	junk;	/* passed in when invoked by a signal; of no interest */
+private SIGRESTYPE 
+hold_read (
+    int junk	/* passed in when invoked by a signal; of no interest */
+)
 {
 	setsighandler(KBDSIG, strt_read);
 #if defined(BSD_SIGS)||defined(POSIX_SIGS)
@@ -71,17 +72,16 @@ int	junk;	/* passed in when invoked by a signal; of no interest */
 	return SIGRESVALUE;
 }
 
-private SIGRESTYPE
-strt_read(junk)
-int	junk;
+private SIGRESTYPE 
+strt_read (int junk)
 {
 	setsighandler(KBDSIG, hold_read);
 	wait_for_sig = NO;
 	return SIGRESVALUE;
 }
 
-private void
-detach()
+private void 
+detach (void)
 {
 #ifdef POSIX_PROCS
 	setsid();
@@ -108,8 +108,8 @@ detach()
 	NEWPG();
 }
 
-private void
-kbd_process()
+private void 
+kbd_process (void)
 {
 	int	pid,
 		n = -1;
@@ -151,9 +151,8 @@ size_t	n;
 	do {} while (write(1, ptr, n) < 0 && RETRY_ERRNO(errno));
 }
 
-private void
-read_pipe(fd)
-int	fd;
+private void 
+read_pipe (int fd)
 {
 	register size_t	n;
 
@@ -165,9 +164,8 @@ int	fd;
 
 private void proc_error proto((const char * /* str */)) NEVER_RETURNS;
 
-private void
-proc_error(str)
-const char	*str;
+private void 
+proc_error (const char *str)
 {
 	lump.header.pid = getpid();
 	lump.header.nbytes = strlen(str);
@@ -190,10 +188,8 @@ const char	*str;
 	_exit(-2);
 }
 
-private void
-portsrv_process(argc, argv)
-int	argc;
-char	**argv;
+private void 
+portsrv_process (int argc, char **argv)
 {
 	int	p[2];
 	pid_t	pid;
@@ -261,10 +257,8 @@ char	**argv;
 	}
 }
 
-int
-main(argc, argv)
-int	argc;
-char	**argv;
+int 
+main (int argc, char **argv)
 {
 	if (argc == 2 && strcmp(argv[1], "--kbd") == 0) {
 		kbd_process();

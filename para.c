@@ -146,23 +146,20 @@ private bool	use_lmargin;
 private bool	bslash;		/* Nonzero if get_indent finds line starting
 				   with backslash */
 
-private bool
-i_blank(lp)
-LinePtr	lp;
+private bool 
+i_blank (LinePtr lp)
 {
 	return get_indent(lp) < 0;
 }
 
-private bool
-i_bsblank(lp)
-LinePtr	lp;
+private bool 
+i_bsblank (LinePtr lp)
 {
 	return i_blank(lp) || bslash;
 }
 
-private int
-get_indent(lp)
-register LinePtr	lp;
+private int 
+get_indent (register LinePtr lp)
 {
 	Bufpos	save;
 	register int	indent;
@@ -193,9 +190,8 @@ register LinePtr	lp;
 	return indent;
 }
 
-private LinePtr
-tailrule(lp)
-register LinePtr	lp;
+private LinePtr 
+tailrule (register LinePtr lp)
 {
 	int	i;
 
@@ -220,9 +216,8 @@ register LinePtr	lp;
  * paragraphs.  That is, it's either FORWARD or BACKWARD depending on which
  * way we're favoring.
  */
-private void
-find_para(how)
-int	how;
+private void 
+find_para (int how)
 {
 	LinePtr	this,
 		prev,
@@ -334,8 +329,8 @@ strt:
 	SetDot(&orig);
 }
 
-void
-FillParagraph()
+void 
+FillParagraph (void)
 {
 	LinePtr nl;
 	int lenparatail;
@@ -350,33 +345,28 @@ FillParagraph()
 		  use_lmargin ? LMargin : body_indent);
 }
 
-private LinePtr
-max_line(l1, l2)
-LinePtr	l1,
-	l2;
+private LinePtr 
+max_line (LinePtr l1, LinePtr l2)
 {
 	return inorder(l1, 0, l2, 0)? l2 : l1;
 }
 
-private LinePtr
-min_line(l1, l2)
-LinePtr	l1,
-	l2;
+private LinePtr 
+min_line (LinePtr l1, LinePtr l2)
 {
 	return inorder(l1, 0, l2, 0)? l1 : l2;
 }
 
-void
-FillRegion()
+void 
+FillRegion (void)
 {
 	CopyRegion();	/* enable yank-pop for undo */
 	do_rfill(is_an_arg());
 	this_cmd = UNDOABLECMD;	/* allow yank-pop to undo */
 }
 
-void
-do_rfill(ulm)
-bool	ulm;
+void 
+do_rfill (bool ulm)
 {
 	Mark	*mp = CurMark(),
 		*endmark;
@@ -417,8 +407,8 @@ bool	ulm;
 	DelMark(endmark);
 }
 
-private void
-do_space()
+private void 
+do_space (void)
 {
 	int
 		c1,
@@ -465,15 +455,8 @@ do_space()
 /*#pragma loop_opt(off) */
 #endif
 
-void
-DoJustify(l1, c1, l2, c2, scrunch, indent)
-LinePtr	l1,
-	l2;
-int	c1,
-	c2,
-	indent;
-bool
-	scrunch;
+void 
+DoJustify (LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
 {
 	Mark	*savedot = MakeMark(curline, curchar),
 		*endmark;
@@ -560,9 +543,8 @@ bool
 /*#pragma loop_opt() */
 #endif
 
-private void
-DoPara(dir)
-int	dir;
+private void 
+DoPara (int dir)
 {
 	register int	num = arg_value();
 	bool	first_time = YES;
@@ -600,14 +582,14 @@ tryagain:
 	}
 }
 
-void
-BackPara()
+void 
+BackPara (void)
 {
 	DoPara(BACKWARD);
 }
 
-void
-ForPara()
+void 
+ForPara (void)
 {
 	DoPara(FORWARD);
 }

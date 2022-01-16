@@ -35,10 +35,8 @@
 
 #ifndef RECOVER
 
-int
-main(argc, argv)
-int	argc;
-char	*argv[];
+int 
+main (int argc, char *argv[])
 {
 	printf("%s: recovery not implemented in this JOVE configuration.\n",
 	       argv[0]);
@@ -185,10 +183,8 @@ size_t	n;
 
 private char	*getblock proto((daddr atl));
 
-void
-jgetline(tl, buf)
-daddr	tl;
-char	*buf;
+void 
+jgetline (daddr tl, char *buf)
 {
 	register char	*bp,
 			*lp;
@@ -212,8 +208,7 @@ char	*buf;
 private jmp_buf	int_env;
 
 private char *
-getblock(atl)
-daddr	atl;
+getblock (daddr atl)
 {
 	daddr	bno,
 		off;
@@ -266,8 +261,7 @@ daddr	atl;
 
 /* This pre-dates strdup, but can we assume it exists now? */
 char *
-copystr(s)
-const char	*s;
+copystr (const char *s)
 {
 	char	*str;
 	size_t	sz = strlen(s) + 1;
@@ -291,8 +285,8 @@ private const char	*CurDir;
 
 private bool	add_name proto((char *));
 
-private void
-free_files() {
+private void 
+free_files (void) {
 	while (First != NULL) {
 		struct file_pair	*p = First;
 
@@ -303,9 +297,8 @@ free_files() {
 	}
 }
 
-private void
-get_files(dirname)
-const char	*dirname;
+private void 
+get_files (const char *dirname)
 {
 	char	**nmptr;
 	int	nentries;
@@ -320,9 +313,8 @@ const char	*dirname;
 		freedir(&nmptr, nentries);
 }
 
-private bool
-add_name(fname)
-char *fname;
+private bool 
+add_name (char *fname)
 {
 	char	dfile[FILESIZE*2+2], /* CurDir/filename */
 		rfile[FILESIZE*2+2];
@@ -404,8 +396,8 @@ char *fname;
 	return YES;
 }
 
-private void
-options()
+private void 
+options (void)
 {
 	printf("Options are:\n");
 	printf("	?		list options.\n");
@@ -421,8 +413,8 @@ options()
 private void	tellme proto((const char *, char *, size_t)),
 	list proto((void));
 
-private long
-getsrc()
+private long 
+getsrc (void)
 {
 	char	name[FILESIZE];
 	long	number;
@@ -449,7 +441,7 @@ getsrc()
 /* Get a destination file name. */
 
 private char *
-getdest()
+getdest (void)
 {
 	static char	filebuf[FILESIZE];
 
@@ -504,9 +496,8 @@ size_t	anslen;
 }
 
 #ifdef UNIX
-private SIGRESTYPE
-catch(junk)
-int	UNUSED(junk);
+private SIGRESTYPE 
+catch (int UNUSED (junk))
 {
 	longjmp(int_env, 1);
 	/*NOTREACHED*/
@@ -515,8 +506,8 @@ int	UNUSED(junk);
 
 private void	get proto((long src, char *dest));
 
-private void
-restore()
+private void 
+restore (void)
 {
 	register long	i;
 	char	tofile[FILESIZE+1], /* leading # */
@@ -552,10 +543,8 @@ tryagain:
 
 private void	dump_file proto((long which, FILE *out));
 
-private void
-get(src, dest)
-long	src;
-char	*dest;
+private void 
+get (long src, char *dest)
 {
 	FILE	*volatile outfile;	/* "volatile" to preserve outfile across setjmp */
 
@@ -597,9 +586,7 @@ char	*dest;
 }
 
 private char **
-scanvec(args, str)
-register char	**args,
-		*str;
+scanvec (register char **args, register char *str)
 {
 	while (*args) {
 		if (strcmp(*args, str) == 0)
@@ -609,17 +596,15 @@ register char	**args,
 	return NULL;
 }
 
-private void
-read_rec(recptr)
-struct rec_entry	*recptr;
+private void 
+read_rec (struct rec_entry *recptr)
 {
 	if (fread((UnivPtr) recptr, sizeof *recptr, (size_t)1, ptrs_fp) != 1)
 		fprintf(stderr, "%s: cannot read record. %s\n", progname, strerror(errno));
 }
 
-private void
-seekto(which)
-long	which;
+private void 
+seekto (long which)
 {
 	long	offset,
 		i;
@@ -630,8 +615,8 @@ long	which;
 	fseek(ptrs_fp, offset, L_SET);
 }
 
-private void
-freeblist()
+private void 
+freeblist (void)
 {
 	long	i;
 	for (i = 0; i < maxbufs; i++) {
@@ -645,8 +630,8 @@ freeblist()
 	maxbufs = 0;
 }
 
-private void
-makblist()
+private void 
+makblist (void)
 {
 	long	i;
 
@@ -727,8 +712,8 @@ FILE	*out;
 
 /* List all the buffers. */
 
-private void
-list()
+private void 
+list (void)
 {
 	long	i;
 
@@ -741,9 +726,8 @@ list()
 
 private void	ask_del proto((const char *prompt, struct file_pair *fp));
 
-private int
-doit(fp)
-struct file_pair	*fp;
+private int 
+doit (struct file_pair *fp)
 {
 	char	answer[SMALLSTRSIZE];
 	char	*datafile = fp->file_data,
@@ -861,10 +845,8 @@ struct file_pair	*fp;
 
 private void	del_files proto((struct file_pair *fp));
 
-private void
-ask_del(prompt, fp)
-const char	*prompt;
-struct file_pair	*fp;
+private void 
+ask_del (const char *prompt, struct file_pair *fp)
 {
 	char	yorn[SMALLSTRSIZE];
 
@@ -873,9 +855,8 @@ struct file_pair	*fp;
 		del_files(fp);
 }
 
-private void
-del_files(fp)
-struct file_pair	*fp;
+private void 
+del_files (struct file_pair *fp)
 {
 	(void) unlink(fp->file_data);
 	(void) unlink(fp->file_rec);
@@ -884,7 +865,7 @@ struct file_pair	*fp;
 
 #ifdef UNIX
 private const char *
-hname()
+hname (void)
 {
 	const char *p = "unknown";
 #ifdef USE_UNAME
@@ -902,9 +883,8 @@ hname()
 	return p;
 }
 
-private void
-MailUser(rec)
-struct rec_head *rec;
+private void 
+MailUser (struct rec_head *rec)
 {
 	char mail_cmd[BUFSIZ];
 	char *last_update;
@@ -957,8 +937,8 @@ struct rec_head *rec;
 }
 
 
-private void
-savetmps()
+private void 
+savetmps (void)
 {
 	struct file_pair	*fp;
 	wait_status_t	status;
@@ -1064,9 +1044,8 @@ savetmps()
 }
 #endif /* UNIX */
 
-private int
-lookup(dir)
-const char	*dir;
+private int 
+lookup (const char *dir)
 {
 	struct file_pair	*fp;
 	int	nfound = 0;
@@ -1088,10 +1067,8 @@ const char	*dir;
 	return nfound;
 }
 
-int
-main(argc, argv)
-int	UNUSED(argc);
-char	*argv[];
+int 
+main (int UNUSED (argc), char *argv[])
 {
 	int	nfound;
 	char	**argvp;

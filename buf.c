@@ -62,9 +62,8 @@ Buffer
  * supplied, a positive one always turns on the mode and zero argument
  * always turns it off.
  */
-void
-TogMinor(bit)
-int	bit;
+void 
+TogMinor (int bit)
 {
 	if (is_an_arg()) {
 		if (arg_value() == 0)
@@ -82,7 +81,7 @@ int	bit;
 private Buffer	*free_bufs = NULL;
 
 private Buffer *
-buf_alloc()
+buf_alloc (void)
 {
 	register Buffer	*b,
 			*lastbp;
@@ -113,7 +112,7 @@ buf_alloc()
 /* Make a buffer and initialize it. */
 
 private Buffer *
-mak_buf()
+mak_buf (void)
 {
 	register Buffer	*newb;
 	register int	i;
@@ -142,14 +141,14 @@ mak_buf()
 	return newb;
 }
 
-void
-ReNamBuf()
+void 
+ReNamBuf (void)
 {
 	setbname(curbuf, ask_buf((Buffer *)NULL, ALLOW_NEW));
 }
 
-void
-FindFile()
+void 
+FindFile (void)
 {
 	char	fnamebuf[FILESIZE];
 
@@ -160,10 +159,8 @@ FindFile()
 		rbell();	/* slight hint of divergence */
 }
 
-private void
-mkbuflist(bnamp, ebnamp)
-register const char	**bnamp;
-const char		**ebnamp;
+private void 
+mkbuflist (register const char **bnamp, const char **ebnamp)
 {
 	register Buffer	*b;
 
@@ -180,9 +177,7 @@ const char		**ebnamp;
 }
 
 const char *
-ask_buf(def, flags)
-Buffer	*def;
-int	flags;
+ask_buf (Buffer *def, int flags)
 {
 	const char	*defname = def != NULL? def->b_name : (char *)NULL;
 	const char	*bnames[200];
@@ -209,8 +204,8 @@ int	flags;
 	return bname;
 }
 
-void
-BufSelect()
+void 
+BufSelect (void)
 {
 	register const char	*bname;
 
@@ -219,9 +214,8 @@ BufSelect()
 	SetBuf(do_select(curwind, bname));
 }
 
-private void
-BufNSelect(n)
-int	n;
+private void 
+BufNSelect (int n)
 {
 	register Buffer	*b;
 
@@ -239,20 +233,29 @@ int	n;
 	/* NOTREACHED */
 }
 
-void Buf1Select() { BufNSelect(1); }
-void Buf2Select() { BufNSelect(2); }
-void Buf3Select() { BufNSelect(3); }
-void Buf4Select() { BufNSelect(4); }
-void Buf5Select() { BufNSelect(5); }
-void Buf6Select() { BufNSelect(6); }
-void Buf7Select() { BufNSelect(7); }
-void Buf8Select() { BufNSelect(8); }
-void Buf9Select() { BufNSelect(9); }
-void Buf10Select() { BufNSelect(10); }
+void 
+Buf1Select (void) { BufNSelect(1); }
+void 
+Buf2Select (void) { BufNSelect(2); }
+void 
+Buf3Select (void) { BufNSelect(3); }
+void 
+Buf4Select (void) { BufNSelect(4); }
+void 
+Buf5Select (void) { BufNSelect(5); }
+void 
+Buf6Select (void) { BufNSelect(6); }
+void 
+Buf7Select (void) { BufNSelect(7); }
+void 
+Buf8Select (void) { BufNSelect(8); }
+void 
+Buf9Select (void) { BufNSelect(9); }
+void 
+Buf10Select (void) { BufNSelect(10); }
 
-private void
-delb_wind(b)
-register Buffer *b;
+private void 
+delb_wind (register Buffer *b)
 {
 	register Window	*w = fwind;
 	const char	*alt = lastbuf != NULL && lastbuf != b? lastbuf->b_name
@@ -273,7 +276,7 @@ register Buffer *b;
 }
 
 private Buffer *
-getNMbuf()
+getNMbuf (void)
 {
 	register Buffer	*delbuf = buf_exists(ask_buf(curbuf,
 		ALLOW_OLD | ALLOW_INDEX));
@@ -283,8 +286,8 @@ getNMbuf()
 	return delbuf;
 }
 
-void
-BufErase()
+void 
+BufErase (void)
 {
 	register Buffer	*delbuf = getNMbuf();
 
@@ -297,9 +300,8 @@ BufErase()
  * We try to reset enough that a dangling reference will be useless.
  */
 
-private void
-kill_buf(delbuf)
-register Buffer	*delbuf;
+private void 
+kill_buf (register Buffer *delbuf)
 {
 #ifdef IPROCS
 	untieDeadProcess(delbuf);	/* check for lingering processes */
@@ -362,8 +364,8 @@ register Buffer	*delbuf;
 
 /* offer to kill some buffers */
 
-void
-KillSome()
+void 
+KillSome (void)
 {
 	register Buffer	*b,
 			*next;
@@ -386,8 +388,8 @@ KillSome()
 	}
 }
 
-void
-BufKill()
+void 
+BufKill (void)
 {
 	kill_buf(getNMbuf());
 }
@@ -399,8 +401,8 @@ private const char	*const TypeNames[] = {
 	"Process",
 };
 
-void
-BufList()
+void 
+BufList (void)
 {
 	register const char	*fmt = "%2s %5s %-8s %-1s%-1s %-*s  %-s";
 	register Buffer	*b;
@@ -462,9 +464,8 @@ BufList()
 	TOstop();
 }
 
-private void
-bufname(b)
-register Buffer	*b;
+private void 
+bufname (register Buffer *b)
 {
 	char	tmp[100];
 	const char	*cp;
@@ -483,9 +484,8 @@ register Buffer	*b;
 	setbname(b, tmp);
 }
 
-void
-buf_clear(b)
-register Buffer	*b;
+void 
+buf_clear (register Buffer *b)
 {
 	lfreelist(b->b_first);
 	b->b_first = b->b_dot = b->b_last = NULL;
@@ -514,8 +514,7 @@ register Buffer	*b;
  * NULL.
  */
 Buffer *
-buf_exists(name)
-register const char	*name;
+buf_exists (register const char *name)
 {
 	register Buffer	*bp;
 
@@ -549,10 +548,7 @@ bool
 	was_file;	/* do_stat found a (plain) file */
 
 Buffer *
-do_stat(name, target, flags)
-register const char	*name;
-Buffer	*target;
-int	flags;
+do_stat (register const char *name, Buffer *target, int flags)
 {
 	register Buffer	*b = NULL;
 	Buffer	*result = NULL;
@@ -648,10 +644,8 @@ int	flags;
 	return result;
 }
 
-private void
-setbname(b, name)
-register Buffer	*b;
-register const char	*name;
+private void 
+setbname (register Buffer *b, register const char *name)
 {
 	UpdModLine = YES;	/* Kludge ... but speeds things up considerably */
 	if (name != NULL) {
@@ -667,10 +661,8 @@ register const char	*name;
 #endif
 }
 
-void
-setfname(b, name)
-register Buffer	*b;
-register const char	*name;
+void 
+setfname (register Buffer *b, register const char *name)
 {
 	char	wholename[FILESIZE],
 		oldname[FILESIZE],
@@ -707,11 +699,7 @@ register const char	*name;
 /* Find the file `fname' into buf and put in in window `w' */
 
 Buffer *
-do_find(w, fname, force, do_macros)
-register Window	*w;
-register char	*fname;
-bool	force;
-bool	do_macros;
+do_find (register Window *w, register char *fname, bool force, bool do_macros)
 {
 	register Buffer *b;
 	Buffer	*oldb = curbuf;
@@ -791,9 +779,8 @@ bool	do_macros;
 
 /* set alternate buffer */
 
-void
-SetABuf(b)
-Buffer	*b;
+void 
+SetABuf (Buffer *b)
 {
 	if (b != NULL)
 		lastbuf = b;
@@ -801,9 +788,8 @@ Buffer	*b;
 
 
 /* check to see if BP is a valid buffer pointer */
-bool
-valid_bp(bp)
-register Buffer	*bp;
+bool 
+valid_bp (register Buffer *bp)
 {
 	register Buffer	*b;
 
@@ -813,9 +799,8 @@ register Buffer	*bp;
 	return NO;
 }
 
-void
-SetBuf(newbuf)
-register Buffer	*newbuf;
+void 
+SetBuf (register Buffer *newbuf)
 {
 	if (newbuf == curbuf || newbuf == NULL)
 		return;
@@ -836,9 +821,7 @@ register Buffer	*newbuf;
 }
 
 Buffer *
-do_select(w, name)
-register Window	*w;
-register const char	*name;
+do_select (register Window *w, register const char *name)
 {
 	register Buffer	*new;
 
@@ -852,15 +835,14 @@ register const char	*name;
 	return new;
 }
 
-void
-buf_init()
+void 
+buf_init (void)
 {
 	SetBuf(do_select(curwind, Mainbuf));
 }
 
-LinePtr
-lastline(lp)
-register LinePtr	lp;
+LinePtr 
+lastline (register LinePtr lp)
 {
 	register LinePtr	next;
 
@@ -869,10 +851,8 @@ register LinePtr	lp;
 	return lp;
 }
 
-LinePtr
-next_line(line, num)
-register LinePtr	line;
-register long	num;
+LinePtr 
+next_line (register LinePtr line, register long num)
 {
 	if (num < 0)
 		return prev_line(line, -num);
@@ -883,10 +863,8 @@ register long	num;
 	return line;
 }
 
-LinePtr
-prev_line(line, num)
-register LinePtr	line;
-register long	num;
+LinePtr 
+prev_line (register LinePtr line, register long num)
 {
 	if (num < 0)
 		return next_line(line, -num);

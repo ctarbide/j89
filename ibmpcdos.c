@@ -46,8 +46,8 @@ int
 	Mlattr = 0x70,	/* VAR: mode-line-attribute (black on white) */
 	Hlattr = 0x10;	/* VAR: highlight-attribute */
 
-void
-getTERM()
+void 
+getTERM (void)
 {
 	/* Check if 101- or 102-key keyboard is installed.
 	 * This test is apparently unreliable, so we allow override.
@@ -58,15 +58,14 @@ getTERM()
 	pcSetTerm();
 }
 
-private void
-setcolor(attr)
-BYTE attr;
+private void 
+setcolor (int attr)
 {
 	c_attr = attr;
 }
 
-private void
-set_cur()
+private void 
+set_cur (void)
 {
 	union REGS vr;
 
@@ -77,8 +76,8 @@ set_cur()
 	VideoBIOS(&vr);
 }
 
-private void
-get_cur()
+private void 
+get_cur (void)
 {
 	union REGS vr;
 
@@ -89,8 +88,8 @@ get_cur()
 	c_row = vr.h.dh;
 }
 
-private BYTE
-chpl()
+private BYTE 
+chpl (void)
 {
 	union REGS vr;
 
@@ -101,9 +100,8 @@ chpl()
 
 #define cur_mov(r, c)	{ c_row = (r); c_col = (c); set_cur(); }
 
-private void
-scr_win(op, no, ur, lr)
-int op, no, ur, lr;
+private void 
+scr_win (int op, int no, int ur, int lr)
 {
 	union REGS vr;
 
@@ -119,22 +117,20 @@ int op, no, ur, lr;
 	VideoBIOS(&vr);
 }
 
-void
-i_lines(top, bottom, num)
-int top, bottom, num;
+void 
+i_lines (int top, int bottom, int num)
 {
 	scr_win(VBS_scroll_window_down, num, top, bottom);
 }
 
-void
-d_lines(top, bottom, num)
-int top, bottom, num;
+void 
+d_lines (int top, int bottom, int num)
 {
 	scr_win(VBS_scroll_window_up, num, top, bottom);
 }
 
-void
-clr_page()
+void 
+clr_page (void)
 {
 	SO_off();
 	/* Note: VBS_scroll_window_up with a count of 0 clears the screen! */
@@ -142,9 +138,8 @@ clr_page()
 	cur_mov(0, 0);
 }
 
-private void
-ch_out(c, n)
-BYTE c, n;
+private void 
+ch_out (int c, int n)
 {
 	union REGS vr;
 
@@ -156,8 +151,8 @@ BYTE c, n;
 	VideoBIOS(&vr);
 }
 
-void
-clr_eoln()
+void 
+clr_eoln (void)
 {
 	ch_out(' ', CO-c_col);
 }
@@ -166,8 +161,8 @@ clr_eoln()
  * by Joe Huffman 1990 August 15 (found on SIMTEL in msdos/screen/vidmode.zip)
  */
 
-private BYTE
-lpp()
+private BYTE 
+lpp (void)
 {
 	union REGS vr;
 	int	lines;
@@ -192,8 +187,8 @@ lpp()
 
 /* discover current video attribute */
 
-private void
-get_c_attr()
+private void 
+get_c_attr (void)
 {
 	union REGS vr;
 
@@ -241,10 +236,8 @@ get_c_attr()
 #define	EGA8x14	0x11	/* not 0x01 or 0x22 */
 #define	EGA8x16	0x14	/* not 0x04 or 0x24 */
 
-private void
-EGAsetup(scanlines, font)
-BYTE	scanlines;
-BYTE	font;
+private void 
+EGAsetup (int scanlines, int font)
 {
 	union REGS vr;
 	vr.h.ah = VBS_select_active_display_page;
@@ -278,9 +271,8 @@ BYTE	font;
 	get_c_attr();
 }
 
-private bool
-set_lines(lines)
-int	lines;
+private bool 
+set_lines (int lines)
 {
 	switch (lines) {
 	case 25:
@@ -304,8 +296,8 @@ int	lines;
 private bool	pc_set = NO;
 private int	unsetLI;
 
-void
-pcSetTerm()
+void 
+pcSetTerm (void)
 {
 	char	*t = getenv("TERM");
 
@@ -334,13 +326,13 @@ pcSetTerm()
 	get_cur();
 }
 
-void
-ttsize()
+void 
+ttsize (void)
 {
 }
 
-void
-pcUnsetTerm()
+void 
+pcUnsetTerm (void)
 {
 	if (pc_set) {
 		pc_set = NO;
@@ -348,8 +340,8 @@ pcUnsetTerm()
 	}
 }
 
-private void
-line_feed()
+private void 
+line_feed (void)
 {
 	if (++c_row > ILI) {
 		c_row = ILI;
@@ -363,9 +355,10 @@ line_feed()
 #define TIME_P 0x40			/* timer */
 #define TINI   182			/* 10110110b timer initialization */
 
-void
-dobell(n)	/* declared in term.h */
-int	n;
+void 
+dobell (	/* declared in term.h */
+    int n
+)
 {
 	unsigned char	spkr_state = inp(BELL_P);
 
@@ -449,10 +442,8 @@ char c;
  * Think about it: it would be silly!
  */
 
-void
-Placur(line, col)
-int line,
-    col;
+void 
+Placur (int line, int col)
 {
 	cur_mov(line, col);
 	CapCol = col;
@@ -463,23 +454,21 @@ private bool
 	doing_so = NO,
 	doing_us = NO;
 
-private void
-doattr()
+private void 
+doattr (void)
 {
 	setcolor((doing_so? Mlattr : Txattr) ^ (doing_us? Hlattr : 0));
 }
 
-void
-SO_effect(f)
-bool f;
+void 
+SO_effect (bool f)
 {
 	doing_so = f;
 	doattr();
 }
 
-void
-US_effect(f)
-bool	f;
+void 
+US_effect (bool f)
 {
 	doing_us = f;
 	doattr();

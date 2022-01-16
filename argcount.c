@@ -11,8 +11,8 @@
 int	arg_state = AS_NONE;
 long	arg_count;
 
-void
-negate_arg()
+void 
+negate_arg (void)
 {
 	if (arg_count < 0) {
 		arg_count = -arg_count;
@@ -25,11 +25,11 @@ negate_arg()
 	}
 }
 
-private void
-gather_argument(ns, nc)
-	int
-	    ns,		/* new state */
-	    nc;		/* new count */
+private void 
+gather_argument (
+    int ns,		/* new state */
+    int nc		/* new count */
+)
 {
 	for (;;) {
 		ZXchar	c;
@@ -85,14 +85,14 @@ gather_argument(ns, nc)
 	this_cmd = ARG_CMD;
 }
 
-void
-TimesFour()
+void 
+TimesFour (void)
 {
 	gather_argument(AS_TIMES, 4);
 }
 
-void
-Digit()
+void 
+Digit (void)
 {
 	if (LastKeyStruck == '-') {
 		gather_argument(AS_NEGSIGN, -1);
@@ -104,68 +104,68 @@ Digit()
 	}
 }
 
-void
-Digit0()
+void 
+Digit0 (void)
 {
 	gather_argument(AS_NUMERIC, 0);
 }
 
-void
-Digit1()
+void 
+Digit1 (void)
 {
 	gather_argument(AS_NUMERIC, 1);
 }
 
-void
-Digit2()
+void 
+Digit2 (void)
 {
 	gather_argument(AS_NUMERIC, 2);
 }
 
-void
-Digit3()
+void 
+Digit3 (void)
 {
 	gather_argument(AS_NUMERIC, 3);
 }
 
-void
-Digit4()
+void 
+Digit4 (void)
 {
 	gather_argument(AS_NUMERIC, 4);
 }
 
-void
-Digit5()
+void 
+Digit5 (void)
 {
 	gather_argument(AS_NUMERIC, 5);
 }
 
-void
-Digit6()
+void 
+Digit6 (void)
 {
 	gather_argument(AS_NUMERIC, 6);
 }
 
-void
-Digit7()
+void 
+Digit7 (void)
 {
 	gather_argument(AS_NUMERIC, 7);
 }
 
-void
-Digit8()
+void 
+Digit8 (void)
 {
 	gather_argument(AS_NUMERIC, 8);
 }
 
-void
-Digit9()
+void 
+Digit9 (void)
 {
 	gather_argument(AS_NUMERIC, 9);
 }
 
-void
-DigitMinus()
+void 
+DigitMinus (void)
 {
 	gather_argument(AS_NEGSIGN, -1);
 }

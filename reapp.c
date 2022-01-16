@@ -38,24 +38,20 @@ private char
 bool
 	UseRE = NO;		/* VAR: use regular expressions in search */
 
-private void
-setsearch(str)
-const char	*str;
+private void 
+setsearch (const char *str)
 {
 	jamstr(searchstr, str);
 }
 
 private char *
-getsearch()
+getsearch (void)
 {
 	return searchstr;
 }
 
-private void
-search(dir, re, setdefault)
-int	dir;
-bool	re,
-	setdefault;
+private void 
+search (int dir, bool re, bool setdefault)
 {
 	Bufpos	*newdot;
 	const char	*s = ask(searchstr, ProcFmt);
@@ -79,38 +75,32 @@ bool	re,
 	SetDot(newdot);
 }
 
-void
-ForSearch()
+void 
+ForSearch (void)
 {
 	search(FORWARD, UseRE, YES);
 }
 
-void
-RevSearch()
+void 
+RevSearch (void)
 {
 	search(BACKWARD, UseRE, YES);
 }
 
-void
-FSrchND()
+void 
+FSrchND (void)
 {
 	search(FORWARD, UseRE, NO);
 }
 
-void
-RSrchND()
+void 
+RSrchND (void)
 {
 	search(BACKWARD, UseRE, NO);
 }
 
-private int
-substitute(re_blk, query, l1, char1, l2, char2)
-struct RE_block	*re_blk;
-LinePtr	l1,
-	l2;
-bool	query;
-int	char1,
-	char2;
+private int 
+substitute (struct RE_block *re_blk, bool query, LinePtr l1, int char1, LinePtr l2, int char2)
 {
 	LinePtr	lp;
 	int	numdone = 0,
@@ -240,10 +230,8 @@ message("Space or Y, Period, Delete or N, ^R or R, ^W, ^U or U, P or !, Return."
 }
 
 /* prompt for search and replacement strings and do the substitution */
-private void
-replace(query, inreg)
-bool	query,
-	inreg;
+private void 
+replace (bool query, bool inreg)
 {
 	LinePtr	l1 = curline,
 		l2 = curbuf->b_last;
@@ -286,20 +274,20 @@ bool	query,
 	add_mess("(%d substitution%n)", numdone, numdone);
 }
 
-void
-RegReplace()
+void 
+RegReplace (void)
 {
 	replace(NO, YES);
 }
 
-void
-QRepSearch()
+void 
+QRepSearch (void)
 {
 	replace(YES, NO);
 }
 
-void
-RepSearch()
+void 
+RepSearch (void)
 {
 	replace(NO, NO);
 }
@@ -462,10 +450,8 @@ char	*filebuf,
 
 char	TagFile[FILESIZE] = "tags";	/* VAR: default tag file */
 
-void
-find_tag(tag, localp)
-char	*tag;
-bool	localp;
+void 
+find_tag (char *tag, bool localp)
 {
 	char	filebuf[FILESIZE],
 		sstr[200],	/* 100 wasn't big enough */
@@ -504,8 +490,8 @@ bool	localp;
 	}
 }
 
-void
-FindTag()
+void 
+FindTag (void)
 {
 	bool	localp = !is_an_arg();
 	char	tag[128];
@@ -516,8 +502,8 @@ FindTag()
 
 /* Find Tag at Dot. */
 
-void
-FDotTag()
+void 
+FDotTag (void)
 {
 	int	c1 = curchar,
 		c2 = c1;
@@ -562,10 +548,7 @@ private char
 ZXchar	SExitChar = CR;	/* VAR: type this to stop i-search */
 
 private Bufpos *
-doisearch(dir, c, failing)
-register ZXchar	c;
-register int	dir;
-bool		failing;
+doisearch (register int dir, register ZXchar c, bool failing)
 {
 	static Bufpos	buf;
 	Bufpos	*bp;
@@ -593,21 +576,20 @@ bool		failing;
 	return bp;
 }
 
-void
-IncFSearch()
+void 
+IncFSearch (void)
 {
 	IncSearch(FORWARD);
 }
 
-void
-IncRSearch()
+void 
+IncRSearch (void)
 {
 	IncSearch(BACKWARD);
 }
 
-private void
-IncSearch(dir)
-int	dir;
+private void 
+IncSearch (int dir)
 {
 	Bufpos	save_env;
 
@@ -625,10 +607,8 @@ int	dir;
 
 /* Nicely recursive. */
 
-private int
-isearch(dir, bp)
-int	dir;
-Bufpos	*bp;
+private int 
+isearch (int dir, Bufpos *bp)
 {
 	Bufpos	pushbp;
 	ZXchar	c;

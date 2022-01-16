@@ -29,8 +29,8 @@ private void
 	CaseReg proto((bool up)),
 	case_reg proto((LinePtr line1,int char1,LinePtr line2,int char2,bool up));
 
-void
-CapChar()
+void 
+CapChar (void)
 {
 	register int	num;
 	bool	restore = NO;
@@ -61,8 +61,8 @@ CapChar()
 		SetDot(&b);
 }
 
-void
-CapWord()
+void 
+CapWord (void)
 {
 	register int	num,
 			restore = NO;
@@ -97,9 +97,8 @@ CapWord()
 		SetDot(&b);
 }
 
-private void
-case_word(up)
-bool	up;
+private void 
+case_word (bool up)
 {
 	Bufpos	before;
 
@@ -110,9 +109,8 @@ bool	up;
 
 /* Convert *p to upper case.  Return YES iff it was changed. */
 
-private bool
-upper(p)
-register char	*p;
+private bool 
+upper (register char *p)
 {
 	if (jislower(*p)) {
 		*p = CharUpcase(*p);
@@ -123,9 +121,8 @@ register char	*p;
 
 /* Convert *p to lower case.  Return YES iff it was changed. */
 
-private bool
-lower(p)
-char	*p;
+private bool 
+lower (char *p)
 {
 	char c = *p;
 
@@ -136,13 +133,8 @@ char	*p;
 	return NO;
 }
 
-private void
-case_reg(line1, char1, line2, char2, up)
-LinePtr	line1,
-	line2;
-int	char1,
-	char2;
-bool	up;
+private void 
+case_reg (LinePtr line1, int char1, LinePtr line2, int char2, bool up)
 {
 	(void) fixorder(&line1, &char1, &line2, &char2);
 	DotTo(line1, char1);
@@ -160,21 +152,20 @@ bool	up;
 	}
 }
 
-void
-CasRegLower()
+void 
+CasRegLower (void)
 {
 	CaseReg(NO);
 }
 
-void
-CasRegUpper()
+void 
+CasRegUpper (void)
 {
 	CaseReg(YES);
 }
 
-private void
-CaseReg(up)
-bool	up;
+private void 
+CaseReg (bool up)
 {
 	register Mark	*mp = CurMark();
 	Bufpos	savedot;
@@ -184,14 +175,14 @@ bool	up;
 	SetDot(&savedot);
 }
 
-void
-UppWord()
+void 
+UppWord (void)
 {
 	case_word(YES);
 }
 
-void
-LowWord()
+void 
+LowWord (void)
 {
 	case_word(NO);
 }

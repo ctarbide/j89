@@ -22,9 +22,8 @@
 # include "mac.h"
 #endif
 
-bool
-blnkp(buf)
-register char	*buf;
+bool 
+blnkp (register char *buf)
 {
 	register char	c;
 
@@ -34,8 +33,8 @@ register char	*buf;
 	return c == '\0';	/* It's NUL if we got to the end of the Line */
 }
 
-bool
-within_indent()
+bool 
+within_indent (void)
 {
 	register int	i;
 
@@ -49,10 +48,8 @@ within_indent()
 	}
 }
 
-void
-DotTo(line, col)
-LinePtr	line;
-int	col;
+void 
+DotTo (LinePtr line, int col)
 {
 	Bufpos	bp;
 
@@ -64,9 +61,8 @@ int	col;
 /* If bp->p_line is != current line, then save current line.  Then set dot
  * to bp->p_line, and if they weren't equal get that line into linebuf.
  */
-void
-SetDot(bp)
-register Bufpos	*bp;
+void 
+SetDot (register Bufpos *bp)
 {
 	register bool	notequal;
 
@@ -85,8 +81,8 @@ register Bufpos	*bp;
 		curchar = length(curline);
 }
 
-void
-ToLast()
+void 
+ToLast (void)
 {
 	SetLine(curbuf->b_last);
 	Eol();
@@ -96,12 +92,8 @@ int	MarkThresh = 22;	/* VAR: moves greater than MarkThresh will SetMark (avg scr
 
 private long	line_diff;
 
-long
-inorder(nextp, char1, endp, char2)
-register LinePtr	nextp,
-		endp;
-int	char1,
-	char2;
+long 
+inorder (register LinePtr nextp, int char1, register LinePtr endp, int char2)
 {
 	register LinePtr	prevp = nextp;
 
@@ -138,10 +130,8 @@ int	char1,
 /* Number of lines (forward OR back) from nextp to endp.
  * Note: if they are not related, returns 0.
  */
-long
-LineDist(nextp, endp)
-LinePtr	nextp,
-		endp;
+long 
+LineDist (LinePtr nextp, LinePtr endp)
 {
 	return inorder(nextp, 0, endp, 0) == -1? 0 : line_diff;
 }
@@ -149,11 +139,8 @@ LinePtr	nextp,
 /* Number of lines forward from "from" to "to"; -1 if not found.
  * Note: if "to" is (LinePtr)NULL, returns number of lines to end + 1
  */
-long
-LinesTo(from, to)
-register LinePtr
-	from,
-	to;
+long 
+LinesTo (register LinePtr from, register LinePtr to)
 {
 	long	n = 0;
 
@@ -169,30 +156,27 @@ register LinePtr
 	}
 }
 
-void
-PushPntp(line)
-register LinePtr	line;
+void 
+PushPntp (register LinePtr line)
 {
 	if (LineDist(curline, line) >= MarkThresh)
 		set_mark();
 }
 
-void
-ToFirst()
+void 
+ToFirst (void)
 {
 	SetLine(curbuf->b_first);
 }
 
-int
-length(line)
-LinePtr	line;
+int 
+length (LinePtr line)
 {
 	return strlen(lcontents(line));
 }
 
-void
-to_word(dir)
-register int	dir;
+void 
+to_word (register int dir)
 {
 	if (dir == FORWARD) {
 		for(;;) {
@@ -229,9 +213,8 @@ register int	dir;
 /* Are there any modified buffers?  Allp means include B_PROCESS
  * buffers in the check.
  */
-bool
-ModBufs(allp)
-bool	allp;
+bool 
+ModBufs (bool allp)
 {
 	register Buffer	*b;
 
@@ -244,39 +227,31 @@ bool	allp;
 }
 
 const char *
-filename(b)
-register const Buffer	*b;
+filename (register const Buffer *b)
 {
 	return b->b_fname ? pr_name(b->b_fname, YES) : "[No file]";
 }
 
-int
-jmin(a, b)
-register int	a,
-		b;
+int 
+jmin (register int a, register int b)
 {
 	return (a < b) ? a : b;
 }
 
-int
-jmax(a, b)
-register int	a,
-		b;
+int 
+jmax (register int a, register int b)
 {
 	return (a > b) ? a : b;
 }
 
 char *
-lcontents(line)
-register LinePtr	line;
+lcontents (register LinePtr line)
 {
 	return line == curline? linebuf : lbptr(line);
 }
 
 char *
-ltobuf(line, buf)
-LinePtr	line;
-char	*buf;
+ltobuf (LinePtr line, char *buf)
 {
 	if (line == curline) {
 		if (buf != linebuf)
@@ -288,9 +263,8 @@ char	*buf;
 	return buf;
 }
 
-void
-DOTsave(buf)
-Bufpos *buf;
+void 
+DOTsave (Bufpos *buf)
 {
 	buf->p_line = curline;
 	buf->p_char = curchar;
@@ -298,12 +272,8 @@ Bufpos *buf;
 
 /* Return YES iff we had to rearrange the order. */
 
-bool
-fixorder(line1, char1, line2, char2)
-register LinePtr	*line1,
-		*line2;
-register int	*char1,
-		*char2;
+bool 
+fixorder (register LinePtr *line1, register int *char1, register LinePtr *line2, register int *char2)
 {
 	LinePtr	tline;
 	int	tchar;
@@ -321,10 +291,8 @@ register int	*char1,
 	return YES;
 }
 
-bool
-inlist(first, what)
-LinePtr	first,
-		what;
+bool 
+inlist (LinePtr first, LinePtr what)
 {
 	return LinesTo(first, what) != -1;
 }
@@ -332,8 +300,8 @@ LinePtr	first,
 /* Make curbuf (un)modified and tell the redisplay code to update the modeline
  * if it will need to be changed.
  */
-void
-modify()
+void 
+modify (void)
 {
 	if (!curbuf->b_modified) {
 		UpdModLine = YES;
@@ -346,8 +314,8 @@ modify()
 #endif
 }
 
-void
-unmodify()
+void 
+unmodify (void)
 {
 	if (curbuf->b_modified) {
 		UpdModLine = YES;
@@ -362,10 +330,8 @@ unmodify()
  * If the flag has changed, tell the redisplay code to update the
  * modeline.
  */
-void
-diverge(buf, d)
-Buffer	*buf;
-bool	d;
+void 
+diverge (Buffer *buf, bool d)
 {
 	if (buf->b_diverged != d) {
 		UpdModLine = YES;
@@ -373,10 +339,8 @@ bool	d;
 	}
 }
 
-int
-numcomp(s1, s2)
-register const char	*s1,
-		*s2;
+int 
+numcomp (register const char *s1, register const char *s2)
 {
 	register int	count = 0;
 
@@ -386,10 +350,8 @@ register const char	*s1,
 }
 
 #ifdef FILENAME_CASEINSENSITIVE
-int
-numcompcase(s1, s2)
-register const char	*s1,
-		*s2;
+int 
+numcompcase (register const char *s1, register const char *s2)
 {
 	register int	count = 0;
 
@@ -400,8 +362,7 @@ register const char	*s1,
 #endif
 
 char *
-copystr(str)
-const char	*str;
+copystr (const char *str)
 {
 	return str == NULL? NULL :
 		strcpy(emalloc(strlen(str) + 1), str);
@@ -423,9 +384,8 @@ register size_t	count;
 }
 #endif
 
-void
-len_error(flag)
-int	flag;
+void 
+len_error (int flag)
 {
 	static const char	mesg[] = "[line too long]";
 
@@ -440,13 +400,8 @@ int	flag;
 
 /* Insert num copies of character c at offset atchar in buffer buf of size max */
 
-void
-ins_c(c, buf, atchar, num, max)
-DAPchar	c;
-char	*buf;
-int	atchar,
-	num,
-	max;
+void 
+ins_c (DAPchar c, char *buf, int atchar, int num, int max)
 {
 	/* hint to reader: all copying and filling is done right to left */
 	register char	*from, *to;
@@ -470,8 +425,8 @@ int	atchar,
 		*--to = c;
 }
 
-bool
-TwoBlank()
+bool 
+TwoBlank (void)
 {
 	register LinePtr	next = curline->l_next;
 
@@ -481,11 +436,8 @@ TwoBlank()
 		&& *(lcontents(next->l_next)) == '\0');
 }
 
-void
-linecopy(onto, atchar, from)
-register char	*onto,
-		*from;
-int	atchar;
+void 
+linecopy (register char *onto, int atchar, register char *from)
 {
 	register char	*endp = &onto[LBSIZE];
 
@@ -500,16 +452,14 @@ int	atchar;
 }
 
 char *
-IOerr(err, file)
-const char	*err, *file;
+IOerr (const char *err, const char *file)
 {
 	return sprint("Couldn't %s \"%s\".", err, file);
 }
 
 #ifdef UNIX
-void
-dopipe(p)
-int	*p;
+void 
+dopipe (int *p)
 {
 	if (pipe(p) == -1) {
 		complain("[Pipe failed: %s]", strerror(errno));
@@ -517,9 +467,8 @@ int	*p;
 	}
 }
 
-void
-pipeclose(p)
-int	*p;
+void 
+pipeclose (int *p)
 {
 	(void) close(p[0]);
 	(void) close(p[1]);
@@ -584,8 +533,7 @@ size_t	size;
  */
 
 const char *
-jbasename(f)
-register const char	*f;
+jbasename (register const char *f)
 {
 	register char	*cp;
 
@@ -729,10 +677,8 @@ size_t bufsz;
 	jamstrsub(buf + bstrsz, str, bufsz - bstrsz);
 }
 
-bool
-sindex(pattern, string)
-register const char	*pattern,
-		*string;
+bool 
+sindex (register const char *pattern, register const char *string)
 {
 	register size_t	len = strlen(pattern);
 
@@ -765,10 +711,8 @@ size_t	size;
 }
 
 /* order file names (parameter for qsort) */
-int
-fnamecomp(a, b)
-UnivConstPtr	a,
-	b;
+int 
+fnamecomp (UnivConstPtr a, UnivConstPtr b)
 {
 	return strcmp(*(const char **)a, *(const char **)b);
 }
@@ -782,8 +726,7 @@ extern char *sys_errlist[];
  * ANSI systems should have this.
  */
 char *
-strerror(errnum)
-int errnum;
+strerror (int errnum)
 {
 	return 0 < errnum && errnum < sys_nerr
 		? sys_errlist[errnum] : sprint("Error number %d", errnum);
@@ -819,9 +762,8 @@ int (*compar) ptrproto((UnivConstPtr, UnivConstPtr));
 
 /* decode a pair of characters representing \x or ^x */
 
-ZXchar
-DecodePair(first, second)
-ZXchar	first, second;
+ZXchar 
+DecodePair (ZXchar first, ZXchar second)
 {
 	if (second == EOF || second == '\n') {
 		complain("unexpected end of file after %p", first);
@@ -848,8 +790,7 @@ ZXchar	first, second;
  * hides a bit of the abstraction and some duplicated code
  */
 const char **
-jenvdata(envp)
-Env *envp;
+jenvdata (Env *envp)
 {
 	if (envp->e_data == NULL) {
 	    envp->e_data = (const char **) environ; /* avoid gcc warning */
@@ -862,10 +803,8 @@ Env *envp;
 /* Put a definition into the environment.
  * Same as putenv(3) in SVID 3, POSIX, and BSD 4.3.
  */
-void
-jputenv(envp, def)
-Env *envp;
-const char *def;
+void 
+jputenv (Env *envp, const char *def)
 {
 	const char **p, **e;
 	const char *eq;
@@ -907,10 +846,8 @@ const char *def;
 /* Remove any definitions of name from the environment.
  * Same as 4.3BSD's unsetenv(3).
  */
-void
-junsetenv(envp, name)
-Env *envp;
-const char *name;
+void 
+junsetenv (Env *envp, const char *name)
 {
 	const char **p, **q;
 	size_t l = strlen(name);

@@ -31,10 +31,8 @@ extern void	exit proto((int));
 #define VAR(v)	NULL, (size_t)0	/* discard variable pointers */
 #include "vars.tab"
 
-private int
-matchcmd(choices, what)
-register const struct cmd	choices[];
-register char	*what;
+private int 
+matchcmd (register const struct cmd choices[], register char *what)
 {
 	register int	i;
 
@@ -47,9 +45,8 @@ register char	*what;
 }
 
 #ifdef MAC
-matchvar(choices, what)
-register const struct variable choices[];
-register char	*what;
+int 
+matchvar (register const struct variable choices[], register char *what)
 {
 	register int	len;
 	int	i;
@@ -64,16 +61,14 @@ register char	*what;
 }
 #endif
 
-private int
-StartsWith(s, pre)
-const char *s, *pre;
+private int 
+StartsWith (const char *s, const char *pre)
 {
     return strncmp(s, pre, strlen(pre)) == 0;
 }
 
 private char *
-PPkey(c)
-int	c;
+PPkey (int c)
 {
 	static char	str[16];
 	char	*cp = str;
@@ -98,10 +93,8 @@ int	c;
 	return str;
 }
 
-private void
-extract(into, from)
-char	*into,
-	*from;
+private void 
+extract (char *into, char *from)
 {
 	from += 2;	/* Past tab and first double quote. */
 	while ((*into = *from++) != '"')
@@ -110,8 +103,8 @@ char	*into,
 }
 
 
-int
-main()
+int 
+main (void)
 {
 	FILE
 		*ifile,

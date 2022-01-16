@@ -46,16 +46,16 @@ private int	ExecIndex = 0;
 
 /* Command auto-execute. */
 
-void
-CAutoExec()
+void 
+CAutoExec (void)
 {
 	DefAutoExec(findcom);
 }
 
 /* Macro auto-execute. */
 
-void
-MAutoExec()
+void 
+MAutoExec (void)
 {
 	DefAutoExec(findmac);
 }
@@ -93,10 +93,8 @@ const data_obj	*(*proc) ptrproto((const char *));
  * matches, OR if the pattern is NULL (none was specified) then, we execute
  * the command associated with that kind of file.
  */
-void
-DoAutoExec(new, old)
-register char	*new,
-		*old;
+void 
+DoAutoExec (register char *new, register char *old)
 {
 	register struct AutoExec	*p;
 
@@ -113,8 +111,8 @@ register char	*new,
 	}
 }
 
-ZXchar
-addgetc()	/* NOTE: can return EOF */
+ZXchar 
+addgetc (void)	/* NOTE: can return EOF */
 {
 	ZXchar	c;
 
@@ -139,8 +137,8 @@ addgetc()	/* NOTE: can return EOF */
 	return c;
 }
 
-void
-Extend()
+void 
+Extend (void)
 {
 	ExecCmd(findcom(": "));
 }
@@ -150,12 +148,8 @@ Extend()
  * in the string must be integers or we return NO (failure); otherwise
  * we stop reading at the first nondigit and return YES (success).
  */
-bool
-chr_to_long(cp, base, allints, result)
-register const char	*cp;
-int	base;
-bool	allints;
-register long	*result;
+bool 
+chr_to_long (register const char *cp, int base, bool allints, register long *result)
 {
 	register char	c;
 	long	value = 0;
@@ -189,12 +183,8 @@ register long	*result;
  * in the string must be integers or we return NO (failure); otherwise
  * we stop reading at the first nondigit and return YES (success).
  */
-bool
-chr_to_int(cp, base, allints, result)
-register const char	*cp;
-int	base;
-bool	allints;
-register int	*result;
+bool 
+chr_to_int (register const char *cp, int base, bool allints, register int *result)
 {
 	long	value;
 	bool ret = chr_to_long(cp, base, allints, &value);
@@ -203,11 +193,8 @@ register int	*result;
 	return ret;
 }
 
-long
-ask_long(def, prompt, base)
-const char	*def;
-const char	*prompt;
-int	base;
+long 
+ask_long (const char *def, const char *prompt, int base)
 {
 	const char	*val = ask(def, prompt);
 	long	value;
@@ -219,11 +206,8 @@ int	base;
 	return value;
 }
 
-int
-ask_int(def, prompt, base)
-const char	*def;
-const char	*prompt;
-int	base;
+int 
+ask_int (const char *def, const char *prompt, int base)
 {
 	const char	*val = ask(def, prompt);
 	int		value = 0;	/* avoid gcc complaint */
@@ -265,8 +249,8 @@ size_t	size;
 	}
 }
 
-void
-PrVar()
+void 
+PrVar (void)
 {
 	struct variable	*vp = (struct variable *) findvar(ProcFmt);
 	char	prbuf[MAXCOLS];
@@ -276,8 +260,8 @@ PrVar()
 	stickymsg = YES;
 }
 
-void
-InsVar()
+void 
+InsVar (void)
 {
 	struct variable	*vp = (struct variable *) findvar(ProcFmt);
 	char	prbuf[MAXCOLS];
@@ -287,10 +271,8 @@ InsVar()
 	stickymsg = YES;
 }
 
-void
-vset_aux(vp, prompt)
-const struct variable	*vp;
-char	*prompt;
+void 
+vset_aux (const struct variable *vp, char *prompt)
 {
 	if (vp->v_flags & V_READONLY)
 		complain("[cannot set readonly variable %s]", vp->Name);
@@ -382,8 +364,8 @@ char	*prompt;
 #endif
 }
 
-void
-SetVar()
+void 
+SetVar (void)
 {
 	struct variable	*vp = (struct variable *) findvar(ProcFmt);
 	char	prompt[128];
@@ -442,9 +424,8 @@ private int
 
 private bool aux_complete proto((ZXchar c));	/* needed to comfort dumb MS Visual C */
 
-private bool
-aux_complete(c)
-ZXchar	c;
+private bool 
+aux_complete (ZXchar c)
 {
 	if (comp_flags & CASEIND) {
 		char	lc;
@@ -566,12 +547,8 @@ ZXchar	c;
 	return YES;
 }
 
-int
-complete(possible, def, prompt, flags)
-register const char	*const *possible;
-const char	*def;
-const char	*prompt;
-int	flags;
+int 
+complete (register const char *const *possible, const char *def, const char *prompt, int flags)
 {
 	/* protect static "Possible" etc. from being overwritten due to recursion */
 	if (InRealAsk) {
@@ -584,8 +561,8 @@ int	flags;
 	return comp_value;
 }
 
-void
-Source()
+void 
+Source (void)
 {
 	char
 		fnamebuf[FILESIZE];
@@ -608,9 +585,8 @@ Source()
 
 /* TODO: Make this unsigned long when we dump support for pre-ANSI C */
 /* calculate percentage without float and no overflow */
-private int
-calc_percent(a, b)
-long	a, b;
+private int 
+calc_percent (long a, long b)
 {
 	int v;
 	if (b == 0) {
@@ -624,8 +600,8 @@ long	a, b;
 }
 
 /* TODO: Make dotchar, nchars unsigned long when we dump support for pre-ANSI C */
-void
-BufPos()
+void 
+BufPos (void)
 {
 	register LinePtr	lp = curbuf->b_first;
 	register long
@@ -652,9 +628,8 @@ BufPos()
 
 #ifdef SUBSHELL
 
-private bool
-do_if(cmd)
-char	*cmd;
+private bool 
+do_if (char *cmd)
 {
 	char	*args[12];
 
@@ -777,11 +752,8 @@ char	*cmd;
 }
 #endif /* SUBSHELL */
 
-private bool
-cmdmatch(inp, verb, oppat)
-char	*inp;
-char	*verb;
-char	*oppat;
+private bool 
+cmdmatch (char *inp, char *verb, char *oppat)
 {
 	int	len = strlen(verb);
 
@@ -795,9 +767,8 @@ char	*oppat;
 	return NO;
 }
 
-bool
-joverc(file)
-char	*file;
+bool 
+joverc (char *file)
 {
 	char	buf[LBSIZE],
 		lbuf[LBSIZE];

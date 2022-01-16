@@ -27,9 +27,8 @@ private File	*rec_out;
 
 private struct rec_head	Header;
 
-void
-rectmpname(tfname)
-char *tfname;
+void 
+rectmpname (char *tfname)
 {
 	if (strlen(tfname) >= sizeof(Header.TmpFileName)) {
 		complain("temporary filename too long; recovery disabled.");
@@ -38,8 +37,8 @@ char *tfname;
 	strcpy(Header.TmpFileName, tfname);
 }
 
-private void
-recinit()
+private void 
+recinit (void)
 {
 	char	buf[FILESIZE];
 
@@ -65,8 +64,8 @@ recinit()
  * Since we might be vforking, we must not change any variables
  * (in particular rec_fd).
  */
-void
-recclose()
+void 
+recclose (void)
 {
 	if (rec_fd != -1)
 		(void) close(rec_fd);
@@ -75,8 +74,8 @@ recclose()
 /* Close and remove recfile before exiting. */
 
 
-void
-recremove()
+void 
+recremove (void)
 {
 	if (rec_fd != -1) {
 		recclose();
@@ -86,9 +85,8 @@ recremove()
 
 /* Write out the line pointers for buffer B. */
 
-private void
-dmppntrs(b)
-register Buffer	*b;
+private void 
+dmppntrs (register Buffer *b)
 {
 	register LinePtr	lp;
 
@@ -98,9 +96,8 @@ register Buffer	*b;
 
 /* dump the buffer info and then the actual line pointers. */
 
-private void
-dmp_buf_header(b)
-register Buffer	*b;
+private void 
+dmp_buf_header (register Buffer *b)
 {
 	struct rec_entry	record;
 
@@ -119,8 +116,8 @@ int	ModCount = 0;	/* number of buffer mods since last sync */
 
 int	SyncFreq = 50;	/* VAR: how often to sync the file pointers */
 
-void
-SyncRec()
+void 
+SyncRec (void)
 {
 	register Buffer	*b;
 	static bool	beenhere = NO;

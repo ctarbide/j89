@@ -38,10 +38,8 @@ extern int	execlp proto((const char */*file*/, const char */*arg*/, ...));
 
 static const char	*ShareDir = SHAREDIR;
 
-int
-main(argc, argv)
-int	argc;
-char	*argv[];
+int 
+main (int argc, char *argv[])
 {
 	char
 		cmd[(FILESIZE+16)*3+32], /* space for cp, chmod */

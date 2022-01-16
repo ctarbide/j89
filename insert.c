@@ -37,10 +37,8 @@ private Bufpos
 /* Make a new line after "after" in buffer "buf", unless "after" is NULL,
  * in which case we insert the new line before first line.
  */
-LinePtr
-listput(buf, after)
-register Buffer	*buf;
-register LinePtr	after;
+LinePtr 
+listput (register Buffer *buf, register LinePtr after)
 {
 	register LinePtr	newline = nbufline();
 
@@ -63,9 +61,8 @@ register LinePtr	after;
 
 /* Divide the current line and move the current line to the next one */
 
-void
-LineInsert(num)
-register long	num;
+void 
+LineInsert (register long num)
 {
 	char	newline[LBSIZE];
 	register LinePtr	newdot,
@@ -103,9 +100,8 @@ register long	num;
  * Uses the most optimal number of tabs and spaces no matter what
  * was there beforehand.
  */
-void
-n_indent(goal)
-register int	goal;
+void 
+n_indent (register int goal)
 {
 	int	dotcol;
 
@@ -128,8 +124,8 @@ register int	goal;
 }
 
 #ifdef ABBREV
-void
-MaybeAbbrevExpand()
+void 
+MaybeAbbrevExpand (void)
 {
 	if (MinorMode(Abbrev) && !jisident(LastKeyStruck)
 	&& !bolp() && jisident(linebuf[curchar - 1]))
@@ -137,9 +133,8 @@ MaybeAbbrevExpand()
 }
 #endif
 
-private void
-Insert(c)
-char	c;
+private void 
+Insert (int c)
 {
 	if (c == CTL('J'))
 		LineInsert(arg_value());
@@ -147,10 +142,8 @@ char	c;
 		insert_c(c, arg_value());
 }
 
-void
-overwrite(c, n)
-DAPchar	c;
-int	n;
+void 
+overwrite (DAPchar c, int n)
 {
 	register int	i;
 
@@ -167,8 +160,8 @@ int	n;
 	}
 }
 
-void
-SelfInsert()
+void 
+SelfInsert (void)
 {
 #ifdef ABBREV
 	MaybeAbbrevExpand();
@@ -203,10 +196,8 @@ SelfInsert()
 }
 
 /* insert character C N times at point */
-void
-insert_c(c, n)
-DAPchar	c;
-int	n;
+void 
+insert_c (DAPchar c, int n)
 {
 	if (n > 0) {
 		modify();
@@ -219,8 +210,8 @@ int	n;
 
 /* Tab in to the right place for C mode */
 
-void
-Tab()
+void 
+Tab (void)
 {
 #ifdef LISP
 	if (MajorMode(LISPMODE) && (bolp() || !eolp())) {
@@ -256,8 +247,8 @@ Tab()
 		SelfInsert();
 }
 
-void
-QuotChar()
+void 
+QuotChar (void)
 {
 	ZXchar	c = ask_ks();
 
@@ -291,8 +282,8 @@ QuotChar()
 int	PDelay = 5,		/* VAR: paren flash delay in tenths of a second */
 	CIndIncrmt = 8;	/* VAR: how much each indentation level pushes over in C mode */
 
-void
-DoParen()
+void 
+DoParen (void)
 {
 	Bufpos	*bp = NULL;	/* avoid uninitialized complaint from gcc -W */
 	ZXchar	c = LastKeyStruck;
@@ -342,21 +333,20 @@ DoParen()
 	}
 }
 
-void
-LineAI()
+void 
+LineAI (void)
 {
 	DoNewline(YES);
 }
 
-void
-Newline()
+void 
+Newline (void)
 {
 	DoNewline(MinorMode(Indent));
 }
 
-private void
-DoNewline(indentp)
-bool	indentp;
+private void 
+DoNewline (bool indentp)
 {
 	Bufpos	save;
 	int	indent;
@@ -400,18 +390,14 @@ bool	indentp;
 	}
 }
 
-void
-ins_str(str)
-const char *str;
+void 
+ins_str (const char *str)
 {
 	ins_str_wrap(str, NO, LBSIZE-1);
 }
 
-void
-ins_str_wrap(str, ok_nl, wrap_off)
-const char *str;
-bool ok_nl;
-int wrap_off;
+void 
+ins_str_wrap (const char *str, bool ok_nl, int wrap_off)
 {
 	register char c;
 	Bufpos save;
@@ -443,9 +429,8 @@ int wrap_off;
 	makedirty(curline);
 }
 
-void
-open_lines(n)
-long	n;
+void 
+open_lines (long n)
 {
 	Bufpos	dot;
 
@@ -454,8 +439,8 @@ long	n;
 	SetDot(&dot);
 }
 
-void
-OpenLine()
+void 
+OpenLine (void)
 {
 	open_lines(arg_value());
 }
@@ -464,14 +449,7 @@ OpenLine()
  * ATLINE/ATCHAR in WHATBUF.
  */
 Bufpos *
-DoYank(fline, fchar, tline, tchar, atline, atchar, whatbuf)
-LinePtr	fline,
-	tline,
-	atline;
-int	fchar,
-	tchar,
-	atchar;
-Buffer	*whatbuf;
+DoYank (LinePtr fline, int fchar, LinePtr tline, int tchar, LinePtr atline, int atchar, Buffer *whatbuf)
 {
 	register LinePtr	newline;
 	static Bufpos	bp;
@@ -518,8 +496,8 @@ Buffer	*whatbuf;
 	return &bp;
 }
 
-void
-YankPop()
+void 
+YankPop (void)
 {
 	Mark	*mp = CurMark();
 	LinePtr	line,
@@ -596,9 +574,8 @@ private ChunkPtr	fchunk = NULL;	/* first chunk */
 private LinePtr	ffline = NULL;	/* First free line */
 private LinePtr	faline = NULL;	/* First available line */
 
-private void
-freeline(line)
-register LinePtr	line;
+private void 
+freeline (register LinePtr line)
 {
 	line->l_dline = NULL_DADDR;
 	line->l_next = ffline;
@@ -612,8 +589,8 @@ register LinePtr	line;
  * then move them to the end of the avail list.
  */
 
-private void
-RecycleLines()
+private void 
+RecycleLines (void)
 {
 	if (ffline == NULL)
 		return;	/* nothing to do */
@@ -633,9 +610,8 @@ RecycleLines()
 	ffline = NULL;
 }
 
-void
-lfreelist(first)
-register LinePtr	first;
+void 
+lfreelist (register LinePtr first)
 {
 	if (first != NULL)
 		lfreereg(first, lastline(first));
@@ -643,10 +619,8 @@ register LinePtr	first;
 
 /* Append region from line1 to line2 onto the free list of lines */
 
-void
-lfreereg(line1, line2)
-register LinePtr	line1,
-		line2;
+void 
+lfreereg (register LinePtr line1, register LinePtr line2)
 {
 	register LinePtr	next,
 			last = line2->l_next;
@@ -658,8 +632,8 @@ register LinePtr	line1,
 	}
 }
 
-private bool
-newchunk()
+private bool 
+newchunk (void)
 {
 	register LinePtr	newline;
 	register long	i;
@@ -698,8 +672,8 @@ newchunk()
 
 /* New BUFfer LINE */
 
-LinePtr
-nbufline()
+LinePtr 
+nbufline (void)
 {
 	register LinePtr	newline;
 
@@ -722,9 +696,8 @@ nbufline()
 /* Remove the free lines, in chunk c, from the free list because they are
  * no longer free.
  */
-private void
-remfreelines(c)
-register ChunkPtr	c;
+private void 
+remfreelines (register ChunkPtr c)
 {
 	register LinePtr	lp;
 	register long	i;
@@ -748,8 +721,8 @@ register ChunkPtr	c;
  * buffer line: nbufline() => newchunk() => GCchunks() -- DHR
  */
 
-void
-GCchunks()
+void 
+GCchunks (void)
 {
 	register ChunkPtr	cp;
 	ChunkPtr	prev = NULL,
@@ -786,8 +759,8 @@ GCchunks()
 
 /* Grind S-Expr */
 
-void
-GSexpr()
+void 
+GSexpr (void)
 {
 	Bufpos	dot,
 		end;
@@ -816,8 +789,8 @@ GSexpr()
  */
 private List	*specials = NULL;
 
-private void
-init_specials()
+private void 
+init_specials (void)
 {
 	static const char *const words[] = {
 		"case",
@@ -840,8 +813,8 @@ init_specials()
 		list_push(&specials, (UnivPtr) *wordp++);
 }
 
-void
-AddSpecial()
+void 
+AddSpecial (void)
 {
 	const char	*word;
 	register List	*lp;
@@ -856,7 +829,7 @@ AddSpecial()
 }
 
 private Bufpos *
-lisp_indent()
+lisp_indent (void)
 {
 	Bufpos	*bp,
 		savedot;

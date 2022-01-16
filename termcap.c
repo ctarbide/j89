@@ -156,19 +156,16 @@ private const struct CapLen	CapLenTab[] = {
 	{ NULL,	NULL }
 };
 
-private void
-tcbad(termname, why)
-const char
-	*termname,
-	*why;
+private void 
+tcbad (const char *termname, const char *why)
 {
 	writef("You can't run JOVE on a %s terminal: %s\n", termname, why);
 	flushscreen();
 	_exit(1);
 }
 
-void
-getTERM()
+void 
+getTERM (void)
 {
 	char	termnmbuf[13],
 		*termname = getenv("TERM"),
@@ -308,21 +305,19 @@ getTERM()
 
 /* Put multi-unit or multiple single-unit strings, as appropriate. */
 
-private void
-tputc(c)
-char	c;
+private void 
+tputc (int c)
 {
 	scr_putchar(c);
 }
 
-void
-putmulti(ss, ms, num, lines)
-const char
-	*ss,	/* single line */
-	*ms;	/* multiline */
-int
-	num,	/* number of iterations */
-	lines;	/* lines affected (for padding) */
+void 
+putmulti (
+    const char *ss,	/* single line */
+    const char *ms,	/* multiline */
+    int num,	/* number of iterations */
+    int lines	/* lines affected (for padding) */
+)
 {
 	if (ms && (num > 1 || !ss)) {
 		/* use the multi string */
@@ -336,18 +331,17 @@ int
 
 /* put a string with padding */
 
-void
-putpad(str, lines)
-const char	*str;
-int	lines;
+void 
+putpad (const char *str, int lines)
 {
 	if (str != NULL)
 		tputs(str, lines, tputc);
 }
 
-void
-dobell(n)	/* declared in term.h */
-int	n;
+void 
+dobell (	/* declared in term.h */
+    int n
+)
 {
 	while (--n >= 0) {
 		if (VisBell && VB)
@@ -358,8 +352,8 @@ int	n;
 	flushscreen();
 }
 
-void
-clr_page()
+void 
+clr_page (void)
 {
 	putpad(CL, LI);
 }

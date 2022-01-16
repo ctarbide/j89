@@ -31,14 +31,15 @@ private BOOL WINAPI ctrlHandler proto((DWORD type));	/* Control handler */
 #define CHECK(fn)	{ if (!(fn)) ConsoleFail(#fn); }
 private void ConsoleFail(char *fdef);
 
-void
-getTERM()
+void 
+getTERM (void)
 {
 }
 
-void
-ttysetattr(n)
-bool	n;	/* also used as subscript! */
+void 
+ttysetattr (
+    bool n	/* also used as subscript! */
+)
 {
 	CONSOLE_SCREEN_BUFFER_INFO info;
 	COORD bufsize;
@@ -116,8 +117,8 @@ bool	n;	/* also used as subscript! */
 	}
 }
 
-void
-ttsize()
+void 
+ttsize (void)
 {
 	/* ??? We really ought to wait until the screen is big enough:
 	 * at least three lines high (one line each for buffer, mode,
@@ -546,8 +547,8 @@ SaveBufferFile(Buffer *b)
 	SetBuf(save_buf);
 }
 
-private void
-MessageCloseFiles()
+private void 
+MessageCloseFiles (void)
 {
 	/* We use a static buffer pointer so that we can detect if we
 	 * have been re-entered.  If so, we do nothing.  This can happen
@@ -626,7 +627,7 @@ freeReason(void)
 }
 
 char *
-getLastErrorString()
+getLastErrorString (void)
 {
 	static BOOL cleanupRegistered;
 	char *ptr;
@@ -706,22 +707,20 @@ scr_win(int no, int ulr, int ulc, int lrr, int lrc)
 	}
 }
 
-void
-i_lines(top, bottom, num)
-int top, bottom, num;
+void 
+i_lines (int top, int bottom, int num)
 {
 	scr_win(-num, top, 0, bottom, CO-1);
 }
 
-void
-d_lines(top, bottom, num)
-int top, bottom, num;
+void 
+d_lines (int top, int bottom, int num)
 {
 	scr_win(num, top, 0, bottom, CO-1);
 }
 
-void
-clr_page()
+void 
+clr_page (void)
 {
 	long written;
 
@@ -745,8 +744,8 @@ flushscreen()
 	}
 }
 
-void
-clr_eoln()
+void 
+clr_eoln (void)
 {
 	DWORD written;
 
@@ -754,15 +753,16 @@ clr_eoln()
 	CHECK(FillConsoleOutputAttribute(conout, c_attr, CO-c_col, curpos, &written));
 }
 
-void
-dobell(n)	/* declared in term.h */
-int	n;
+void 
+dobell (	/* declared in term.h */
+    int n
+)
 {
 	MessageBeep(n);
 }
 
-void
-ResizeWindow()
+void 
+ResizeWindow (void)
 {
 	/* Must update window size to eliminate those ugly scroll bars */
 	SMALL_RECT newsize;
@@ -810,10 +810,8 @@ scr_putchar(char c)
  * Think about it: it would be silly!
  */
 
-void
-Placur(line, col)
-int	line,
-	col;
+void 
+Placur (int line, int col)
 {
 	flushscreen();
 	cur_mov(line, col);
@@ -825,24 +823,22 @@ private bool
 	doing_so = NO,
 	doing_us = NO;
 
-private void
-doattr()
+private void 
+doattr (void)
 {
 	flushscreen();
 	setcolor((doing_so? Mlattr : Txattr) ^ (doing_us? Hlattr : 0));
 }
 
-void
-SO_effect(f)
-bool f;
+void 
+SO_effect (bool f)
 {
 	doing_so = f;
 	doattr();
 }
 
-void
-US_effect(f)
-bool	f;
+void 
+US_effect (bool f)
 {
 	doing_us = f;
 	doattr();

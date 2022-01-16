@@ -32,9 +32,8 @@ Window
 
 /* First line in a Window */
 
-private int
-FLine(w)
-register Window	*w;
+private int 
+FLine (register Window *w)
 {
 	register Window	*wp = fwind;
 	register int	lineno = -1;
@@ -55,9 +54,8 @@ register Window	*w;
  * to the next window if there is one, otherwise the previous
  * window gets the body.
  */
-void
-del_wind(wp)
-register Window	*wp;
+void 
+del_wind (register Window *wp)
 {
 	register Window
 		*prev = wp->w_prev,
@@ -89,9 +87,7 @@ register Window	*wp;
  * small to be split into that many pieces.  It returns the new window.
  */
 Window *
-div_wind(wp, n)
-register Window	*wp;
-int	n;
+div_wind (register Window *wp, int n)
 {
 	Window	*latest = wp;
 	int	amt;
@@ -139,8 +135,8 @@ int	n;
  * screen.  There is no buffer with this window.  See parse for the
  * setting of this window.
  */
-void
-winit()
+void 
+winit (void)
 {
 	register Window	*w;
 
@@ -158,10 +154,8 @@ winit()
 #endif
 }
 
-void
-tiewind(w, bp)
-register Window	*w;
-register Buffer	*bp;
+void 
+tiewind (register Window *w, register Buffer *bp)
 {
 	bool	not_tied = (w->w_bufp != bp);
 
@@ -176,8 +170,8 @@ register Buffer	*bp;
 
 /* Change to previous window. */
 
-void
-PrevWindow()
+void 
+PrevWindow (void)
 {
 	register Window	*new = curwind->w_prev;
 
@@ -194,9 +188,8 @@ PrevWindow()
 
 /* Make NEW the current Window */
 
-void
-SetWind(new)
-register Window	*new;
+void 
+SetWind (register Window *new)
 {
 	if (!Asking && curbuf!=NULL) {		/* can you say kludge? */
 		curwind->w_line = curline;
@@ -219,8 +212,8 @@ register Window	*new;
 
 /* delete the current window if it isn't the only one left */
 
-void
-DelCurWindow()
+void 
+DelCurWindow (void)
 {
 	SetABuf(curwind->w_bufp);
 	del_wind(curwind);
@@ -228,9 +221,8 @@ DelCurWindow()
 
 /* put the current line of `w' in the middle of the window */
 
-void
-CentWind(w)
-register Window	*w;
+void 
+CentWind (register Window *w)
 {
 	SetTop(w, prev_line(w->w_line, WSIZE(w)/2));
 }
@@ -240,9 +232,8 @@ int	ScrollStep = 0;	/* VAR: how should we scroll (full scrolling) */
 /* Calculate the new topline of the window.  If ScrollStep == 0
  * it means we should center the current line in the window.
  */
-void
-CalcWind(w)
-register Window	*w;
+void 
+CalcWind (register Window *w)
 {
 	register int	up;
 	int	scr_step;
@@ -273,8 +264,8 @@ register Window	*w;
  * necessary because of the way this is implemented (i.e., in
  * terms of do_find(), do_select() which manipulate the windows.
  */
-void
-WindFind()
+void 
+WindFind (void)
 {
 	register Buffer
 		*obuf = curbuf,
@@ -330,16 +321,15 @@ WindFind()
 
 /* Go into one window mode by deleting all the other windows */
 
-void
-OneWindow()
+void 
+OneWindow (void)
 {
 	while (curwind->w_next != curwind)
 		del_wind(curwind->w_next);
 }
 
 Window *
-windbp(bp)
-register Buffer	*bp;
+windbp (register Buffer *bp)
 {
 
 	register Window	*wp = fwind;
@@ -357,8 +347,8 @@ register Buffer	*bp;
 
 /* Change window into the next window.  Curwind becomes the new window. */
 
-void
-NextWindow()
+void 
+NextWindow (void)
 {
 	register Window	*new = curwind->w_next;
 
@@ -375,8 +365,8 @@ NextWindow()
 
 /* Scroll the next Window */
 
-void
-PageNWind()
+void 
+PageNWind (void)
 {
 	if (one_windp()) {
 		complain(onlyone);
@@ -388,9 +378,7 @@ PageNWind()
 }
 
 private Window *
-w_nam_typ(name, type)
-register const char	*name;
-int	type;
+w_nam_typ (register const char *name, int type)
 {
 	register Window *w;
 	register Buffer	*b;
@@ -416,11 +404,8 @@ int	type;
 /* Put a window with the buffer `name' in it.  Erase the buffer if
  * `clobber' is YES.
  */
-void
-pop_wind(name, clobber, btype)
-register const char	*name;
-bool	clobber;
-int	btype;
+void 
+pop_wind (register const char *name, bool clobber, int btype)
 {
 	register Window	*wp;
 	register Buffer	*newb;
@@ -445,14 +430,14 @@ int	btype;
 	SetBuf(newb);
 }
 
-void
-GrowWindowCmd()
+void 
+GrowWindowCmd (void)
 {
 	WindSize(curwind, abs((int)arg_value()));
 }
 
-void
-ShrWindow()
+void 
+ShrWindow (void)
 {
 	WindSize(curwind, -abs((int)arg_value()));
 }
@@ -460,10 +445,8 @@ ShrWindow()
 /* Change the size of the window by inc.  First arg is the window,
  * second is the increment.
  */
-void
-WindSize(w, inc)
-register Window	*w;
-register int	inc;
+void 
+WindSize (register Window *w, register int inc)
 {
 	if (one_windp()) {
 		complain(onlyone);
@@ -500,10 +483,8 @@ register int	inc;
  * This is for numbering the lines only.
  */
 
-void
-SetTop(w, line)
-Window	*w;
-register LinePtr	line;
+void 
+SetTop (Window *w, register LinePtr line)
 {
 #ifdef HIGHLIGHTING
 	if (ScrollBar)
@@ -514,15 +495,15 @@ register LinePtr	line;
 		w->w_topnum = LinesTo(w->w_bufp->b_first, line) + 1;
 }
 
-void
-WNumLines()
+void 
+WNumLines (void)
 {
 	curwind->w_flags ^= W_NUMLINES;
 	SetTop(curwind, curwind->w_top);
 }
 
-void
-WVisSpace()
+void 
+WVisSpace (void)
 {
 	curwind->w_flags ^= W_VISSPACE;
 	ClAndRedraw();
@@ -531,10 +512,8 @@ WVisSpace()
 /* If `line' is in `windes', return its screen line number;
  * otherwise return -1.
  */
-int
-in_window(windes, line)
-register Window	*windes;
-register LinePtr	line;
+int 
+in_window (register Window *windes, register LinePtr line)
 {
 	register int	i;
 	register LinePtr	lp = windes->w_top;
@@ -545,8 +524,8 @@ register LinePtr	line;
 	return -1;
 }
 
-void
-SplitWind()
+void 
+SplitWind (void)
 {
 	SetWind(div_wind(curwind, arg_or_default(2) - 1));
 }
@@ -554,8 +533,8 @@ SplitWind()
 /* Goto the window with the named buffer.  If no such window
  * exists, pop one and attach the buffer to it.
  */
-void
-GotoWind()
+void 
+GotoWind (void)
 {
 	const char	*bname = ask_buf(lastbuf, ALLOW_OLD | ALLOW_INDEX | ALLOW_NEW);
 	Window	*w;
@@ -573,8 +552,8 @@ GotoWind()
 	pop_wind(bname, NO, -1);
 }
 
-void
-ScrollRight()
+void 
+ScrollRight (void)
 {
 	int	amt = arg_or_default(ScrollWidth);
 
@@ -585,8 +564,8 @@ ScrollRight()
 	UpdModLine = YES;
 }
 
-void
-ScrollLeft()
+void 
+ScrollLeft (void)
 {
 	int	amt = arg_or_default(ScrollWidth);
 
@@ -594,9 +573,8 @@ ScrollLeft()
 	UpdModLine = YES;
 }
 
-LineEffects
-WindowRange(w)
-Window *w;
+LineEffects 
+WindowRange (Window *w)
 {
 #ifdef HIGHLIGHTING
 	static struct LErange range = {0-0, 0-0, SO_effect, US_effect};

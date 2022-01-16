@@ -77,9 +77,10 @@ ZXchar	IntChar = CTL(']');	/* VAR: ttysetattr sets this to generate SIGINT */
 bool	DisBiff = YES;		/* VAR: turn off/on biff with entering/exiting jove */
 #endif /* BIFF */
 
-void
-ttysetattr(n)
-bool	n;	/* also used as subscript! */
+void 
+ttysetattr (
+    bool n	/* also used as subscript! */
+)
 {
 	static bool	keep_saved = NO;
 
@@ -406,8 +407,8 @@ bool	n;	/* also used as subscript! */
  * output.  Decide what matters most to you. This sets ScrBufSize to the right
  * number or chars, and initializes `jstdout'.
  */
-void
-settout()
+void 
+settout (void)
 {
 	int	speed_chars;
 
@@ -503,8 +504,8 @@ settout()
 #endif
 }
 
-void
-ttsize()
+void 
+ttsize (void)
 {
 	/* ??? We really ought to wait until the screen is big enough:
 	 * at least three lines high (one line each for buffer, mode,

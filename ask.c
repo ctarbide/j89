@@ -47,7 +47,7 @@ private Buffer	*AskBuffer = NULL;	/* Askbuffer points to actual structure */
  * is somewhere in the mini-buffer).
  */
 private Buffer *
-get_minibuf()
+get_minibuf (void)
 {
 	if (AskBuffer) {		/* make sure it still exists */
 		register Buffer	*b;
@@ -63,10 +63,8 @@ get_minibuf()
 
 /* Add a string to the mini-buffer. */
 
-void
-minib_add(str, movedown)
-char	*str;
-bool	movedown;
+void 
+minib_add (char *str, bool movedown)
 {
 	register Buffer	*saveb = curbuf;
 
@@ -357,8 +355,8 @@ yes_or_no_p(fmt, va_alist)
 
 bool	DoEVexpand = YES;	/* VAR: should we expand evironment variables? */
 
-private void
-EVexpand()
+private void 
+EVexpand (void)
 {
 	register char	c;
 	register char	*lp = linebuf,
@@ -420,9 +418,8 @@ char	BadExtensions[sizeof(BadExtensions)] =	/* VAR: extensions to ignore */
 ".obj .lib .exe .com .dll .arc .zip .zoo .bmp .gif .jpg .mpg .tif .pcx .wks .wk1 .xls";
 # endif /* MSFILESYSTEM */
 
-private bool
-bad_extension(name)
-char	*name;
+private bool 
+bad_extension (char *name)
 {
 	char	*ip,
 		*bads;
@@ -455,9 +452,8 @@ char	*name;
 
 private bool f_match proto((char* file));	/* needed to comfort MS Visual C */
 
-private bool
-f_match(file)
-char	*file;
+private bool 
+f_match (char *file)
 {
 	size_t	len = strlen(fc_filebase);
 
@@ -473,19 +469,16 @@ char	*file;
 }
 
 # ifndef DIRECTORY_ADD_SLASH
-private bool
-isdir(name)
-char	*name;
+private bool 
+isdir (char *name)
 {
 	(void) do_stat(name, (Buffer *) NULL, DS_DIR);
 	return was_dir;
 }
 # endif /* !DIRECTORY_ADD_SLASH */
 
-private void
-fill_in(dir_vec, n)
-register char	**dir_vec;
-int	n;
+private void 
+fill_in (register char **dir_vec, int n)
 {
 	bool	filter;
 
@@ -557,9 +550,8 @@ int	n;
 /* called from do_ask() when one of "\r\n ?" is typed.  Does the right
  * thing, depending on which.
  */
-private bool
-f_complete(c)
-ZXchar	c;
+private bool 
+f_complete (ZXchar c)
 {
 	char
 		dir[FILESIZE],
@@ -668,14 +660,8 @@ ZXchar	c;
  */
 
 #ifdef MSFILESYSTEM
-private
-#endif
-char *
-ask_ford(prmt, def, buf)
-const char	*prmt;
-char
-	*def,
-	*buf;
+private char *
+ask_ford (const char *prmt, char *def, char *buf)
 {
 	/* Note: pr_name yields a pointer into its static buffer so
 	 * pretty_name will not be a pointer into def.  This allows

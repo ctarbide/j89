@@ -93,8 +93,8 @@ static const char scanToAsciiUpper[] = {
 
 #endif /* IBMPCDOS */
 
-ZXchar
-getrawinchar()
+ZXchar 
+getrawinchar (void)
 {
 #ifdef IBMPCDOS
 	unsigned scan;
@@ -175,8 +175,8 @@ getrawinchar()
 
 private bool	waiting = NO;
 
-bool
-rawkey_ready()
+bool 
+rawkey_ready (void)
 {
 #ifdef IBMPCDOS
 	return !waiting && (last != EOF || jkbready());
@@ -203,8 +203,8 @@ rawkey_ready()
 /* Wait for next character, updating the modeline if it displays the time.
  * NOTE: this is a busy wait.
  */
-private void
-rawkey_wait()
+private void 
+rawkey_wait (void)
 {
 	while (!rawkey_ready()) {
 		if (UpdModLine) {
@@ -229,9 +229,10 @@ rawkey_wait()
 	}
 }
 
-void
-ttysetattr(n)
-bool	n;	/* also used as subscript! */
+void 
+ttysetattr (
+    bool n	/* also used as subscript! */
+)
 {
 	static char break_state;
 

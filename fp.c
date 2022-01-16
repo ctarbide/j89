@@ -33,12 +33,7 @@ private int rbwrite proto((int, char *, int));
 private File	openfiles[MAXFILES];	/* must be zeroed initially */
 
 File *
-fd_open(name, flags, fd, buffer, buf_size)
-const char	*name;
-char	*buffer;
-int	flags,
-	fd,
-	buf_size;
+fd_open (const char *name, int flags, int fd, char *buffer, int buf_size)
 {
 	register File	*fp;
 	register int	i;
@@ -65,8 +60,8 @@ int	flags,
 	return fp;
 }
 
-void
-gc_openfiles()
+void 
+gc_openfiles (void)
 {
 	register File	*fp;
 
@@ -76,11 +71,7 @@ gc_openfiles()
 }
 
 File *
-f_open(name, flags, buffer, buf_size)
-const char	*name;
-char	*buffer;
-int	flags,
-	buf_size;
+f_open (const char *name, int flags, char *buffer, int buf_size)
 {
 	register int	fd;
 
@@ -136,9 +127,8 @@ int	flags,
 	return fd_open(name, flags, fd, buffer, buf_size);
 }
 
-void
-f_close(fp)
-File	*fp;
+void 
+f_close (File *fp)
 {
 	const char *what = "close";
 	int	err = 0;
@@ -170,9 +160,8 @@ File	*fp;
 	}
 }
 
-ZXchar
-f_filbuf(fp)
-File	*fp;
+ZXchar 
+f_filbuf (File *fp)
 {
 	if (fp->f_flags & (F_EOF|F_ERR))
 		return EOF;
@@ -199,9 +188,8 @@ File	*fp;
 	return f_getc(fp);
 }
 
-void
-putstr(s)
-register const char	*s;
+void 
+putstr (register const char *s)
 {
 	register char	c;
 
@@ -209,11 +197,8 @@ register const char	*s;
 		scr_putchar(c);
 }
 
-void
-fputnchar(s, n, fp)
-register char	*s;
-register int	n;
-register File	*fp;
+void 
+fputnchar (register char *s, register int n, register File *fp)
 {
 	while (--n >= 0)
 		f_putc(*s++, fp);
@@ -227,10 +212,8 @@ flushscreen()
 }
 #endif /* !NO_JSTDOUT */
 
-void
-f_seek(fp, offset)
-register File	*fp;
-off_t	offset;
+void 
+f_seek (register File *fp, off_t offset)
 {
 	if (fp->f_flags & (F_WRITE|F_APPEND))
 		flushout(fp);
@@ -239,9 +222,8 @@ off_t	offset;
 	lseek(fp->f_fd, offset, L_SET);
 }
 
-void
-flushout(fp)
-register File	*fp;
+void 
+flushout (register File *fp)
 {
 	if (fp->f_flags & (F_READ | F_STRING | F_ERR)) {
 		if (fp->f_flags != F_STRING)
@@ -348,9 +330,8 @@ size_t	max;
 /* skip to beginning of next line, i.e., next read returns first
  * character of new line
  */
-void
-f_toNL(fp)
-register File	*fp;
+void 
+f_toNL (register File *fp)
 {
 	if (fp->f_flags & F_EOF)
 		return;
@@ -413,11 +394,8 @@ File	*jstdout = &stdout_File;
 
 #include <dos.h>
 
-private int
-rbwrite(fd, buf, cnt)
-int fd;
-char *buf;
-int cnt;
+private int 
+rbwrite (int fd, char *buf, int cnt)
 {
 	union REGS vr;
 
