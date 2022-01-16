@@ -140,7 +140,7 @@ bool	(*d_proc) ptrproto((ZXchar));
 			prompt_leftchar = "";
 		}
 #define PRWIDTH	    (prompt_len - prompt_off + SIWIDTH(prompt_off))
-#define ASKWIDTH    (PRWIDTH + curchar - line_off + SIWIDTH(line_off)) 
+#define ASKWIDTH    (PRWIDTH + curchar - line_off + SIWIDTH(line_off))
 		nw = ASKWIDTH;
 		if (nw > COMAX) {
 			int COMID = COMAX/2;

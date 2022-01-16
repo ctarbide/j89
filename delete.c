@@ -281,7 +281,7 @@ new_kill()
 	nl->l_next = nl->l_prev = NULL;
 	return nl;
 }
-    
+
 /* Save a region.  A pretend kill. */
 
 void

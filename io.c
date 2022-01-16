@@ -1888,7 +1888,7 @@ char *fname;
 #  endif
 
 		/* Unlink the pathname before creating.  It may have been
-		 * created by someone else, or worse it may be linked or 
+		 * created by someone else, or worse it may be linked or
 		 * symlinked somewhere else, none of which we want to
 		 * overwrite.  There is still a possible race-condition,
 		 * so we need to use O_EXCL if we can.

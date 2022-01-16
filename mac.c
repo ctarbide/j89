@@ -1926,7 +1926,7 @@ rawgetc()
 		longjmp(auxjmp, 1);
 		/* NOTREACHED */
 	}
-		
+
 
 	while (nchars <= 0) {
 		nchars = 0;

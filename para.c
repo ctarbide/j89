@@ -339,7 +339,7 @@ FillParagraph()
 {
 	LinePtr nl;
 	int lenparatail;
-	
+
 	use_lmargin = is_an_arg();
 	find_para(BACKWARD);
 	nl = new_kill();

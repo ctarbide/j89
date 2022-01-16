@@ -622,7 +622,7 @@ long	a, b;
 	}
 	return v;
 }
-	
+
 /* TODO: Make dotchar, nchars unsigned long when we dump support for pre-ANSI C */
 void
 BufPos()

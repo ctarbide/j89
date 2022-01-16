@@ -329,7 +329,7 @@ int	hl_setting, startx, starty, endx, endy;
 {
 	static const char	hl_fmt[] = "\033[%d;%d;%d;%d;%dT";
 	char	buf[sizeof(hl_fmt) + 4*(5-2)];
-	
+
 	swritef(buf, sizeof(buf), hl_fmt, hl_setting, startx, starty, endx, endy);
 	putstr(buf);
 #ifdef XTERMHLBUG

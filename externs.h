@@ -195,7 +195,7 @@ extern int	unlink proto((const char */*path*/));
    * no X_OK and considers a value of 1 to be invalid, e.g see
    * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=30972
    * https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-waccess?view=vs-2019
-   * Older runtimes may have accepted it, but VS 2019, in Win 7 Pro, 
+   * Older runtimes may have accepted it, but VS 2019, in Win 7 Pro,
    * crashes the program.
    */
 # define J_X_OK F_OK

@@ -12,7 +12,7 @@
  * provides, but those may not be appropriate for the host,
  * which, might be a very different compiler.
  */
- 
+
 #define USE_STDIO_H 1
 #define NO_EXTERNS 1
 #include "jove.h"

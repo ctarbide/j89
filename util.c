@@ -858,7 +858,7 @@ Env *envp;
 	}
 	return envp->e_data;
 }
-    
+
 /* Put a definition into the environment.
  * Same as putenv(3) in SVID 3, POSIX, and BSD 4.3.
  */

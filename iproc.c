@@ -535,7 +535,7 @@ register int	fd;
 	}
 
 	n = read(fd, (UnivPtr) ibuf, sizeof(ibuf) - 1);
-	jdbg("pty read %d returned %d errno %d from %s\n", fd, n, errno, 
+	jdbg("pty read %d returned %d errno %d from %s\n", fd, n, errno,
 	     p->p_name);
 	if (n <= 0) {
 		if (n < 0) {

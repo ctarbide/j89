@@ -180,7 +180,7 @@ int delay;
 {
 	struct timeval	timer;
 	fd_set	readfds;
-	
+
 	timer.tv_sec = (delay / 10);
 	timer.tv_usec = (delay % 10) * 100000;
 	FD_ZERO(&readfds);
@@ -343,7 +343,7 @@ const char *s;
 	fflush(stdout);
 	jdelay(delay);
 }
-    
+
 int main(argc, argv)
 int argc;
 char **argv;
@@ -402,7 +402,7 @@ char **argv;
 	}
 	xtputs(5, jtcarg2(tgetstr("cm", NULL),0,5), 1);
 	cp = tgetstr("SF", NULL);
-	if (cp) 
+	if (cp)
 		xtputs(10, jtcarg1(cp, 2), 2);
 	else {
 		xtputs(5, jtcarg1(tgetstr("sf", NULL),1), 1);
