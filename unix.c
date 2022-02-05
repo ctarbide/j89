@@ -16,8 +16,8 @@
 #endif
 
 #include "chars.h"
-#include "term.h"	/* ospeed */
 #include "ttystate.h"
+#include "term.h"	/* ospeed */
 
 
 #ifdef SGTTY
@@ -77,9 +77,12 @@ ZXchar	IntChar = CTL(']');	/* VAR: ttysetattr sets this to generate SIGINT */
 bool	DisBiff = YES;		/* VAR: turn off/on biff with entering/exiting jove */
 #endif /* BIFF */
 
-void 
-ttysetattr (
-    bool n	/* also used as subscript! */
+C89_STATIC_ASSERT((IXON | IXOFF) < USHRT_MAX, "(IXON | IXOFF) < USHRT_MAX");
+C89_STATIC_ASSERT((INLCR | ICRNL | IGNCR | ISTRIP) < USHRT_MAX, "(INLCR | ICRNL | IGNCR | ISTRIP) < USHRT_MAX");
+
+void
+ttysetattr(
+	bool n	/* also used as subscript! */
 )
 {
 	static bool	keep_saved = NO;
@@ -95,33 +98,24 @@ ttysetattr (
 #ifdef SGTTY
 		(void) gtty(0, &sg[NO]);
 #endif
-
 #ifdef TERMIO
 		(void) ioctl(0, TCGETA, (UnivPtr) &sg[NO]);
 #endif
-
 #ifdef TERMIOS
 		(void) tcgetattr(0, &sg[NO]);
 #endif
-
 #ifdef USE_TIOCSLTC
 		(void) ioctl(0, TIOCGLTC, (UnivPtr) &ls[NO]);
 #endif /* USE_TIOCSLTC */
-
 #ifdef SGTTY
-
 # ifdef TIOCGETC
 		(void) ioctl(0, TIOCGETC, (UnivPtr) &tc[NO]);
 # endif
-
 # ifdef LPASS8	/* use 4.3BSD's LPASS8 instead of raw for meta-key */
 		(void) ioctl(0, TIOCLGET, (UnivPtr) &lmword[NO]);
 # endif
-
 #endif /* SGTTY */
-
-/* extract some info from results */
-
+		/* extract some info from results */
 #if defined(TERMIO) || defined(TERMIOS)
 # ifdef TAB3
 		TABS = (sg[NO].c_oflag & TABDLY) != TAB3;
@@ -136,7 +130,6 @@ ttysetattr (
 #  endif /* CBAUD */
 # endif /* TERMIOS */
 #endif /* defined(TERMIO) || defined(TERMIOS) */
-
 #ifdef SGTTY
 		TABS = !(sg[NO].sg_flags & XTABS);
 		ospeed = sg[NO].sg_ospeed;
@@ -146,6 +139,7 @@ ttysetattr (
 		keep_saved = YES;
 #endif
 	}
+
 #ifndef STICKY_TTYSTATE
 	/* Keep saved copy of ttystate next time iff we are switching to JOVE mode.
 	 * In other words, don't replace saved copy next time if we will
@@ -153,32 +147,34 @@ ttysetattr (
 	 */
 	keep_saved = n;
 #endif
-
 	/* Fill in YES half of each appropriate tty state pair.
 	 * They are filled in as late as possible so that each will
 	 * reflect the latest settings of controling variables.
 	 * NOTE: the nested tangle of ifdefs is intended to follow
 	 * the structure of the definitions in ttystate.c.
 	 */
-
 	sg[YES] = sg[NO];
-
 #ifdef SGTTY
-	sg[YES].sg_flags &= ~(XTABS|ECHO|CRMOD);
+	sg[YES].sg_flags &= ~(XTABS | ECHO | CRMOD);
 # ifdef LPASS8
 	sg[YES].sg_flags |= CBREAK;
 # else
 	sg[YES].sg_flags |= (MetaKey ? RAW : CBREAK);
 # endif
 #endif
-
 #if defined(TERMIO) || defined(TERMIOS)
-	if (OKXonXoff)
-		sg[YES].c_iflag &= ~(IXON | IXOFF);
-	sg[YES].c_iflag &= ~(INLCR|ICRNL|IGNCR | (MetaKey? ISTRIP : 0));
-	sg[YES].c_lflag &= ~(ICANON|ECHO);
-	sg[YES].c_oflag &= ~(OPOST);
 
+	if (OKXonXoff) {
+		sg[YES].c_iflag &= (unsigned short)~(IXON | IXOFF);
+	}
+
+	{
+		unsigned short istrip = MetaKey ? ISTRIP : 0;
+		sg[YES].c_iflag &= (unsigned short)~(INLCR | ICRNL | IGNCR | istrip);
+	}
+	sg[YES].c_lflag &= (unsigned short)~(ICANON | ECHO);
+	sg[YES].c_oflag &= (unsigned short)~(OPOST);
+	
 	/* Set all those c_cc elements that we must.
 	 * For peculiar systems, one might wish to predefine JVDISABLE
 	 * in the configuration.  For example, on some unnamed
@@ -204,18 +200,15 @@ ttysetattr (
 #   endif /* !_PC_VDISABLE */
 #  endif /* !_POSIX_VDISABLE */
 # endif /* JVDISABLE */
-
-		sg[YES].c_cc[VINTR] = IntChar;
-
+		sg[YES].c_cc[VINTR] = (cc_t)IntChar;
 # ifdef VQUIT
-		sg[YES].c_cc[VQUIT] = JVDISABLE;
+		sg[YES].c_cc[VQUIT] = (cc_t)JVDISABLE;
 # endif
 		/* VERASE, VKILL, VEOL2 irrelevant */
 		/* Beware aliasing! VMIN is VEOF and VTIME is VEOL */
 # ifdef VSWTCH
-		sg[YES].c_cc[VSWTCH] = JVDISABLE;
+		sg[YES].c_cc[VSWTCH] = (cc_t)JVDISABLE;
 # endif
-
 		/* Under at least one system (SunOS 4.0), <termio.h>
 		 * mistakenly defines the extra V symbols of <termios.h>
 		 * without extending the c_cc array in struct termio
@@ -223,7 +216,6 @@ ttysetattr (
 		 * ifdefed.  It turns out that we don't use <termio.h>
 		 * on SunOS 4.0, so the problem may be moot.
 		 */
-
 # ifdef TERMIOS
 #  ifdef VSUSP
 		sg[YES].c_cc[VSUSP] = JVDISABLE;
@@ -241,12 +233,10 @@ ttysetattr (
 		sg[YES].c_cc[VLNEXT] = JVDISABLE;	/* literal next char */
 #  endif
 # endif /* TERMIOS */
-
 		sg[YES].c_cc[VMIN] = 1;
 		sg[YES].c_cc[VTIME] = 1;
 	}
 #endif /* defined(TERMIO) || defined(TERMIOS) */
-
 #ifdef USE_TIOCSLTC
 	ls[YES] = ls[NO];
 	ls[YES].t_suspc = (char) -1;
@@ -254,43 +244,41 @@ ttysetattr (
 	ls[YES].t_flushc = (char) -1;
 	ls[YES].t_lnextc = (char) -1;
 #endif /* USE_TIOCSLTC */
-
 #ifdef SGTTY
-
 # ifdef TIOCGETC
 	tc[YES] = tc[NO];
 	tc[YES].t_intrc = IntChar;
 	tc[YES].t_quitc = (char) -1;
+
 	if (OKXonXoff) {
 		tc[YES].t_stopc = (char) -1;
 		tc[YES].t_startc = (char) -1;
 	}
-# endif
 
+# endif
 # ifdef LPASS8	/* use 4.3BSD's LPASS8 instead of raw for meta-key */
 	lmword[YES] = lmword[NO];
 
-	if (MetaKey)
+	if (MetaKey) {
 		lmword[YES] |= LPASS8;
+	}
 
 #  ifdef LLITOUT
 	/* ??? under what conditions should we turn on LLITOUT flag? */
 #  endif /* LLITOUT */
-
 #  ifdef LTILDE
-	if (Hazeltine)
+
+	if (Hazeltine) {
 		lmword[YES] &= ~LTILDE;
+	}
+
 #  endif /* LTILDE */
-
 # endif /* LPASS8 */
-
 #endif /* SGTTY */
-
 	/* Set tty state according to appropriate entry of each state pair.
 	 * NOTE: the nested tangle of ifdefs is intended to follow
 	 * the structure of the definitions in ttystate.c.
 	 */
-
 #ifdef SGTTY
 #  ifdef TIOCSETN
 	(void) ioctl(0, TIOCSETN, (UnivPtr) &sg[n]);
@@ -298,39 +286,31 @@ ttysetattr (
 	(void) stty(0, &sg[n]);
 #  endif
 #endif
-
 #ifdef TERMIO
 	do {} while (ioctl(0, TCSETAW, (UnivPtr) &sg[n]) < 0 && errno == EINTR);
-#endif
 
+#endif
 #ifdef TERMIOS
 	do {} while (tcsetattr(0, TCSADRAIN, &sg[n]) < 0 && errno == EINTR);
-#endif
 
+#endif
 #ifdef USE_TIOCSLTC
 	(void) ioctl(0, TIOCSLTC, (UnivPtr) &ls[n]);
 #endif /* USE_TIOCSLTC */
-
 #ifdef SGTTY
-
 # ifdef TIOCGETC
 	(void) ioctl(0, TIOCSETC, (UnivPtr) &tc[n]);
 # endif
-
 # ifdef LPASS8	/* use 4.3BSD's LPASS8 instead of raw for meta-key */
 	(void) ioctl(0, TIOCLSET, (UnivPtr) &lmword[n]);	/* local mode word */
 # endif
-
 #endif /* SGTTY */
-
 #ifdef BIFF
-
 # ifdef S_IXUSR
 #  define BIFF_BIT ((jmode_t)S_IXUSR)	/* POSIX name */
 # else
 #  define BIFF_BIT ((jmode_t)S_IEXEC)	/* BSD name */
 # endif
-
 	/* biff state is an honorary part of the tty state.
 	 * On the other hand, it is different from the rest of the state
 	 * since we only want to examine the setting if DisBiff
@@ -342,7 +322,6 @@ ttysetattr (
 #		define BS_DISABLED	1	/* we have disabled biff */
 #		define BS_UNCHANGED	2	/* we didn't disable biff */
 		static int	biff_state = BS_UNEXAMINED;
-
 		static struct stat	tt_stat;
 # if !defined(USE_FSTAT) || !defined(USE_FCHMOD)
 		static char	*tt_name = NULL;	/* name of the control tty */
@@ -354,6 +333,7 @@ ttysetattr (
 			if (biff_state == BS_UNEXAMINED) {
 				/* and we haven't looked after it */
 				biff_state = BS_UNCHANGED;	/* at least so far */
+
 				if (
 # ifdef USE_FSTAT
 					fstat(0, &tt_stat) != -1
@@ -361,22 +341,22 @@ ttysetattr (
 					((tt_name != NULL) || (tt_name = ttyname(0)) != NULL)
 					&& stat(tt_name, &tt_stat) != -1
 # endif
-				&& (tt_stat.st_mode & BIFF_BIT))
-				{
+					&& (tt_stat.st_mode & BIFF_BIT)) {
 					/* so let's suppress it */
 # ifdef USE_FCHMOD
 					(void) fchmod(0, tt_stat.st_mode & ~BIFF_BIT);
 					biff_state = BS_DISABLED;
 # else
+
 					if ((tt_name != NULL || (tt_name = ttyname(0)) != NULL)
-					&& chmod(tt_name, tt_stat.st_mode & ~BIFF_BIT) != -1)
-					{
+						&& chmod(tt_name, tt_stat.st_mode & ~BIFF_BIT) != -1) {
 						/* Note: only change biff_state if we were able to
 						 * get the tt_name -- this prevents the other
 						 * chmod from blowing up.
 						 */
 						biff_state = BS_DISABLED;
 					}
+
 # endif
 				}
 			}
@@ -390,14 +370,15 @@ ttysetattr (
 				(void) chmod(tt_name, tt_stat.st_mode);
 # endif
 			}
+
 			biff_state = BS_UNEXAMINED;	/* it's out of our hands */
 		}
+
 #		undef BS_UNEXAMINED
 #		undef BS_DISABLED
 #		undef BS_UNCHANGED
 	}
 # undef BIFF_BIT
-
 #endif /* BIFF */
 }
 
@@ -407,14 +388,13 @@ ttysetattr (
  * output.  Decide what matters most to you. This sets ScrBufSize to the right
  * number or chars, and initializes `jstdout'.
  */
-void 
-settout (void)
+void
+settout(void)
 {
 	int	speed_chars;
-
 	static const struct {
-		unsigned int bsize;
-		unsigned int brate;
+		unsigned bsize;
+		unsigned brate;
 	} speeds[] = {
 
 #ifdef B0
@@ -483,16 +463,23 @@ settout (void)
 #ifdef EXT
 		{ 1024, EXT }
 #endif
-};
+	};
 	int i;
+
 	for (i = 0; ; i++) {
 		if (i == elemsof(speeds)) {
 			speed_chars = 512;
 			ospeed = B9600;	/* XXX */
 			break;
 		}
+
 		if (speeds[i].brate == (unsigned short) ospeed) {
-			speed_chars = speeds[i].bsize;
+			if (speeds[i].bsize > INT_MAX) {
+				fprintf(stderr, "fatal: %s:%d: speeds[i].bsize > INT_MAX\n", __FILE__, __LINE__);
+				exit(1);
+			}
+			/* 'speeds[i].bsize' guaranteed within [0,INT_MAX] */
+			speed_chars = (int)speeds[i].bsize;
 			break;
 		}
 	}
@@ -500,12 +487,12 @@ settout (void)
 	flushscreen();		/* flush the one character buffer */
 	ScrBufSize = jmin(MAXTTYBUF, speed_chars * jmax(LI / 24, 1));
 #ifndef NO_JSTDOUT
-	jstdout = fd_open("/dev/tty", F_WRITE|F_LOCKED, 1, (char *)NULL, ScrBufSize);
+	jstdout = fd_open("/dev/tty", F_WRITE | F_LOCKED, 1, (char *)NULL, ScrBufSize);
 #endif
 }
 
-void 
-ttsize (void)
+void
+ttsize(void)
 {
 	/* ??? We really ought to wait until the screen is big enough:
 	 * at least three lines high (one line each for buffer, mode,
@@ -517,23 +504,23 @@ ttsize (void)
 	struct winsize win;
 
 	if (ioctl(0, TIOCGWINSZ, (UnivPtr) &win) == 0
-	&& win.ws_col >= 12
-	&& win.ws_row >= 3)
-	{
+		&& win.ws_col >= 12
+		&& win.ws_row >= 3) {
 		CO = jmin(win.ws_col, MAXCOLS);
 		LI = win.ws_row;
 	}
+
 #else /* !TIOCGWINSZ */
 # ifdef BTL_BLIT
 	struct jwinsize jwin;
 
 	if (ioctl(0, JWINSIZE, (UnivPtr) &jwin) == 0
-	&& jwin.bytesx >= 12
-	&& jwin.bytesy >= 3)
-	{
+		&& jwin.bytesx >= 12
+		&& jwin.bytesy >= 3) {
 		CO = jmin(jwin.bytesx, MAXCOLS);
 		LI = jwin.bytesy;
 	}
+
 # endif /* BTL_BLIT */
 #endif /* !TIOCGWINSZ */
 	ILI = LI - 1;

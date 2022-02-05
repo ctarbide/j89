@@ -19,37 +19,39 @@
 #include "move.h"
 #include "para.h"
 
-void 
-prCTIME (void)
+void
+prCTIME(void)
 {
 	f_mess(": %f %s", get_time((time_t *)NULL, (char *)NULL, 0, -1));
 	stickymsg = YES;
 }
 
-void 
-ChrToOct (void)
+void
+ChrToOct(void)
 {
 	ZXchar	c = ask_ks();
-
 	ins_str(sprint("\\%03o", c));
 #ifdef PCNONASCII
+
 	if (c == PCNONASCII) {
 		c = waitchar();
 		ins_str(sprint("\\%03o", c));
 	}
+
 #endif
 }
 
-void 
-StrLength (void)
+void
+StrLength(void)
 {
 	static const char	inquotes[] = "Where are the quotes?";
 	char	*cp;
 	int	numchars = 0;
 
-	for (cp = linebuf+curchar; ; cp--) {
-		if (*cp == '"' && (cp == linebuf || cp[-1] != '\\'))
+	for (cp = linebuf + curchar; ; cp--) {
+		if (*cp == '"' && (cp == linebuf || cp[-1] != '\\')) {
 			break;
+		}
 
 		if (cp == linebuf) {
 			complain(inquotes);
@@ -58,37 +60,45 @@ StrLength (void)
 	}
 
 	cp += 1;	/* skip opening quote */
+
 	for (;;) {
 		switch (*cp++) {
 		case '\0':
 			complain(inquotes);
-			/*NOTREACHED*/
+
+		/*NOTREACHED*/
 		case '"':
 			f_mess("%d characters", numchars);
 			stickymsg = YES;
 			return;
+
 		case '\\':
 			if (!jisdigit(*cp)) {
 				if (*cp == '\0') {
 					complain(inquotes);
 					/* NOTREACHED */
 				}
+
 				cp += 1;
 			} else {
 				int	num = 3;
 
-				do cp += 1; while (--num != 0 && jisdigit(*cp));
+				do {
+					cp += 1;
+				} while (--num != 0 && jisdigit(*cp));
 			}
+
 			break;
 		}
+
 		numchars += 1;
 	}
 }
 
 /* Transpose cur_char with cur_char - 1 */
 
-void 
-TransChar (void)
+void
+TransChar(void)
 {
 	char	before;
 
@@ -96,8 +106,11 @@ TransChar (void)
 		complain((char *)NULL);	/* BEEP */
 		/* NOTREACHED */
 	}
-	if (eolp())
+
+	if (eolp()) {
 		b_char(1);
+	}
+
 	before = linebuf[curchar - 1];
 	del_char(BACKWARD, 1, NO);
 	f_char(1);
@@ -106,13 +119,14 @@ TransChar (void)
 
 /* Switch current line with previous one */
 
-void 
-TransLines (void)
+void
+TransLines(void)
 {
 	daddr	old_prev;
 
-	if (firstp(curline))
+	if (firstp(curline)) {
 		return;
+	}
 
 	lsave();
 	/* Exchange l_dline values.
@@ -124,18 +138,20 @@ TransLines (void)
 	curline->l_dline = old_prev;
 	getDOT();
 
-	if (!lastp(curline))
+	if (!lastp(curline)) {
 		line_move(FORWARD, 1, NO);
-	else
-		Eol();	/* can't move to next line, so we do the next best thing */
+	} else {
+		Eol();        /* can't move to next line, so we do the next best thing */
+	}
+
 	modify();
 	DOLsave = NO;	/* CHEAT: contents of linebuf need not override l_dline. */
 }
 
 /* exit-jove command */
 
-void 
-Leave (void)
+void
+Leave(void)
 {
 	longjmp(mainjmp, JMP_QUIT);
 	/* NOTREACHED */
@@ -146,8 +162,8 @@ Leave (void)
  * right of the cursor is white space, we delete the line separator
  * as if we were at the end of the line.
  */
-void 
-KillEOL (void)
+void
+KillEOL(void)
 {
 	LinePtr	line2;
 	int	char2;
@@ -159,28 +175,33 @@ KillEOL (void)
 			char2 = 0;
 		} else {
 			line2 = next_line(curline, num);
-			if ((LineDist(curline, line2) < num) || (line2 == curline))
+
+			if ((LineDist(curline, line2) < num) || (line2 == curline)) {
 				char2 = length(line2);
-			else
+			} else {
 				char2 = 0;
+			}
 		}
 	} else if (blnkp(&linebuf[curchar])) {
 		line2 = next_line(curline, 1);
-		if (line2 == curline)
+
+		if (line2 == curline) {
 			char2 = length(curline);
-		else
+		} else {
 			char2 = 0;
+		}
 	} else {
 		line2 = curline;
 		char2 = length(curline);
 	}
+
 	reg_kill(line2, char2, NO);
 }
 
 /* kill to beginning of sentence */
 
-void 
-KillBos (void)
+void
+KillBos(void)
 {
 	negate_arg();
 	KillEos();
@@ -188,32 +209,30 @@ KillBos (void)
 
 /* Kill to end of sentence */
 
-void 
-KillEos (void)
+void
+KillEos(void)
 {
 	LinePtr	line1;
 	int	char1;
-
 	line1 = curline;
 	char1 = curchar;
 	Eos();
 	reg_kill(line1, char1, YES);
 }
 
-void 
-KillExpr (void)
+void
+KillExpr(void)
 {
 	LinePtr	line1;
 	int	char1;
-
 	line1 = curline;
 	char1 = curchar;
 	FSexpr();
 	reg_kill(line1, char1, YES);
 }
 
-void 
-Yank (void)
+void
+Yank(void)
 {
 	LinePtr	line,
 		lp;
@@ -223,6 +242,7 @@ Yank (void)
 		complain("[Nothing to yank!]");
 		/* NOTREACHED */
 	}
+
 	lsave();
 	line = killbuf[killptr];
 	lp = lastline(line);
@@ -231,49 +251,63 @@ Yank (void)
 	SetDot(dot);
 }
 
-void 
-ToIndent (void)
+void
+ToIndent(void)
 {
 	Bol();
 	skip_wht_space();
 }
 
-void 
-skip_wht_space (void)
+void
+skip_wht_space(void)
 {
-	register char	*cp = linebuf + curchar;
+	INTPTR_T	diff;
+	char		*cp = linebuf + curchar;
 
-	while (jiswhite(*cp))
+	while (jiswhite(*cp)) {
 		cp += 1;
-	curchar = cp - linebuf;
+	}
+
+	diff = cp - linebuf;
+
+	if ((UINTPTR_T)diff > INT_MAX) {
+		fprintf(stderr, "fatal: %s:%d: diff > INT_MAX\n", __FILE__, __LINE__);
+		exit(1);
+	}
+
+	curchar = (int)diff;
 }
 
 /* GoLine -- go to a line, usually wired to goto-line, ESC g or ESC G.
  * If no argument is specified it asks for a line number.
  */
-void 
-GoLine (void)
+void
+GoLine(void)
 {
 	LinePtr	newline;
 
-	if (!is_an_arg())
+	if (!is_an_arg()) {
 		set_arg_value(ask_long("1", "Line: ", 10));
-	if (arg_value() < 0)
+	}
+
+	if (arg_value() < 0) {
 		newline = prev_line(curbuf->b_last, -1 - arg_value());
-	else
+	} else {
 		newline = next_line(curbuf->b_first, arg_value() - 1);
+	}
+
 	PushPntp(newline);
 	SetLine(newline);
 }
 
-void 
-NotModified (void)
+void
+NotModified(void)
 {
 	unmodify();
 }
 
-void 
-SetLMargin (void)
+void
+SetLMargin(void)
 {
 	int	lmarg = calc_pos(linebuf, curchar);
 
@@ -281,11 +315,12 @@ SetLMargin (void)
 		complain("[Left margin must be left of right margin]");
 		/* NOTREACHED */
 	}
+
 	LMargin = lmarg;
 }
 
-void 
-SetRMargin (void)
+void
+SetRMargin(void)
 {
 	int	rmarg = calc_pos(linebuf, curchar);
 
@@ -293,5 +328,6 @@ SetRMargin (void)
 		complain("[Right margin must be right of left margin]");
 		/* NOTREACHED */
 	}
+
 	RMargin = rmarg;
 }

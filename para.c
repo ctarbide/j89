@@ -120,22 +120,22 @@ private int	get_indent proto((LinePtr));
  */
 
 bool
-	SpaceSent2 = YES;	/* VAR: space-sentence-2 */
+SpaceSent2 = YES;	/* VAR: space-sentence-2 */
 
 int
-	LMargin = 0,	/* VAR: left margin */
-	RMargin = 78;	/* VAR: right margin */
+LMargin = 0,	/* VAR: left margin */
+RMargin = 78;	/* VAR: right margin */
 
 char
-	ParaDelim[sizeof(ParaDelim)] = "[ \t]*$\\|\\.\\|\\\\";	/* VAR: paragraph-delimiter-pattern */
+ParaDelim[sizeof(ParaDelim)] = "[ \t]*$\\|\\.\\|\\\\";	/* VAR: paragraph-delimiter-pattern */
 
 private LinePtr
-	para_head,
-	para_tail;
+para_head,
+para_tail;
 
 private int
-	head_indent,
-	body_indent;
+head_indent,
+body_indent;
 
 private bool	use_lmargin;
 
@@ -146,68 +146,78 @@ private bool	use_lmargin;
 private bool	bslash;		/* Nonzero if get_indent finds line starting
 				   with backslash */
 
-private bool 
-i_blank (LinePtr lp)
+private bool
+i_blank(LinePtr lp)
 {
 	return get_indent(lp) < 0;
 }
 
-private bool 
-i_bsblank (LinePtr lp)
+private bool
+i_bsblank(LinePtr lp)
 {
 	return i_blank(lp) || bslash;
 }
 
-private int 
-get_indent (register LinePtr lp)
+private int
+get_indent(register LinePtr lp)
 {
 	Bufpos	save;
 	register int	indent;
-
 	bslash = NO;
-	if (lp == NULL)
+
+	if (lp == NULL) {
 		return I_BUFEDGE;
+	}
 
 	DOTsave(&save);
 	SetLine(lp);
+
 	if (LookingAt(ParaDelim, linebuf, 0)) {
 		indent = I_DELIM;
+
 		if (linebuf[0] == '\\' && REeom == 1) {
 			/* BH 12/24/85.  Backslash is delimiter only if next line
 			 * also starts with Backslash.
 			 */
 			bslash = YES;
 			SetLine(lp->l_next);
-			if (linebuf[0] != '\\')
+
+			if (linebuf[0] != '\\') {
 				indent = 0;
+			}
 		}
 	} else {
 		ToIndent();
 		indent = calc_pos(linebuf, curchar);
 	}
-	SetDot(&save);
 
+	SetDot(&save);
 	return indent;
 }
 
-private LinePtr 
-tailrule (register LinePtr lp)
+private LinePtr
+tailrule(register LinePtr lp)
 {
 	int	i;
-
 	i = get_indent(lp);
-	if (i < 0)
-		return lp;	/* one line paragraph */
+
+	if (i < 0) {
+		return lp;        /* one line paragraph */
+	}
 
 	do {
 		if ((get_indent(lp->l_next) != i) || bslash)
 			/* BH line with backslash is head of next para */
+		{
 			break;
+		}
 	} while ((lp = lp->l_next) != NULL);
+
 	if (lp == NULL) {
 		complain((char *) NULL);
 		/* NOTREACHED */
 	}
+
 	return lp;
 }
 
@@ -216,8 +226,8 @@ tailrule (register LinePtr lp)
  * paragraphs.  That is, it's either FORWARD or BACKWARD depending on which
  * way we're favoring.
  */
-private void 
-find_para (int how)
+private void
+find_para(int how)
 {
 	LinePtr	this,
 		prev,
@@ -227,7 +237,6 @@ find_para (int how)
 		tail = NULL;
 	int	this_indent;
 	Bufpos	orig;		/* remember where we were when we started */
-
 	DOTsave(&orig);
 strt:
 	this = curline;
@@ -244,6 +253,7 @@ strt:
 				} else {
 					line_move(BACKWARD, 1, NO);
 				}
+
 			goto strt;
 		} else {
 			while (i_blank(curline))
@@ -253,138 +263,149 @@ strt:
 				} else {
 					line_move(FORWARD, 1, NO);
 				}
+
 			head = curline;
 			next = curline->l_next;
-			body = !i_bsblank(next)? next : head;
+			body = !i_bsblank(next) ? next : head;
 		}
 	} else if (i_bsblank(this) || i_blank(prev)) {	/* rule 2 */
 		head = this;
-		if (!i_bsblank(next))
+
+		if (!i_bsblank(next)) {
 			body = next;
+		}
 	} else if (i_bsblank(next)) {	/* rule 3 */
 		tail = this;
 		body = this;
 	} else if (get_indent(next) == this_indent	/* rule 4 */
-	|| get_indent(prev) == this_indent) {
+		|| get_indent(prev) == this_indent) {
 		body = this;
 	} else {		/* rule 6+ */
 		if (get_indent(prev) > this_indent) {
 			/* hanging indent maybe? */
 			if (next != NULL
-			&& get_indent(next) == get_indent(next->l_next))
-			{
+				&& get_indent(next) == get_indent(next->l_next)) {
 				head = this;
 				body = next;
 			}
 		}
+
 		/* Now we handle hanging indent else and the other
 		 * case of this_indent > get_indent(prev).  That is,
 		 * if we didn't resolve HEAD in the above if, then
 		 * we are not a hanging indent.
 		 */
 		if (head == NULL) {	/* still don't know */
-			head =  this_indent > get_indent(prev)? this : prev;
+			head =  this_indent > get_indent(prev) ? this : prev;
 			body = head->l_next;
 		}
 	}
+
 	/* rule 5 -- find the missing parts */
 	if (head == NULL) {
 		/* haven't found head of paragraph so do so now */
 		LinePtr	lp;
 		int	i;
-
 		lp = this;
+
 		do {
 			i = get_indent(lp->l_prev);
-			if (i < 0)	/* is blank */
+
+			if (i < 0) {	/* is blank */
 				head = lp;
-			else if (bslash)
+			} else if (bslash) {
 				head = lp->l_prev;
-			else if (i != this_indent) {
+			} else if (i != this_indent) {
 				this = lp->l_prev;
-				if (get_indent(this->l_prev) == i)
+
+				if (get_indent(this->l_prev) == i) {
 					head = this->l_next;
-				else
+				} else {
 					head = this;
+				}
 			}
 		} while (head == NULL && (lp = lp->l_prev) != NULL);
+
 		if (lp == NULL) {
 			complain((char *)NULL);
 			/* NOTREACHED */
 		}
 	}
-	if (body == NULL)		/* this must be a one line paragraph */
+
+	if (body == NULL) {	/* this must be a one line paragraph */
 		body = head;
-	if (tail == NULL)
+	}
+
+	if (tail == NULL) {
 		tail = tailrule(body);
+	}
+
 	if (tail == NULL || head == NULL || body == NULL) {
 		complain("BUG! tail(%d),head(%d),body(%d)!", tail, head, body);
 		/* NOTREACHED */
 	}
+
 	para_head = head;
 	para_tail = tail;
 	head_indent = get_indent(head);
 	body_indent = get_indent(body);
-
 	SetDot(&orig);
 }
 
-void 
-FillParagraph (void)
+void
+FillParagraph(void)
 {
 	LinePtr nl;
 	int lenparatail;
-
 	use_lmargin = is_an_arg();
 	find_para(BACKWARD);
 	nl = new_kill();
 	lenparatail = length(para_tail);
 	(void) DoYank(para_head, 0, para_tail, lenparatail,
-		      nl, 0, (Buffer *)NULL);
+		nl, 0, (Buffer *)NULL);
 	DoJustify(para_head, 0, para_tail, lenparatail, NO,
-		  use_lmargin ? LMargin : body_indent);
+		use_lmargin ? LMargin : body_indent);
 }
 
-private LinePtr 
-max_line (LinePtr l1, LinePtr l2)
+private LinePtr
+max_line(LinePtr l1, LinePtr l2)
 {
-	return inorder(l1, 0, l2, 0)? l2 : l1;
+	return inorder(l1, 0, l2, 0) ? l2 : l1;
 }
 
-private LinePtr 
-min_line (LinePtr l1, LinePtr l2)
+private LinePtr
+min_line(LinePtr l1, LinePtr l2)
 {
-	return inorder(l1, 0, l2, 0)? l1 : l2;
+	return inorder(l1, 0, l2, 0) ? l1 : l2;
 }
 
-void 
-FillRegion (void)
+void
+FillRegion(void)
 {
 	CopyRegion();	/* enable yank-pop for undo */
 	do_rfill(is_an_arg());
 	this_cmd = UNDOABLECMD;	/* allow yank-pop to undo */
 }
 
-void 
-do_rfill (bool ulm)
+void
+do_rfill(bool ulm)
 {
 	Mark	*mp = CurMark(),
-		*endmark;
+		 *endmark;
 	LinePtr	l1 = curline,
 		l2 = mp->m_line;
 	int	c1 = curchar,
 		c2 = mp->m_char;
-
 	use_lmargin = ulm;
 	(void) fixorder(&l1, &c1, &l2, &c2);
 	endmark = MakeMark(l2, c2);
+
 	for (;;) {
 		Mark	*tailmark;
 		LinePtr	rl1,
 			rl2;
 		int	rc1,
 			rc2;
-
 		DotTo(l1, c1);
 		find_para(FORWARD);
 		rl1 = max_line(l1, para_head);
@@ -392,41 +413,53 @@ do_rfill (bool ulm)
 		rl2 = min_line(endmark->m_line, para_tail);
 		rc2 = (rl2 == endmark->m_line) ? endmark->m_char : length(rl2);
 		tailmark = MakeMark(rl2, rc2);
+
 		if (rl1 != rl2 || rc1 != rc2)
 			DoJustify(rl1, rc1, rl2, rc2, NO,
 				use_lmargin ? LMargin : body_indent);
+
 		ToMark(tailmark);
 		DelMark(tailmark);
-		if (curline == endmark->m_line)
+
+		if (curline == endmark->m_line) {
 			break;
+		}
+
 		l1 = curline->l_next;
 		c1 = 0;
-		if (l1 == NULL || (l1 == endmark->m_line && c1 >= endmark->m_char))
+
+		if (l1 == NULL || (l1 == endmark->m_line && c1 >= endmark->m_char)) {
 			break;
+		}
 	}
+
 	DelMark(endmark);
 }
 
-private void 
-do_space (void)
+private void
+do_space(void)
 {
 	int
-		c1,
-		diff,
-		nspace = 0;
+	c1,
+	diff,
+	nspace = 0;
 	bool
-		funny_space = NO;
-
+	funny_space = NO;
 	skip_wht_space();
-	for (c1 = curchar; --c1 >= 0 && jiswhite(linebuf[c1]); )
-		if (linebuf[c1] != ' ')
+
+	for (c1 = curchar; --c1 >= 0 && jiswhite(linebuf[c1]);) {
+		if (linebuf[c1] != ' ') {
 			funny_space = YES;
+		}
+	}
+
 	c1 += 1;
 	diff = (curchar - c1);
 
 	if (diff != 0) {
 		if (c1 > 0 && !eolp()) {
 			nspace = 1;
+
 			if (diff >= 2) {
 				int	topunct = c1;
 
@@ -435,8 +468,9 @@ do_space (void)
 				} while (topunct > 0 && strchr("\"')]", linebuf[topunct]) != NULL);
 
 				if (SpaceSent2 && topunct > 0
-				&& (linebuf[c1-1] == ':' || strchr("?!.", linebuf[topunct]) != NULL))
+					&& (linebuf[c1 - 1] == ':' || strchr("?!.", linebuf[topunct]) != NULL)) {
 					nspace = 2;
+				}
 			}
 		}
 
@@ -445,7 +479,7 @@ do_space (void)
 			 * deletion so that marks will remain on the same side.
 			 */
 			b_char(diff);
-			ins_str(&"  "[2-nspace]);
+			ins_str(&"  "[2 - nspace]);
 			del_char(FORWARD, diff, NO);
 		}
 	}
@@ -455,34 +489,37 @@ do_space (void)
 /*#pragma loop_opt(off) */
 #endif
 
-void 
-DoJustify (LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
+void
+DoJustify(LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
 {
 	Mark	*savedot = MakeMark(curline, curchar),
-		*endmark;
+		 *endmark;
 	int	okay_char,	/* end of what fits */
 		start_char;	/* where we started the line */
-
 	(void) fixorder(&l1, &c1, &l2, &c2);	/* l1/c1 will be before l2/c2 */
 	DotTo(l1, c1);
+
 	if (get_indent(l1) >= c1) {
 		if (use_lmargin) {
 			Bol();
 			n_indent(indent + (head_indent - body_indent));
 			use_lmargin = NO;	/* turn this off now */
 		}
+
 		ToIndent();
 	}
-	endmark = MakeMark(l2, c2);
 
+	endmark = MakeMark(l2, c2);
 	okay_char = start_char = curchar;
+
 	for (;;) {
 		/* for each word ... */
 		int word_start = curchar;
 
 		/* skip to end of (possibly empty) input word */
-		while (!eolp() && !jiswhite(linebuf[curchar]))
+		while (!eolp() && !jiswhite(linebuf[curchar])) {
 			curchar += 1;
+		}
 
 		/* stop if we've run out of range */
 		if (curline == endmark->m_line && curchar >= endmark->m_char) {
@@ -491,7 +528,7 @@ DoJustify (LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
 		}
 
 		if (word_start != curchar && okay_char != start_char
-		&& calc_pos(linebuf, curchar) > RMargin) {
+			&& calc_pos(linebuf, curchar) > RMargin) {
 			/* This non-empty word won't fit in output line
 			 * (the first word on a line is always considered to fit).
 			 */
@@ -507,11 +544,13 @@ DoJustify (LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
 			DelWtSpace();
 			f_char(1);
 			DelWtSpace();
+
 			if (scrunch && TwoBlank()) {
 				Eol();
 				del_char(FORWARD, 1, NO);
 				Bol();
 			}
+
 			n_indent(indent);
 			okay_char = start_char = curchar;
 		} else {
@@ -528,9 +567,11 @@ DoJustify (LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
 				ins_str("  ");
 				del_char(FORWARD, 1, NO);
 			}
+
 			do_space();	/* compress space; advance past it */
 		}
 	}
+
 	ToMark(savedot);	/* Back to where we were */
 	DelMark(endmark);	/* Free up marks */
 	DelMark(savedot);
@@ -543,53 +584,58 @@ DoJustify (LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
 /*#pragma loop_opt() */
 #endif
 
-private void 
-DoPara (int dir)
+private void
+DoPara(int dir)
 {
-	register int	num = arg_value();
+	int	num = arg_value_as_int();
 	bool	first_time = YES;
 
 	if (num < 0) {
 		num = -num;
 		dir = -dir;
 	}
+
 	while (--num >= 0) {
 tryagain:
 		find_para(dir);		/* find paragraph bounderies */
+
 		if (dir == BACKWARD
-		&& (!first_time || (para_head == curline && bolp())))
-		{
+			&& (!first_time || (para_head == curline && bolp()))) {
 			if (bobp()) {
 				complain((char *)NULL);
 				/* NOTREACHED */
 			}
+
 			b_char(1);
 			first_time = !first_time;
 			goto tryagain;
 		}
+
 		SetLine((dir == BACKWARD) ? para_head : para_tail);
+
 		if (dir == BACKWARD && !firstp(curline)
-		&& i_blank(curline->l_prev)) {
+			&& i_blank(curline->l_prev)) {
 			line_move(BACKWARD, 1, NO);
 		} else if (dir == FORWARD) {
 			if (lastp(curline)) {
 				Eol();
 				break;
 			}
+
 			/* otherwise */
 			line_move(FORWARD, 1, NO);
 		}
 	}
 }
 
-void 
-BackPara (void)
+void
+BackPara(void)
 {
 	DoPara(BACKWARD);
 }
 
-void 
-ForPara (void)
+void
+ForPara(void)
 {
 	DoPara(FORWARD);
 }

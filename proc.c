@@ -65,42 +65,48 @@ struct error {
 			er_text;	/* Actual error */
 	int		er_char;	/* char pos of error */
 	struct error	*er_prev,	/* List of errors */
-			*er_next;
+			  *er_next;
 };
 
 private struct error	*cur_error = NULL,
-		*errorlist = NULL;
+				 *errorlist = NULL;
 
 /* Eliminate any error records that contain dangling references to Lines.
  * We only eliminate error structs when either referent is recycled.
  * If it deleted, we keep it (dormant) in case it will be pasted back
  * into the same buffer.
  */
-void 
-ChkErrorLines (void)
+void
+ChkErrorLines(void)
 {
 	register struct error	*e;
 	struct error	*prev = NULL;
 
-	for (e = errorlist; e != NULL; ) {
+	for (e = errorlist; e != NULL;) {
 		struct error	*next = e->er_next;
 
 		if (e->er_mess->l_dline == NULL_DADDR
-		|| e->er_text->l_dline == NULL_DADDR)
-		{
+			|| e->er_text->l_dline == NULL_DADDR) {
 			/* dangling reference: delete */
-			if (prev == NULL)
+			if (prev == NULL) {
 				errorlist = next;
-			else
+			} else {
 				prev->er_next = next;
-			if (next != NULL)
+			}
+
+			if (next != NULL) {
 				next->er_prev = prev;
-			if (cur_error == e)
+			}
+
+			if (cur_error == e) {
 				cur_error = next;
+			}
+
 			free((UnivPtr)e);
 		} else {
 			prev = e;
 		}
+
 		e = next;
 	}
 }
@@ -109,50 +115,52 @@ ChkErrorLines (void)
  * parse-{C,LINT}-errors and for the spell-buffer command
  */
 private struct error *
-AddError (struct error *laste, LinePtr errline, Buffer *buf, LinePtr line, int charpos)
+AddError(struct error *laste, LinePtr errline, Buffer *buf, LinePtr line, int charpos)
 {
-	struct error	*new = (struct error *) emalloc(sizeof *new);
-
+	struct error	*new = (struct error *) emalloc(sizeof * new);
 	new->er_prev = laste;
+
 	if (laste == NULL) {
 		/* first time: free up old errors */
-		if (errorlist != NULL)
+		if (errorlist != NULL) {
 			ErrFree();
+		}
+
 		cur_error = errorlist = new;
 	} else {
 		laste->er_next = new;
 	}
+
 	new->er_next = NULL;
 	new->er_buf = buf;
 	new->er_text = line;
 	new->er_char = charpos;
 	new->er_mess = errline;
-
 	return new;
 }
 
-void 
-get_FL_info (char *fname, char *lineno)
+void
+get_FL_info(char *fname, char *lineno)
 {
 	putmatch(1, fname, (size_t)FILESIZE);
 	putmatch(2, lineno, (size_t)FILESIZE);
 
 	/* if error had lineno before fname, switch the two */
 	if (!jisdigit(lineno[0]) && jisdigit(fname[0])) {
-	    putmatch(1, lineno, (size_t)FILESIZE);
-	    putmatch(2, fname, (size_t)FILESIZE);
+		putmatch(1, lineno, (size_t)FILESIZE);
+		putmatch(2, fname, (size_t)FILESIZE);
 	}
 }
 
 /* Free up all the errors */
 
-void 
-ErrFree (void)
+void
+ErrFree(void)
 {
 	cur_error = NULL;
+
 	while (errorlist != NULL) {
 		struct error	*nel = errorlist->er_next;
-
 		free((UnivPtr) errorlist);
 		errorlist = nel;
 	}
@@ -163,8 +171,8 @@ ErrFree (void)
  * will work for any kind of output that prints a file name and a line
  * number on the same line.
  */
-void 
-ErrParse (void)
+void
+ErrParse(void)
 {
 	struct RE_block	re_blk;
 	Bufpos	*bp;
@@ -176,33 +184,38 @@ ErrParse (void)
 	Buffer	*buf,
 		*lastb = NULL;
 	LinePtr	err_line = NULL;	/* avoid uninitialized complaint from gcc -W */
-
 	ErrFree();		/* This is important! */
 	ToFirst();
 	perr_buf = curbuf;
 	REcompile(ErrFmtStr, YES, &re_blk);
+
 	/* Find a line with a number on it. */
 	while ((bp = docompiled(FORWARD, &re_blk)) != NULL) {
 		SetDot(bp);
 		get_FL_info(fname, lineno);
 		buf = do_find((Window *)NULL, fname, YES, YES);
 		(void) chr_to_long(lineno, 10, NO, &lnum);
+
 		if (buf != lastb) {
 			lastb = buf;
 			last_lnum = 1;		/* new file */
 			err_line = buf->b_first;
-		} else if (lnum == last_lnum)	/* one error per line is nicer */
+		} else if (lnum == last_lnum) {	/* one error per line is nicer */
 			continue;
+		}
+
 		err_line = next_line(err_line, lnum - last_lnum);
 		ep = AddError(ep, curline, buf, err_line, 0);
 		last_lnum = lnum;
 	}
-	if (cur_error != NULL)
+
+	if (cur_error != NULL) {
 		ShowErr();
+	}
 }
 
-private void 
-NeedErrors (void)
+private void
+NeedErrors(void)
 {
 	if (cur_error == NULL) {
 		complain("No errors!");
@@ -210,8 +223,8 @@ NeedErrors (void)
 	}
 }
 
-private bool 
-ErrorHasReferents (void)
+private bool
+ErrorHasReferents(void)
 {
 	return inlist(cur_error->er_buf->b_first, cur_error->er_text)
 		&& inlist(perr_buf->b_first, cur_error->er_mess);
@@ -221,64 +234,70 @@ ErrorHasReferents (void)
  * one window and the buffer with the error in another window.
  * It checks to make sure that the error actually exists.
  */
-private void 
-ToError (bool forward)
+private void
+ToError(bool forward)
 {
 	register struct error	*e = cur_error;
-	int	num = arg_value();
-
+	int	num = arg_value_as_int();
 	NeedErrors();
-	if ((forward? e->er_next : e->er_prev) == NULL) {
+
+	if ((forward ? e->er_next : e->er_prev) == NULL) {
 		s_mess("You're at the %s error.", forward ? "last" : "first");
 	} else {
 		while (--num >= 0 || !ErrorHasReferents()) {
 			e = forward ? e->er_next : e->er_prev;
-			if (e == NULL)
+
+			if (e == NULL) {
 				break;
+			}
 
 			cur_error = e;
 		}
+
 		ShowErr();
 	}
 }
 
-void 
-NextError (void)
+void
+NextError(void)
 {
 	ToError(YES);
 }
 
-void 
-PrevError (void)
+void
+PrevError(void)
 {
 	ToError(NO);
 }
 
 int	EWSize = 20;	/* VAR: percentage of screen to make the error window */
 
-private void 
-set_wsize (int wsize)
+private void
+set_wsize(int wsize)
 {
 	wsize = (LI * wsize) / 100;
-	if (wsize >= 1 && !one_windp())
+
+	if (wsize >= 1 && !one_windp()) {
 		WindSize(curwind, wsize - (curwind->w_height - 1));
+	}
 }
 
 /* Show the current error, i.e. put the line containing the error message
  * in one window, and the buffer containing the actual error in another
  * window.
  */
-void 
-ShowErr (void)
+void
+ShowErr(void)
 {
 	Window	*err_wind,
 		*buf_wind;
-
 	NeedErrors();
+
 	if (!ErrorHasReferents()) {
 		rbell();
 		return;
 	}
+
 	err_wind = windbp(perr_buf);
 	buf_wind = windbp(cur_error->er_buf);
 
@@ -304,7 +323,6 @@ ShowErr (void)
 	SetLine(cur_error->er_mess);
 	SetTop(curwind, (curwind->w_line = cur_error->er_mess));
 	set_wsize(EWSize);
-
 	/* now go to the the line with the error in the other window */
 	SetWind(buf_wind);
 	DotTo(cur_error->er_text, cur_error->er_char);
@@ -316,32 +334,40 @@ char	ShcomBuf[LBSIZE];
  * will return the buffer name "fgrep".
  */
 char *
-MakeName (char *command)
+MakeName(char *command)
 {
 	static char	bnm[FILESIZE];
 	register char	*cp = bnm,
-			c;
+			 c;
 	const char	*bp;
 
 	do {
 		c = *command++;
 	} while (jiswhite(c));
+
 	*cp++ = '['; /* avoid potential clash with script or program names */
+
 	while (cp < &bnm[sizeof(bnm) - 1] && c != '\0' && !jiswhite(c)) {
 		*cp++ = c;
 		c = *command++;
 	}
+
 	*cp = '\0';
+
 	if ((bp = jbasename(&bnm[1])) != &bnm[1]) {
 		/* bp overlaps bnm, cannot use strcpy */
 		cp = &bnm[1];
-		do ; while ((*cp++ = *bp++) != '\0');
+
+		do {} while ((*cp++ = *bp++) != '\0');
+
 		cp--; /* make sure cp points at '\0' */
 	}
-	if (cp > &bnm[1] && cp < &bnm[sizeof(bnm)-1]) {
+
+	if (cp > &bnm[1] && cp < &bnm[sizeof(bnm) - 1]) {
 		*cp++ = ']';
 		*cp = '\0';
 	}
+
 	return bnm;
 }
 
@@ -354,18 +380,19 @@ bool	WtOnMk = YES;		/* VAR: write files on compile-it command */
 bool	WrapProcessLines = NO;	/* VAR: wrap process lines at CO-1 chars */
 
 private void
-	DoShell proto((char *, char *)),
+DoShell proto((char *, char *)),
 	com_finish proto((wait_status_t, char *));
 
 private char	make_cmd[LBSIZE] = "make";
 
-void 
-MakeErrors (void)
+void
+MakeErrors(void)
 {
 	Window	*old = curwind;
 
-	if (WtOnMk)
+	if (WtOnMk) {
 		put_bufs(NO);
+	}
 
 	/* When we're not doing make or cc (i.e., the last command
 	 * was probably a grep or something) and the user just types
@@ -375,70 +402,76 @@ MakeErrors (void)
 	 * default command and let the person decide.
 	 */
 	if (is_an_arg()
-	|| !(sindex("make", make_cmd) || sindex("cc", make_cmd)))
-	{
-		if (!is_an_arg())
+		|| !(sindex("make", make_cmd) || sindex("cc", make_cmd))) {
+		if (!is_an_arg()) {
 			rbell();
+		}
+
 		/* insert the default for the user (Kludge: only if Inputp is free) */
-		if (Inputp == NULL)
+		if (Inputp == NULL) {
 			Inputp = make_cmd;
+		}
+
 		jamstr(make_cmd, ask(make_cmd, "Compilation command: "));
 	}
-	com_finish(UnixToBuf(UTB_DISP|UTB_CLOBBER|UTB_ERRWIN|UTB_SH,
-		MakeName(make_cmd), (char *)NULL, make_cmd), make_cmd);
 
+	com_finish(UnixToBuf(UTB_DISP | UTB_CLOBBER | UTB_ERRWIN | UTB_SH,
+			MakeName(make_cmd), (char *)NULL, make_cmd), make_cmd);
 	ErrParse();
 
-	if (!cur_error)
+	if (!cur_error) {
 		SetWind(old);
+	}
 }
 
 # ifdef SPELL
 
-private void 
-SpelParse (const char *bname)
+private void
+SpelParse(const char *bname)
 {
 	Buffer	*buftospel,
 		*wordsb;
 	char	wordspel[100];
 	Bufpos	*bp;
 	struct error	*ep = NULL;
-
 	ErrFree();		/* This is important! */
-
 	buftospel = curbuf;
 	wordsb = buf_exists(bname);
+
 	if (wordsb == NULL) {
 		complain("Buffer %s is gone!", bname);
 		/* NOTREACHED */
 	}
+
 	perr_buf = wordsb;	/* This is important (buffer containing
 				   error messages) */
 	SetBuf(wordsb);
 	ToFirst();
 	f_mess("Finding misspelled words ... ");
+
 	while (!lastp(curline)) {
 		swritef(wordspel, sizeof(wordspel), "\\<%s\\>", linebuf);
 		SetBuf(buftospel);
 		ToFirst();
+
 		while ((bp = dosearch(wordspel, FORWARD, NO)) != NULL) {
 			SetDot(bp);
 			ep = AddError(ep, wordsb->b_dot, buftospel,
-					  curline, curchar);
+					curline, curchar);
 		}
+
 		SetBuf(wordsb);
 		line_move(FORWARD, 1, NO);
 	}
-	add_mess("Done.");
 
+	add_mess("Done.");
 	/* undo buffer switches that ought not to be reflected in current window */
 	SetBuf(curwind->w_bufp);
-
 	ShowErr();
 }
 
-void 
-SpelBuffer (void)
+void
+SpelBuffer(void)
 {
 	static const char	Spell[] = "Spell";
 	const char *cp;
@@ -449,87 +482,96 @@ SpelBuffer (void)
 		complain("no file name");
 		/* NOTREACHED */
 	}
+
 	if ((cp = strchr(SpellCmdFmt, '%')) == NULL ||
-	    cp[1] != 's' || strchr(cp+2, '%') != NULL) {
+		cp[1] != 's' || strchr(cp + 2, '%') != NULL) {
 		complain("spell-command-format needs one %%s with no other format characters");
 		/* NOTREACHED */
 	}
-	if (IsModified(curbuf))
+
+	if (IsModified(curbuf)) {
 		SaveFile();
+	}
+
 	swritef(com, sizeof(com), SpellCmdFmt, curbuf->b_fname);
-	(void) UnixToBuf(UTB_DISP|UTB_CLOBBER|UTB_ERRWIN|UTB_SH,
+	(void) UnixToBuf(UTB_DISP | UTB_CLOBBER | UTB_ERRWIN | UTB_SH,
 		Spell, (char *)NULL, com);
 	message("[Delete the irrelevant words and then type ^X ^C]");
 	ToFirst();
 	Recur();
+
 	if (!valid_bp(savebp)) {
 		complain("Buffer gone!");
 		/* NOTREACHED */
 	}
+
 	SetBuf(savebp);
 	SpelParse(Spell);
 }
 
-void 
-SpelWords (void)
+void
+SpelWords(void)
 {
 	Buffer	*wordsb = curbuf;
 	const char	*buftospel = ask_buf((Buffer *)NULL, ALLOW_OLD | ALLOW_INDEX);
-
 	SetBuf(do_select(curwind, buftospel));
 	SpelParse(wordsb->b_name);
 }
 
 # endif /* SPELL */
 
-void 
-ShToBuf (void)
+void
+ShToBuf(void)
 {
 	char	bnm[128],
 		cmd[LBSIZE];
-
 	jamstr(bnm, ask((char *)NULL, "Buffer: "));
 	jamstr(cmd, ask(ShcomBuf, "Command: "));
 	DoShell(bnm, cmd);
 }
 
-void 
-ShellCom (void)
+void
+ShellCom(void)
 {
 	jamstr(ShcomBuf, ask(ShcomBuf, ProcFmt));
 	DoShell(MakeName(ShcomBuf), ShcomBuf);
 }
 
-void 
-ShNoBuf (void)
+void
+ShNoBuf(void)
 {
 	jamstr(ShcomBuf, ask(ShcomBuf, ProcFmt));
-	com_finish(UnixToBuf(UTB_SH|UTB_FILEARG, (char *)NULL, (char *)NULL,
-		ShcomBuf), ShcomBuf);
+	com_finish(UnixToBuf(UTB_SH | UTB_FILEARG, (char *)NULL, (char *)NULL,
+			ShcomBuf), ShcomBuf);
 }
 
-void 
-Shtypeout (void)
+void
+Shtypeout(void)
 {
 	wait_status_t	status;
-
 	jamstr(ShcomBuf, ask(ShcomBuf, ProcFmt));
-	status = UnixToBuf(UTB_DISP|UTB_SH|UTB_FILEARG, (char *)NULL, (char *)NULL,
-		ShcomBuf);
+	status = UnixToBuf(UTB_DISP | UTB_SH | UTB_FILEARG, (char *)NULL, (char *)NULL,
+			ShcomBuf);
 #ifdef MSDOS_PROCS
-	if (status < 0)
+
+	if (status < 0) {
 		Typeout("[%s: not executed %d]", ShcomBuf, status);
-	else if (status > 0)
+	} else if (status > 0) {
 		Typeout("[%s: exited with %d]", ShcomBuf, status);
-	else if (!is_an_arg())
+	} else if (!is_an_arg()) {
 		Typeout("[%s: completed successfully]", ShcomBuf);
+	}
+
 #else /* !MSDOS_PROCS */
-	if (WIFSIGNALED(status))
+
+	if (WIFSIGNALED(status)) {
 		Typeout("[%s: terminated by signal %d]", ShcomBuf, WTERMSIG(status));
-	else if (WIFEXITED(status) && WEXITSTATUS(status)!=0)
+	} else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
 		Typeout("[%s: exited with %d]", ShcomBuf, WEXITSTATUS(status));
-	else if (!is_an_arg())
+	} else if (!is_an_arg()) {
 		Typeout("[%s: completed successfully]", ShcomBuf);
+	}
+
 #endif /* !MSDOS_PROCS */
 	TOstop();
 }
@@ -538,36 +580,41 @@ Shtypeout (void)
  * give a numeric argument, in which case it inserts the output at the
  * current position in the buffer.
  */
-private void 
-DoShell (char *bnm, char *command)
+private void
+DoShell(char *bnm, char *command)
 {
 	Window	*savewp = curwind;
-
 	com_finish(UnixToBuf(
-		(is_an_arg()
-			? UTB_DISP|UTB_SH|UTB_FILEARG
-			: UTB_DISP|UTB_CLOBBER|UTB_SH|UTB_FILEARG),
-		bnm, (char *)NULL, command), command);
+			(is_an_arg()
+				? UTB_DISP | UTB_SH | UTB_FILEARG
+				: UTB_DISP | UTB_CLOBBER | UTB_SH | UTB_FILEARG),
+			bnm, (char *)NULL, command), command);
 	SetWind(savewp);
 }
 
-private void 
-com_finish (wait_status_t status, char *cmd)
+private void
+com_finish(wait_status_t status, char *cmd)
 {
 #ifdef MSDOS_PROCS
-	if (status < 0)
+
+	if (status < 0) {
 		s_mess("[%s: not executed %d]", cmd, status);
-	else if (status > 0)
+	} else if (status > 0) {
 		s_mess("[%s: exited with %d]", cmd, status);
-	else
+	} else {
 		s_mess("[%s: completed successfully]", cmd);
+	}
+
 #else /* !MSDOS_PROCS */
-	if (WIFSIGNALED(status))
+
+	if (WIFSIGNALED(status)) {
 		s_mess("[%s: terminated by signal %d]", cmd, WTERMSIG(status));
-	else if (WIFEXITED(status) && WEXITSTATUS(status)!=0)
+	} else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
 		s_mess("[%s: exited with %d]", cmd, WEXITSTATUS(status));
-	else
+	} else {
 		s_mess("[%s: completed successfully]", cmd);
+	}
+
 #endif /* !MSDOS_PROCS */
 }
 
@@ -579,12 +626,13 @@ com_finish (wait_status_t status, char *cmd)
  */
 pid_t	ChildPid;
 
-void 
-dowait (
-    wait_status_t *status	/* may be NULL */
+void
+dowait(
+	wait_status_t *status	/* may be NULL */
 )
 {
 # ifdef IPROCS
+
 	while (DeadPid != ChildPid) {
 		wait_status_t	w;
 		pid_t	rpid = wait(&w);
@@ -599,9 +647,13 @@ dowait (
 			kill_off(rpid, w);
 		}
 	}
+
 	DeadPid = 0;
-	if (status != NULL)
+
+	if (status != NULL) {
 		*status = DeadStatus;
+	}
+
 # else
 	wait_status_t	w;
 
@@ -618,8 +670,11 @@ dowait (
 			break;
 		}
 	}
-	if (status != NULL)
+
+	if (status != NULL) {
 		*status = w;
+	}
+
 # endif
 	ChildPid = 0;
 }
@@ -631,26 +686,28 @@ private Env proc_env;
 private char PEnvExpBuf[LBSIZE];
 private char PEnvUnsetBuf[LBSIZE];
 
-void 
-ProcEnvExport (void)
+void
+ProcEnvExport(void)
 {
 	jamstr(PEnvExpBuf, ask(PEnvExpBuf, ProcFmt));
 	jputenv(&proc_env, PEnvExpBuf);
 }
 
-void 
-ProcEnvShow (void)
+void
+ProcEnvShow(void)
 {
 	const char **p;
 	TOstart("subshell environment");
+
 	for (p = jenvdata(&proc_env); *p; p++) {
-	    Typeout("%s", *p);
+		Typeout("%s", *p);
 	}
+
 	TOstop();
 }
 
-void 
-ProcEnvUnset (void)
+void
+ProcEnvUnset(void)
 {
 	jamstr(PEnvUnsetBuf, ask(PEnvUnsetBuf, ProcFmt));
 	junsetenv(&proc_env, PEnvUnsetBuf);
@@ -677,12 +734,12 @@ ProcEnvUnset (void)
  * Only if UTB_DISP and bnm is non-NULL are UTB_ERRWIN and
  * UTB_CLOBBER meaningful.
  */
-wait_status_t 
-UnixToBuf (
-    int flags,	/* bunch of booleans: see UTB_* in proc.h */
-    const char *bnm,	/* buffer name (NULL means none) */
-    const char *InFName,	/* name of file for process stdin (NULL means none) */
-    const char *cmd	/* command to run */
+wait_status_t
+UnixToBuf(
+	int flags,	/* bunch of booleans: see UTB_* in proc.h */
+	const char *bnm,	/* buffer name (NULL means none) */
+	const char *InFName,	/* name of file for process stdin (NULL means none) */
+	const char *cmd	/* command to run */
 )
 {
 #ifndef MSDOS_PROCS
@@ -703,77 +760,84 @@ UnixToBuf (
 	File	*fp;
 #ifdef SIGINTMASK_DECL
 	SIGINTMASK_DECL
-
 	SIGINTMASK_INIT();
 #endif
-
 	jdbg("UnixToBuf flags 0x%x \"%s\"\n", flags, cmd);
 	SlowCmd += 1;;
-	if (flags & UTB_SH) {
-			*ap++ = Shell;
-			*ap++ = (char *)jbasename(Shell);	/* lose const (but it's safe) */
-			*ap++ = ShFlags;
-			*ap++ = (char *)cmd;	/* lose const (but it's safe) */
-#ifdef MSDOS_PROCS
-			/* Kludge alert!
-			 * UNIX-like DOS shells and command.com-like DOS shells
-			 * seem to differ seem to differ on two points:
-			 * - UNIX-like shells use "-" to start flags whereas
-			 *   command.com-like shells use "/".
-			 * - UNIX-like shells seem to require that the argument to
-			 *   $SHELL -c be quoted to cause it to be taken as a single argument.
-			 *   command.com-like shells seem to automatically use the rest
-			 *   of the arguments.  This is not an issue under real UNIX
-			 *   since arguments are passed already broken down.
-			 *
-			 * E.g., your shell comand: echo foo
-			 *         jove runs: command /c echo foo     OK
-			 *         jove runs: sh -c echo foo          Oops! sh just runs "echo"
-			 *         jove runs: sh -c "echo foo"        Ah, now I get it.
-			 *
-			 * We use the first character of ShFlags to distinguish
-			 * which kind of shell we are dealing with!
-			 */
-			if (ShFlags[0] == '-') {
-				swritef(cmdbuf, sizeof(cmdbuf), "\"%s\"", cmd);
-				ap[-1] = cmdbuf;
-				/* ??? can we usefully jam in a copy or two of current filename? */
-			}
-#else /* !MSDOS_PROCS */
-			/* Two copies of the file name are passed to the shell:
-			 * The Cshell uses the first as a definition of $1.
-			 * Most versions of the Bourne shell use the second as a
-			 * definition of $1.  (Unfortunately, these same versions
-			 * of the Bourne shell take the first as their own name
-			 * for error reporting.)
-			 */
-			if ((flags & UTB_FILEARG) && curbuf->b_fname != NULL) {
-				strcpy(bfn, pr_name(curbuf->b_fname, NO));
-				*ap++ = bfn;
-				*ap++ = bfn;
-				{
-					int ln = 1;	/* origin 1 */
-					LinePtr lp;
 
-					for (lp = curbuf->b_first; lp != curline; lp = lp->l_next)
-						ln++;
-					swritef(bln, sizeof(bln), "%d", ln);
-					*ap++ = bln;
+	if (flags & UTB_SH) {
+		*ap++ = Shell;
+		*ap++ = (char *)jbasename(Shell);	/* lose const (but it's safe) */
+		*ap++ = ShFlags;
+		*ap++ = (char *)cmd;	/* lose const (but it's safe) */
+#ifdef MSDOS_PROCS
+
+		/* Kludge alert!
+		 * UNIX-like DOS shells and command.com-like DOS shells
+		 * seem to differ seem to differ on two points:
+		 * - UNIX-like shells use "-" to start flags whereas
+		 *   command.com-like shells use "/".
+		 * - UNIX-like shells seem to require that the argument to
+		 *   $SHELL -c be quoted to cause it to be taken as a single argument.
+		 *   command.com-like shells seem to automatically use the rest
+		 *   of the arguments.  This is not an issue under real UNIX
+		 *   since arguments are passed already broken down.
+		 *
+		 * E.g., your shell comand: echo foo
+		 *         jove runs: command /c echo foo     OK
+		 *         jove runs: sh -c echo foo          Oops! sh just runs "echo"
+		 *         jove runs: sh -c "echo foo"        Ah, now I get it.
+		 *
+		 * We use the first character of ShFlags to distinguish
+		 * which kind of shell we are dealing with!
+		 */
+		if (ShFlags[0] == '-') {
+			swritef(cmdbuf, sizeof(cmdbuf), "\"%s\"", cmd);
+			ap[-1] = cmdbuf;
+			/* ??? can we usefully jam in a copy or two of current filename? */
+		}
+
+#else /* !MSDOS_PROCS */
+
+		/* Two copies of the file name are passed to the shell:
+		 * The Cshell uses the first as a definition of $1.
+		 * Most versions of the Bourne shell use the second as a
+		 * definition of $1.  (Unfortunately, these same versions
+		 * of the Bourne shell take the first as their own name
+		 * for error reporting.)
+		 */
+		if ((flags & UTB_FILEARG) && curbuf->b_fname != NULL) {
+			strcpy(bfn, pr_name(curbuf->b_fname, NO));
+			*ap++ = bfn;
+			*ap++ = bfn;
+			{
+				int ln = 1;	/* origin 1 */
+				LinePtr lp;
+
+				for (lp = curbuf->b_first; lp != curline; lp = lp->l_next) {
+					ln++;
 				}
-				swritef(bc, sizeof(bc), "%d", curchar + 1);	/* origin 1 */
-				*ap++ = bc;
+
+				swritef(bln, sizeof(bln), "%d", ln);
+				*ap++ = bln;
 			}
+			swritef(bc, sizeof(bc), "%d", curchar + 1);	/* origin 1 */
+			*ap++ = bc;
+		}
+
 #endif /* !MSDOS_PROCS */
 	} else {
 		*ap++ = (char *)cmd;	/* lose const (but it's safe) */
 		*ap++ = (char *)jbasename(cmd);	/* lose const (but it's safe) */
 	}
+
 	*ap++ = NULL;
 
 	if (access(argv[0], J_X_OK) != 0) {
 		complain("[Couldn't access %s: %s]", argv[0], strerror(errno));
 		/* NOTREACHED */
 	}
+
 	if (flags & UTB_DISP) {
 		if (bnm != NULL) {
 			if (flags & UTB_CLOBBER) {
@@ -782,7 +846,8 @@ UnixToBuf (
 			} else {
 				pop_wind(bnm, NO, B_FILE);
 			}
-			set_wsize(flags & UTB_ERRWIN? EWSize : 0);
+
+			set_wsize(flags & UTB_ERRWIN ? EWSize : 0);
 			message("Starting up...");
 			redisplay();
 		} else {
@@ -791,6 +856,7 @@ UnixToBuf (
 			TOstart(argv[0]);	/* overwrite "Starting up..." */
 		}
 	}
+
 	/* Now I will attempt to describe how I deal with signals during
 	 * the execution of the shell command.  My desire was to be able
 	 * to interrupt the shell command AS SOON AS the window pops up.
@@ -808,16 +874,13 @@ UnixToBuf (
 	 * little while longer before trying again.  Now that is fixed,
 	 * in that you just have to type it twice.
 	 */
-
 #ifndef MSDOS_PROCS
 	dopipe(p);
-
 # ifdef SIGINT_BLOCK
 	SIGINT_BLOCK();
 # else
 	old_int = setsighandler(SIGINT, SIG_IGN),
 # endif
-
 # ifdef USE_VFORK
 	/*
 	 * There are several other forks in Jove, but for
@@ -838,7 +901,6 @@ UnixToBuf (
 
 	if (ChildPid == -1) {
 		int	fork_errno = errno;
-
 		pipeclose(p);
 # ifdef SIGINT_UNBLOCK
 		SIGINT_UNBLOCK();
@@ -848,18 +910,20 @@ UnixToBuf (
 		complain("[Fork failed: %s]", strerror(fork_errno));
 		/* NOTREACHED */
 	}
+
 	if (ChildPid == 0) {
 		const char	*a;	/* action name (for error message) */
 		(void) setsighandler(SIGINT, SIG_DFL);
 #  ifdef SIGINT_UNBLOCK
 		SIGINT_UNBLOCK();
 #  endif
+
 		if (!((a = "close 0", close(0)) == 0
-		&& (a = "open", open(InFName==NULL? "/dev/null" : InFName, O_RDONLY | O_BINARY)) == 0
-		&& (a = "close 1", close(1)) == 0
-		&& (a = "dup 1", dup(p[1])) == 1
-		&& (a = "close 2", close(2)) == 0
-		&& (a = "dup 2", dup(p[1])) == 2)) {
+				&& (a = "open", open(InFName == NULL ? "/dev/null" : InFName, O_RDONLY | O_BINARY)) == 0
+				&& (a = "close 1", close(1)) == 0
+				&& (a = "dup 1", dup(p[1])) == 1
+				&& (a = "close 2", close(2)) == 0
+				&& (a = "dup 2", dup(p[1])) == 2)) {
 			raw_complain("% in setup for child failed: %s", a, strerror(errno));
 			_exit(1);
 		}
@@ -870,6 +934,7 @@ UnixToBuf (
 		raw_complain("Execl failed: %s", strerror(errno));
 		_exit(1);
 	}
+
 # ifdef SIGINT_BLOCK
 	old_int = setsighandler(SIGINT, SIG_IGN);	/* got to do this eventually */
 # endif
@@ -883,57 +948,66 @@ UnixToBuf (
 		bool	InFailure = NO;
 		int	ph, pinh, saverrno = 0;
 		const	char *op = "";
-
 		PathCat(pipename, sizeof(pipename), TmpDir, "jpXXXXXX");
 		ph = MakeTemp(pipename, "filter buffer");
 		jdbg("created temp \"%s\" ph %d\n", pipename, ph);
+
 		if (InFName == NULL) {
-		    char	nullname[FILESIZE];
-		    PathCat(nullname, sizeof(nullname), TmpDir, "jnXXXXXX");
-		    pinh = MakeTemp(nullname, "filter null file");
-		    (void) unlink(nullname);
+			char	nullname[FILESIZE];
+			PathCat(nullname, sizeof(nullname), TmpDir, "jnXXXXXX");
+			pinh = MakeTemp(nullname, "filter null file");
+			(void) unlink(nullname);
 		} else {
-		    pinh = open(InFName, O_RDONLY | O_BINARY);
-		    if (pinh < 0) {
-			saverrno = errno;
-			op = InFName;
-			jdbg("error opening \"%s\": %d %s\n", InFName, errno);
-			InFailure = YES;
-		    }
+			pinh = open(InFName, O_RDONLY | O_BINARY);
+
+			if (pinh < 0) {
+				saverrno = errno;
+				op = InFName;
+				jdbg("error opening \"%s\": %d %s\n", InFName, errno);
+				InFailure = YES;
+			}
 		}
+
 		if (!InFailure && (dup2(ph, 1) < 0 || dup2(ph, 2) < 0)) {
 			saverrno = errno;
 			op = "dup2 temp";
 			jdbg("%s file fd failed: %d %s\n", op, errno,
-			     strerror(errno));
+				strerror(errno));
 			InFailure = YES;
 		}
+
 		(void) close(ph);
+
 		if (!InFailure && dup2(pinh, 0) < 0) {
 			saverrno = errno;
 			op = "dup2 input";
 			jdbg("%s file fd failed: %d %s\n", op, errno,
-			     strerror(errno));
+				strerror(errno));
 			InFailure = YES;
 		}
-		(void) close(pinh);
 
+		(void) close(pinh);
 		jdbg("InFailure %d InFName \"%s\"\n", InFailure,
-		     InFName == NULL ? "(NULL)" : InFName);
+			InFName == NULL ? "(NULL)" : InFName);
+
 		if (!InFailure) {
 			if (jdebug) {
 				int vk = 0;
+
 				while (argv[vk]) {
 					jdprintf("%d: \"%s\"\n", vk, argv[vk]);
 					vk++;
 				}
 			}
+
 			status = spawnve(0, argv[0], &argv[1],
-					 (char *const *)jenvdata(&proc_env));
+					(char *const *)jenvdata(&proc_env));
+
 			if (status < 0) {
-			    saverrno = errno;
+				saverrno = errno;
 			}
 		}
+
 		jdbg("restoring fds 0 1 2 from %d %d %d\n", oldi, oldo, olde);
 		(void) dup2(oldi, 0);
 		(void) dup2(oldo, 1);
@@ -946,21 +1020,25 @@ UnixToBuf (
 			complain("[filter %s failed %s %d]", op, strerror(saverrno), saverrno);
 			/* NOTREACHED */
 		}
-		if (status < 0)
+
+		if (status < 0) {
 			s_mess("[Spawn failed, status %d: %s %d]", status, strerror(saverrno), saverrno);
+		}
+
 		jdbg("opening \"%s\" from \"%s\"\n", pipename, argv[1]);
 		ph = open(pipename, O_RDONLY | O_BINARY | O_CLOEXEC);
+
 		if (ph < 0) {
 			complain("[cannot reopen pipe %s: %s]", pipename, strerror(errno));
 			/* NOTREACHED */
 		}
+
 		fp = fd_open(argv[1], F_READ, ph, iobuff, LBSIZE);
 	}
-
 #endif /* MSDOS_PROCS */
 
 	do {
-		int	wrap_col = WrapProcessLines ? CO-1 : LBSIZE;
+		int	wrap_col = WrapProcessLines ? CO - 1 : LBSIZE;
 #ifdef UNIX
 		InSlowRead = YES;
 #endif
@@ -968,19 +1046,27 @@ UnixToBuf (
 #ifdef UNIX
 		InSlowRead = NO;
 #endif
+
 		if (bnm != NULL) {
 			ins_str_wrap(genbuf, YES, wrap_col);
-			if (!eof)
+
+			if (!eof) {
 				LineInsert(1);
+			}
+
 			if ((flags & UTB_DISP) && fp->f_cnt <= 0) {
 				message("Chugging along...");
 				redisplay();
 			}
-		} else if (flags & UTB_DISP)
+		} else if (flags & UTB_DISP) {
 			Typeout("%s", genbuf);
+		}
 	} while (!eof);
-	if (flags & UTB_DISP)
+
+	if (flags & UTB_DISP) {
 		DrawMesg(NO);
+	}
+
 	close_file(fp);
 #ifndef MSDOS_PROCS
 	dowait(&status);
@@ -1004,8 +1090,8 @@ UnixToBuf (
 /* Send the current region to CMD and insert the output from the
  * command into OUT_BUF.
  */
-private void 
-RegToUnix (Buffer *outbuf, char *cmd, bool wrap)
+private void
+RegToUnix(Buffer *outbuf, char *cmd, bool wrap)
 {
 	Mark	*m = CurMark();
 	static char	tname[FILESIZE];
@@ -1015,50 +1101,50 @@ RegToUnix (Buffer *outbuf, char *cmd, bool wrap)
 	bool	old_wrap = WrapProcessLines;
 	File	*volatile fp;
 	jmp_buf	sav_jmp;
-
 	PathCat(tname, sizeof(tname), TmpDir, "jfXXXXXX");
-
 	/* safe version of mktemp */
 	close(MakeTemp(tname, "filter region"));
-
 	fp = open_file(tname, iobuff, F_WRITE, YES);
 	push_env(sav_jmp);
+
 	if (setjmp(mainjmp) == 0) {
 		WrapProcessLines = wrap;
 		putreg(fp, m->m_line, m->m_char, curline, curchar, YES);
 		DelReg();
 		f_close(fp);
-		status = UnixToBuf(UTB_SH|UTB_FILEARG, outbuf->b_name, tname, cmd);
+		status = UnixToBuf(UTB_SH | UTB_FILEARG, outbuf->b_name, tname, cmd);
 	} else {
 		f_close(fp);
 		err = YES;
 	}
+
 	pop_env(sav_jmp);
 	WrapProcessLines = old_wrap;
-
 	(void) unlink(tname);
 	SetWind(save_wind);
-	if (!err)
+
+	if (!err) {
 		com_finish(status, cmd);
+	}
 }
 
-void 
-FilterRegion (void)
+void
+FilterRegion(void)
 {
 	static char FltComBuf[LBSIZE];
-
 	jamstr(FltComBuf, ask(FltComBuf, ": %f (through command) "));
 	RegToUnix(curbuf, FltComBuf, NO);
 	this_cmd = UNDOABLECMD;
 }
 
-void 
-isprocbuf (const char *bnm)
+void
+isprocbuf(const char *bnm)
 {
 	Buffer	*bp;
 
-	if ((bp = buf_exists(bnm)) != NULL && bp->b_type != B_PROCESS)
+	if ((bp = buf_exists(bnm)) != NULL && bp->b_type != B_PROCESS) {
 		confirm("Over-write buffer %s? ", bnm);
+	}
 }
 
 #endif /* SUBSHELL */

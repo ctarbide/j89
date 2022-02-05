@@ -6,6 +6,7 @@
  **************************************************************************/
 
 #include "jove.h"
+#include "ttystate.h"
 #include "term.h"
 
 #include "fp.h"
@@ -19,16 +20,16 @@ int
 	CO;		/* number of columns (CO <= MAXCOLS) */
 
 bool
-	TABS = NO;		/* terminal supports tabs */
+	TABS = NO;	/* terminal supports tabs */
 
 #ifndef UNIX
-void 
-settout (void)
+void
+settout(void)
 {
 # ifndef NO_JSTDOUT
 	flushscreen();		/* flush the one character buffer */
 	ScrBufSize = MAXTTYBUF;
-	jstdout = fd_open("/dev/tty", F_WRITE|F_LOCKED, 1, (char *)NULL, ScrBufSize);
+	jstdout = fd_open("/dev/tty", F_WRITE | F_LOCKED, 1, (char *)NULL, ScrBufSize);
 # endif
 }
 #endif /* !UNIX */

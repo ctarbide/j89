@@ -28,8 +28,8 @@
 #include "reapp.h"
 #include "rec.h"
 #include "screen.h"
-#include "term.h"
 #include "ttystate.h"
+#include "term.h"
 /* #include "util.h" */
 #include "wind.h"
 
@@ -40,8 +40,8 @@
 /* Needed to comfort MS Visual C */
 private int varcmp proto((UnivConstPtr p1, UnivConstPtr p2));
 
-private int 
-varcmp (UnivConstPtr p1, UnivConstPtr p2)
+private int
+varcmp(UnivConstPtr p1, UnivConstPtr p2)
 {
 	const struct variable *v1 = (const struct variable *) p1;
 	const struct variable *v2 = (const struct variable *) p2;
@@ -58,16 +58,19 @@ size_t		vbufsize;
 	const struct variable	*vp;
 	vkey.Name = name;
 	vp = (const struct variable *) bsearch((UnivConstPtr)&vkey,
-		(UnivConstPtr)variables, elemsof(variables) - 1,/* ignore NULL */
-		sizeof(struct variable), varcmp);
-	if (vp == NULL)
+			(UnivConstPtr)variables, elemsof(variables) - 1,/* ignore NULL */
+			sizeof(struct variable), varcmp);
+
+	if (vp == NULL) {
 		return NULL;
+	}
+
 	vpr_aux(vp, vbuf, vbufsize);
 	return vbuf;
 }
 
 const data_obj *
-findvar (const char *prompt)
+findvar(const char *prompt)
 {
 	static const char	*strings[elemsof(variables)];
 	static int	last = -1;
@@ -76,12 +79,14 @@ findvar (const char *prompt)
 		register const char	**strs = strings;
 		register const struct variable	*v = variables;
 
-		for (; v->Name; v++)
+		for (; v->Name; v++) {
 			*strs++ = v->Name;
+		}
+
 		*strs = NULL;
 	}
 
-	last = complete(strings, last >= 0? strings[last] : (char *)NULL,
-		prompt, ALLOW_OLD);
+	last = complete(strings, last >= 0 ? strings[last] : (char *)NULL,
+			prompt, ALLOW_OLD);
 	return (data_obj *) &variables[last];
 }

@@ -173,7 +173,7 @@ private const unsigned char IdChartable[NCHARS] = {
 	wL,	w,	w,	w,	w,	w,	w,	w,	/* 100 */
 	w,	w,	w,	w,	w,	w,	w,	w,	/* 110 */
 	w,	w,	w,	w,	w,	w,	w,	w,	/* 120 */
-	w,	w,	w,	0,	0,	0,	wL,	wC|wL,	/* 130 */
+	w,	w,	w,	0,	0,	0,	wL,	wC | wL,	/* 130 */
 
 	0,	w,	w,	w,	w,	w,	w,	w,	/* 140 */
 	w,	w,	w,	w,	w,	w,	w,	w,	/* 150 */
@@ -275,8 +275,8 @@ private const unsigned char IdChartable[NCHARS] = {
 #undef wL
 #undef w
 
-bool 
-jisident (DAPchar c)
+bool
+jisident(DAPchar c)
 {
 #ifdef USE_CTYPE
 	return (IdChartable[ZXC(c)] & (1 << curbuf->b_major)) != 0 || jisword(c);
@@ -295,15 +295,16 @@ char	LcCtype[32] = "";	/* VAR: lc-ctype, for use in setlocale */
 
 /* adjust the locale to reflect possible change to LcCtype */
 
-void 
-locale_adjust (void)
+void
+locale_adjust(void)
 {
 	char	*res = setlocale(LC_CTYPE, LcCtype);
 
 	if (res != NULL) {
 		/* success: if it fits, record result */
-		if (strlen(res) < sizeof(LcCtype))
+		if (strlen(res) < sizeof(LcCtype)) {
 			strcpy(LcCtype, res);
+		}
 	} else if (LcCtype[0] != '\0') {
 		/* Failure, but not for "".  Complain, after recovering.
 		 * Note: We don't try to print a message if "" fails because it
@@ -311,15 +312,16 @@ locale_adjust (void)
 		 * or it might be the recursive call.
 		 */
 		char	temp[sizeof(LcCtype)];
-
 		strcpy(temp, LcCtype);
 		res = setlocale(LC_CTYPE, (char *)NULL);
+
 		if (res != NULL && strlen(res) < sizeof(LcCtype)) {
 			strcpy(LcCtype, res);
 		} else {
 			LcCtype[0] = '\0';	/* default */
 			locale_adjust();	/* note: this will recurse only one level */
 		}
+
 		complain("Unrecognized lc-ctype: %s", temp);
 		/* NOTREACHED */
 	}
@@ -405,7 +407,7 @@ const char	RaiseTable[NCHARS] = {
 	 * '\317' -> '\316'
 	 */
 	'\200',	'\201',	'\202',	'\203',	'\204',	'\205',	'\206',	'\207',
-	 '\313',	'\211',	 '\200',	 '\314',	 '\201',	 '\202',	 '\203',	'\217',
+	'\313',	'\211',	 '\200',	 '\314',	 '\201',	 '\202',	 '\203',	'\217',
 	'\220',	'\221',	'\222',	'\223',	'\224',	'\225',	 '\204',	'\227',
 	'\230',	'\231',	 '\205',	 '\315',	'\234',	'\235',	'\236',	 '\206',
 	'\240',	'\241',	'\242',	'\243',	'\244',	'\245',	'\246',	'\247',
@@ -519,14 +521,14 @@ const char	LowerTable[NCHARS] = {
 	 * '\315' -> '\233'
 	 * '\316' -> '\317'
 	 */
-	 '\212',	 '\214',	 '\215',	 '\216',	 '\226',	 '\232',	 '\237',	'\207',
+	'\212',	 '\214',	 '\215',	 '\216',	 '\226',	 '\232',	 '\237',	'\207',
 	'\210',	'\211',	'\212',	'\213',	'\214',	'\215',	'\216',	'\217',
 	'\220',	'\221',	'\222',	'\223',	'\224',	'\225',	'\226',	'\227',
 	'\230',	'\231',	'\232',	'\233',	'\234',	'\235',	'\236',	'\237',
 	'\240',	'\241',	'\242',	'\243',	'\244',	'\245',	'\246',	'\247',
 	'\250',	'\251',	'\252',	'\253',	'\254',	'\255',	'\256',	'\257',
 	'\260',	'\261',	'\262',	'\263',	'\264',	'\265',	'\266',	'\267',
-	 '\271',	'\271',	'\272',	'\273',	'\274',	'\275',	'\276',	'\277',
+	'\271',	'\271',	'\272',	'\273',	'\274',	'\275',	'\276',	'\277',
 	'\300',	'\301',	'\302',	'\303',	'\304',	'\305',	'\306',	'\307',
 	'\310',	'\311',	'\312',	 '\230',	 '\213',	 '\233',	 '\317',	'\317',
 	'\320',	'\321',	'\322',	'\323',	'\324',	'\325',	'\326',	'\327',

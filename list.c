@@ -9,22 +9,20 @@
 #include "list.h"
 
 private List *
-list_new (void)
+list_new(void)
 {
 	List	*new;
-
-	new = (List *) emalloc(sizeof (List));
+	new = (List *) emalloc(sizeof(List));
 	new->car = NULL;
 	return new;
 }
 
 /* push an object to the beginning of list */
 
-UnivPtr 
-list_push (register List **list, UnivPtr element)
+UnivPtr
+list_push(register List **list, UnivPtr element)
 {
 	List	*new;
-
 	new = list_new();
 	new->cdr = *list;
 	new->car = element;
@@ -32,14 +30,15 @@ list_push (register List **list, UnivPtr element)
 	return element;
 }
 
-UnivPtr 
-list_pop (List **list)
+UnivPtr
+list_pop(List **list)
 {
 	List	*cell = *list;
 	UnivPtr	element;
 
-	if (cell == NULL)
+	if (cell == NULL) {
 		return NULL;
+	}
 
 	element = cell->car;
 	*list = cell->cdr;

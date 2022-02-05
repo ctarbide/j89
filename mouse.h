@@ -8,7 +8,7 @@
 #ifdef MOUSE	/* the body is the rest of this file */
 
 extern void
-	MouseOn proto((void)),
+MouseOn proto((void)),
 	MouseOff proto((void)),
 
 	xjMousePoint proto((void)),

@@ -18,5 +18,5 @@ struct cons {
 #define list_data(lp)	((lp)->car)
 
 extern UnivPtr
-	list_push proto((List **, UnivPtr)),
-	list_pop proto((List **));
+list_push proto((List **, UnivPtr)),
+	  list_pop proto((List **));

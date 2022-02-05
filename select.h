@@ -11,7 +11,7 @@
 
 #ifndef FD_SET		/* usually set in sys/types.h (AIX: sys/select.h) */
 
-  typedef long fd_set;
+typedef long fd_set;
 
 # ifndef FD_SETSIZE
 #  define FD_SETSIZE      32
@@ -31,8 +31,8 @@ struct timeval;	/* forward declaration preventing prototype scoping */
 # endif
 
 extern int	UNMACRO(select) proto((int /*width*/,
-	fd_set * /*readfds*/, fd_set * /*writefds*/, fd_set * /*exceptfds*/,
-	struct timeval * /*timeout*/));
+		fd_set * /*readfds*/, fd_set * /*writefds*/, fd_set * /*exceptfds*/,
+		struct timeval * /*timeout*/));
 
 #endif
 

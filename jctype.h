@@ -43,7 +43,7 @@ extern bool	jisident proto((DAPchar));
 
 #ifndef NO_SETLOCALE
 extern char	LcCtype[32];		/* VAR: lc-ctype, for use in setlocale */
-extern void		locale_adjust proto ((void));
+extern void		locale_adjust proto((void));
 #endif
 
 #else /* !USE_CTYPE */
@@ -53,9 +53,9 @@ extern void		locale_adjust proto ((void));
 # define	jisupper(c)	has_syntax(c, C_UPPER)
 # define	jislower(c)	has_syntax(c, C_LOWER)
 
-  extern const char
-	RaiseTable[NCHARS],
-	LowerTable[NCHARS];
+extern const char
+RaiseTable[NCHARS],
+	   LowerTable[NCHARS];
 
 # define	CharUpcase(c)	ZXC(RaiseTable[ZXC(c)])
 # define	CharDowncase(c)	ZXC(LowerTable[ZXC(c)])

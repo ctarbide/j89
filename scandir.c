@@ -21,7 +21,7 @@
 # include <sys/stat.h>
 
 # if defined(M_XENIX) && !defined(M_UNIX)
-   /* XENIX, but not SCO UNIX, which pretends to be XENIX! */
+/* XENIX, but not SCO UNIX, which pretends to be XENIX! */
 #  include <sys/ndir.h>
 #  ifndef dirent
 #   define dirent direct
@@ -46,8 +46,8 @@ typedef struct {
 	int	d_fd;		/* File descriptor for this directory */
 } DIR;
 
-private int 
-closedir (DIR *dp)
+private int
+closedir(DIR *dp)
 {
 	(void) close(dp->d_fd);
 	free((UnivPtr) dp);
@@ -55,7 +55,7 @@ closedir (DIR *dp)
 }
 
 private DIR *
-opendir (const char *dir)
+opendir(const char *dir)
 {
 	int	fd;
 
@@ -63,17 +63,17 @@ opendir (const char *dir)
 		struct stat	stbuf;
 
 		if ((fstat(fd, &stbuf) != -1)
-		&& (stbuf.st_mode & S_IFMT) == S_IFDIR)
-		{
+			&& (stbuf.st_mode & S_IFMT) == S_IFDIR) {
 			/* Success! */
-			DIR	*dp = (DIR *) emalloc(sizeof *dp);
-
+			DIR	*dp = (DIR *) emalloc(sizeof * dp);
 			dp->d_fd = fd;
 			return dp;
 		}
+
 		/* this isn't a directory! */
 		(void) close(fd);
 	}
+
 	return NULL;
 }
 
@@ -84,8 +84,9 @@ DIR	*dp;
 	static dirent	dir;
 
 	do {
-		if (read(dp->d_fd, (UnivPtr) &dir, sizeof dir) != sizeof dir)
+		if (read(dp->d_fd, (UnivPtr) &dir, sizeof dir) != sizeof dir) {
 			return NULL;
+		}
 	} while (dir.d_ino == 0);
 
 	return &dir;
@@ -109,27 +110,41 @@ int	(*sorter) ptrproto((UnivConstPtr, UnivConstPtr));
 	unsigned int	nalloc = 10;
 	size_t	nentries = 0;
 
-	if ((dirp = opendir(dir)) == NULL)
+	if ((dirp = opendir(dir)) == NULL) {
 		return -1;
+	}
 
-	ourarray = (char **) emalloc(nalloc * sizeof (char *));
+	ourarray = (char **) emalloc(nalloc * sizeof(char *));
+
 	while ((entry = readdir(dirp)) != NULL) {
-		if (qualify != NULL && !(*qualify)(entry->d_name))
+		if (qualify != NULL && !(*qualify)(entry->d_name)) {
 			continue;
+		}
 
 		/* note: test ensures one space left in ourarray for NULL */
-		if (nentries+1 == nalloc)
-			ourarray = (char **) erealloc((UnivPtr) ourarray, (nalloc += 10) * sizeof (char *));
+		if (nentries + 1 == nalloc) {
+			ourarray = (char **) erealloc((UnivPtr) ourarray, (nalloc += 10) * sizeof(char *));
+		}
+
 		ourarray[nentries++] = copystr(entry->d_name);
 	}
+
 	closedir(dirp);
 	ourarray[nentries] = NULL;
 
-	if (sorter != NULL)
-		qsort((UnivPtr) ourarray, nentries, sizeof (char **), sorter);
+	if (sorter != NULL) {
+		qsort((UnivPtr) ourarray, nentries, sizeof(char **), sorter);
+	}
+
 	*nmptr = ourarray;
 
-	return nentries;
+	if (nentries > INT_MAX) {
+		fprintf(stderr, "fatal: %s:%d: nentries > INT_MAX\n", __FILE__, __LINE__);
+		exit(1);
+	}
+
+	/* nentries guaranteed within 0 and INT_MAX */
+	return (int)nentries;
 }
 
 #endif /* UNIX */
@@ -164,47 +179,60 @@ int	(*sorter) ptrproto((UnivConstPtr, UnivConstPtr));
 	char	**ourarray;
 	unsigned int	nalloc = 10,
 			nentries = 0;
-
 	{
 		char dirname[FILESIZE];
 		char *ptr;
-
 		strcpy(dirname, dir);
-		ptr = &dirname[strlen(dirname)-1];
-		if (!((dirname[1] == ':' && dirname[2] == '\0') || *ptr == '/' || *ptr == '\\'))
-			*++ptr = '/';
-		strcpy(ptr+1, "*.*");
+		ptr = &dirname[strlen(dirname) - 1];
 
-		if (_dos_findfirst(dirname, _A_NORMAL|_A_RDONLY|_A_HIDDEN|_A_SUBDIR, &entry))
+		if (!((dirname[1] == ':' && dirname[2] == '\0') || *ptr == '/' || *ptr == '\\')) {
+			*++ptr = '/';
+		}
+
+		strcpy(ptr + 1, "*.*");
+
+		if (_dos_findfirst(dirname, _A_NORMAL | _A_RDONLY | _A_HIDDEN | _A_SUBDIR, &entry)) {
 			return -1;
+		}
 	}
-	ourarray = (char **) emalloc(nalloc * sizeof (char *));
+	ourarray = (char **) emalloc(nalloc * sizeof(char *));
+
 	do  {
 		char filename[FILESIZE];
 
-		if (MatchDir && (entry.attrib&_A_SUBDIR) == 0)
+		if (MatchDir && (entry.attrib & _A_SUBDIR) == 0) {
 			continue;
+		}
 
 		strlwr(entry.name);
-		if (qualify != NULL && !(*qualify)(entry.name))
+
+		if (qualify != NULL && !(*qualify)(entry.name)) {
 			continue;
+		}
 
 		/* note: test ensures one space left in ourarray for NULL */
-		if (nentries+1 == nalloc)
-			ourarray = (char **) erealloc((char *) ourarray, (nalloc += 10) * sizeof (char *));
+		if (nentries + 1 == nalloc) {
+			ourarray = (char **) erealloc((char *) ourarray, (nalloc += 10) * sizeof(char *));
+		}
+
 		strcpy(filename, entry.name);
 #ifdef DIRECTORY_ADD_SLASH
-		if ((entry.attrib&_A_SUBDIR) != 0)
+
+		if ((entry.attrib & _A_SUBDIR) != 0) {
 			strcat(filename, "/");
+		}
+
 #endif
 		ourarray[nentries++] = copystr(filename);
 	} while (_dos_findnext(&entry) == 0);
+
 	ourarray[nentries] = NULL;
 
-	if (sorter != (int (*) ptrproto((UnivConstPtr, UnivConstPtr)))NULL)
-		qsort((char *) ourarray, nentries, sizeof (char **), sorter);
-	*nmptr = ourarray;
+	if (sorter != (int (*) ptrproto((UnivConstPtr, UnivConstPtr)))NULL) {
+		qsort((char *) ourarray, nentries, sizeof(char **), sorter);
+	}
 
+	*nmptr = ourarray;
 	return nentries;
 }
 
@@ -229,60 +257,76 @@ int	(*sorter) ptrproto((UnivConstPtr, UnivConstPtr));
 	char	**ourarray;
 	unsigned int	nalloc = 10,
 			nentries = 0;
-
 	{
 		char dirname[_MAX_PATH];
 		char *ptr;
-
 		strcpy(dirname, dir);
-		ptr = &dirname[strlen(dirname)-1];
-		if (!((dirname[1] == ':' && dirname[2] == '\0') || *ptr == '/' || *ptr == '\\'))
-			*++ptr = '/';
-		strcpy(ptr+1, "*.*");
+		ptr = &dirname[strlen(dirname) - 1];
 
-		if ((findHand = FindFirstFile(dirname, &entry)) == INVALID_HANDLE_VALUE)
+		if (!((dirname[1] == ':' && dirname[2] == '\0') || *ptr == '/' || *ptr == '\\')) {
+			*++ptr = '/';
+		}
+
+		strcpy(ptr + 1, "*.*");
+
+		if ((findHand = FindFirstFile(dirname, &entry)) == INVALID_HANDLE_VALUE) {
 			return -1;
+		}
 	}
-	ourarray = (char **) emalloc(nalloc * sizeof (char *));
+	ourarray = (char **) emalloc(nalloc * sizeof(char *));
+
 	do  {
 		char filename[_MAX_PATH];
 
-		if (MatchDir && (entry.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) == 0)
+		if (MatchDir && (entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
 			continue;
+		}
 
 		strcpy(filename, entry.cFileName);
 		strlwr(entry.cFileName);
-		if (qualify != NULL && !(*qualify)(entry.cFileName))
+
+		if (qualify != NULL && !(*qualify)(entry.cFileName)) {
 			continue;
+		}
 
 		/* note: test ensures one space left in ourarray for NULL */
-		if (nentries+1 == nalloc)
-			ourarray = (char **) erealloc((char *) ourarray, (nalloc += 10) * sizeof (char *));
+		if (nentries + 1 == nalloc) {
+			ourarray = (char **) erealloc((char *) ourarray, (nalloc += 10) * sizeof(char *));
+		}
+
 #ifdef DIRECTORY_ADD_SLASH
-		if ((entry.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY) != 0)
+
+		if ((entry.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
 			strcat(filename, "/");
+		}
+
 #endif
 		ourarray[nentries++] = copystr(filename);
 	} while (FindNextFile(findHand, &entry));
+
 	FindClose(findHand);
 	ourarray[nentries] = NULL;
 
-	if (sorter != (int (*)ptrproto((UnivConstPtr, UnivConstPtr)))NULL)
-		qsort((char *) ourarray, nentries, sizeof (char **), sorter);
-	*nmptr = ourarray;
+	if (sorter != (int (*)ptrproto((UnivConstPtr, UnivConstPtr)))NULL) {
+		qsort((char *) ourarray, nentries, sizeof(char **), sorter);
+	}
 
+	*nmptr = ourarray;
 	return nentries;
 }
 
 #endif /* WIN32 */
 
-void 
-freedir (char ***nmptr, int nentries)
+void
+freedir(char ***nmptr, size_t nentries)
 {
 	char	**ourarray = *nmptr;
 
-	while (--nentries >= 0)
+	while (nentries > 0) {
 		free((UnivPtr) *ourarray++);
+		nentries--;
+	}
+
 	free((UnivPtr) *nmptr);
 	*nmptr = NULL;
 }

@@ -6,8 +6,8 @@
  **************************************************************************/
 
 extern Bufpos
-	*c_indent proto((bool brace)),
-	*m_paren proto((DAPchar p_type, int dir, bool can_mismatch, bool can_stop));
+*c_indent proto((bool brace)),
+*m_paren proto((DAPchar p_type, int dir, bool can_mismatch, bool can_stop));
 
 extern void	mp_error proto((void));
 
@@ -20,14 +20,14 @@ extern char	CmtFmt[80];		/* VAR: comment format */
 
 /* Commands: */
 extern void
-	BList proto((void)),
-	BSexpr proto((void)),
-	BUpList proto((void)),
+BList proto((void)),
+      BSexpr proto((void)),
+      BUpList proto((void)),
 #ifdef CMT_FMT
-	FillComment proto((void)),
+      FillComment proto((void)),
 #endif
-	FDownList proto((void)),
-	FList proto((void)),
-	FSexpr proto((void)),
-	LRShift proto((void)),
-	RRShift proto((void));
+      FDownList proto((void)),
+      FList proto((void)),
+      FSexpr proto((void)),
+      LRShift proto((void)),
+      RRShift proto((void));

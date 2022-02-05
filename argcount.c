@@ -11,11 +11,32 @@
 int	arg_state = AS_NONE;
 long	arg_count;
 
-void 
-negate_arg (void)
+unsigned
+arg_count_as_unsigned(char *file, int line)
+{
+	if ((unsigned long)arg_count > (unsigned long)UINT_MAX) {
+		fprintf(stderr, "fatal: %s:%d: arg_count cannot be cast to unsigned\n", file, line);
+		exit(1);
+	}
+	return (unsigned)arg_count;
+}
+
+int
+arg_count_as_int(char *file, int line)
+{
+	if (arg_count < INT_MIN || arg_count > INT_MAX) {
+		fprintf(stderr, "fatal: %s:%d: arg_count cannot be cast to int\n", file, line);
+		exit(1);
+	}
+	return (int)arg_count;
+}
+
+void
+negate_arg(void)
 {
 	if (arg_count < 0) {
 		arg_count = -arg_count;
+
 		if (arg_count < 0) {
 			complain("arg count overflow");
 			/* NOTREACHED */
@@ -25,10 +46,10 @@ negate_arg (void)
 	}
 }
 
-private void 
-gather_argument (
-    int ns,		/* new state */
-    int nc		/* new count */
+private void
+gather_argument(
+	int ns,		/* new state */
+	int nc		/* new count */
 )
 {
 	for (;;) {
@@ -39,6 +60,7 @@ gather_argument (
 			neg = YES;
 			negate_arg();
 		}
+
 		if (ns != arg_state) {
 			/* First time in this state */
 			arg_state = ns;
@@ -49,32 +71,39 @@ gather_argument (
 
 			switch (ns) {
 			case AS_NUMERIC:
-				t = t*10 + nc;	/* add a digit to previous value */
+				t = t * 10 + nc;	/* add a digit to previous value */
 				break;
+
 			case AS_NEGSIGN:
 				neg = !neg;	/* change previous sign */
 				break;
+
 			case AS_TIMES:
 				t *= nc;	/* multiply by factor */
 				break;
 			}
+
 			if (t < arg_count) {
 				complain("arg count overflow");
 				/* NOTREACHED */
 			}
+
 			arg_count = t;
 		}
-		if (neg)
+
+		if (neg) {
 			negate_arg();
+		}
 
 		/* Treat a following digit as AS_NUMERIC.
 		 * If in AS_TIMES, accept a '-'.
 		 */
 		c = waitchar();
+
 		if (jisdigit(c)) {
 			ns = AS_NUMERIC;
 			nc = c - '0';
-		} else if (arg_state==AS_TIMES && c=='-') {
+		} else if (arg_state == AS_TIMES && c == '-') {
 			ns = AS_NEGSIGN;	/* forget multiplication */
 			nc = -1;
 		} else {
@@ -82,17 +111,18 @@ gather_argument (
 			break;
 		}
 	}
+
 	this_cmd = ARG_CMD;
 }
 
-void 
-TimesFour (void)
+void
+TimesFour(void)
 {
 	gather_argument(AS_TIMES, 4);
 }
 
-void 
-Digit (void)
+void
+Digit(void)
 {
 	if (LastKeyStruck == '-') {
 		gather_argument(AS_NEGSIGN, -1);
@@ -104,68 +134,68 @@ Digit (void)
 	}
 }
 
-void 
-Digit0 (void)
+void
+Digit0(void)
 {
 	gather_argument(AS_NUMERIC, 0);
 }
 
-void 
-Digit1 (void)
+void
+Digit1(void)
 {
 	gather_argument(AS_NUMERIC, 1);
 }
 
-void 
-Digit2 (void)
+void
+Digit2(void)
 {
 	gather_argument(AS_NUMERIC, 2);
 }
 
-void 
-Digit3 (void)
+void
+Digit3(void)
 {
 	gather_argument(AS_NUMERIC, 3);
 }
 
-void 
-Digit4 (void)
+void
+Digit4(void)
 {
 	gather_argument(AS_NUMERIC, 4);
 }
 
-void 
-Digit5 (void)
+void
+Digit5(void)
 {
 	gather_argument(AS_NUMERIC, 5);
 }
 
-void 
-Digit6 (void)
+void
+Digit6(void)
 {
 	gather_argument(AS_NUMERIC, 6);
 }
 
-void 
-Digit7 (void)
+void
+Digit7(void)
 {
 	gather_argument(AS_NUMERIC, 7);
 }
 
-void 
-Digit8 (void)
+void
+Digit8(void)
 {
 	gather_argument(AS_NUMERIC, 8);
 }
 
-void 
-Digit9 (void)
+void
+Digit9(void)
 {
 	gather_argument(AS_NUMERIC, 9);
 }
 
-void 
-DigitMinus (void)
+void
+DigitMinus(void)
 {
 	gather_argument(AS_NEGSIGN, -1);
 }

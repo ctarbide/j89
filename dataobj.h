@@ -5,7 +5,7 @@
  * this notice is included in all the source files and documentation.     *
  **************************************************************************/
 
-#define COMMAND	1
+#define COMMAND		1
 #define VARIABLE	2
 #define MACRO		3
 #define FULL_KEYMAP	4
@@ -27,7 +27,7 @@
 
 /* prefix of cmd, macro, keymap, variable, and sometimes buffer structs */
 typedef struct {
-	int	Type;
+	unsigned	Type;
 	const char	*Name;
 } data_obj;
 
@@ -36,6 +36,6 @@ extern const data_obj	*LastCmd;	/* last command invoked */
 extern const char	*ProcFmt;	/* ": %f " -- name of LastCmd */
 
 extern const data_obj
-	*findcom proto((const char *prompt)),
-	*findmac proto((const char *prompt)),
-	*findvar proto((const char *prompt));
+*findcom proto((const char *prompt)),
+*findmac proto((const char *prompt)),
+*findvar proto((const char *prompt));

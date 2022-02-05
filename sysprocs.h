@@ -32,18 +32,18 @@
 
 # include <sys/types.h>	/* defines pid_t */
 # include <sys/wait.h>
-  typedef int	wait_status_t;
+typedef int	wait_status_t;
 # define wait_opt(stat_loc, options)	waitpid(-1, stat_loc, options)
 
 #else /*!POSIX_PROCS*/
 
- typedef int	pid_t;
+typedef int	pid_t;
 
 # ifdef BSD_WAIT
 
 #  include <sys/wait.h>
 
-  typedef union wait	wait_status_t;
+typedef union wait	wait_status_t;
 
 #  ifndef WEXITSTATUS
 #   define WEXITSTATUS(w)	((w).w_retcode)
@@ -61,7 +61,7 @@
 
 # else /*!BSD_WAIT*/
 
-  typedef int	wait_status_t;
+typedef int	wait_status_t;
 
 #  ifdef UNIX
 
@@ -74,8 +74,8 @@
 #   endif
 
 #   define wait_opt(stat_loc, options)		wait(stat_loc)
-    /* should be correct if all preceding typedefs or includes worked out */
-    extern pid_t wait proto((wait_status_t *));
+/* should be correct if all preceding typedefs or includes worked out */
+extern pid_t wait proto((wait_status_t *));
 
 #  endif /* UNIX */
 
@@ -108,19 +108,19 @@ extern int	UNMACRO(vfork) proto((void));
  */
 #ifdef POSIX_PROCS
 # ifndef FULL_UNISTD
-   extern int	UNMACRO(setpgid) proto((pid_t /*pid*/, pid_t /*pgid*/));
-   extern pid_t UNMACRO(setsid) proto((void));
+extern int	UNMACRO(setpgid) proto((pid_t /*pid*/, pid_t /*pgid*/));
+extern pid_t UNMACRO(setsid) proto((void));
 # endif
 # define NEWPG()	setpgid(0, getpid())
 #else /* !POSIX_PROCS */
 # ifdef BSD_SETPGRP
 #  ifndef FULL_UNISTD
-   extern int	UNMACRO(setpgrp) proto((pid_t /*pid*/, pid_t /*pgrp*/));
+extern int	UNMACRO(setpgrp) proto((pid_t /*pid*/, pid_t /*pgrp*/));
 #  endif
 #  define NEWPG()	setpgrp(0, getpid())
 # else /* !(defined(BSD_SETPGRP) || defined(POSIX_PROCS)) */
 #  ifndef FULL_UNISTD
-   extern int	UNMACRO(setpgrp) proto((void));
+extern int	UNMACRO(setpgrp) proto((void));
 #  endif
 #  define NEWPG()	setpgrp()
 # endif /* !(defined(BSD_SETPGRP) || defined(POSIX_PROCS)) */

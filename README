@@ -1,3 +1,14 @@
+
+This is a fork of JOVE from [1] that I use to study and experiment.
+
+The canonical source for this version is https://github.com/ctarbide/j89.
+
+- [1]: https://github.com/jonmacs/jove
+
+Original README follows
+
+****************************************************************
+
 ##########################################################################
 # This program is Copyright (C) 1986-2002 by Jonathan Payne.  JOVE is    #
 # provided by Jonathan and Jovehacks without charge and without          #

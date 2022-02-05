@@ -27,80 +27,84 @@
 #endif
 
 private void
-	IncSearch proto((int));
+IncSearch proto((int));
 
 private int
-	isearch proto((int, Bufpos *));
+isearch proto((int, Bufpos *));
 
 private char
-	searchstr[128];		/* global search string */
+searchstr[128];		/* global search string */
 
 bool
-	UseRE = NO;		/* VAR: use regular expressions in search */
+UseRE = NO;		/* VAR: use regular expressions in search */
 
-private void 
-setsearch (const char *str)
+private void
+setsearch(const char *str)
 {
 	jamstr(searchstr, str);
 }
 
 private char *
-getsearch (void)
+getsearch(void)
 {
 	return searchstr;
 }
 
-private void 
-search (int dir, bool re, bool setdefault)
+private void
+search(int dir, bool re, bool setdefault)
 {
 	Bufpos	*newdot;
 	const char	*s = ask(searchstr, ProcFmt);
 
-	if (setdefault)
+	if (setdefault) {
 		setsearch(s);
+	}
+
 	okay_wrap = YES;
 	newdot = dosearch(s, dir, re);
 	okay_wrap = NO;
+
 	if (newdot == NULL) {
 		if (WrapScan) {
 			complain("No \"%s\" in buffer.", s);
 			/* NOTREACHED */
 		} else {
 			complain("No \"%s\" found to %s.", s,
-				 (dir == FORWARD) ? "bottom" : "top");
+				(dir == FORWARD) ? "bottom" : "top");
 			/* NOTREACHED */
 		}
 	}
+
 	PushPntp(newdot->p_line);
 	SetDot(newdot);
 }
 
-void 
-ForSearch (void)
+void
+ForSearch(void)
 {
 	search(FORWARD, UseRE, YES);
 }
 
-void 
-RevSearch (void)
+void
+RevSearch(void)
 {
 	search(BACKWARD, UseRE, YES);
 }
 
-void 
-FSrchND (void)
+void
+FSrchND(void)
 {
 	search(FORWARD, UseRE, NO);
 }
 
-void 
-RSrchND (void)
+void
+RSrchND(void)
 {
 	search(BACKWARD, UseRE, NO);
 }
 
-private int 
-substitute (struct RE_block *re_blk, bool query, LinePtr l1, int char1, LinePtr l2, int char2)
+private int
+substitute(struct RE_block *re_blk, bool query, LinePtr l1, int char1, LinePtr l2, int char2)
 {
 	LinePtr	lp;
 	int	numdone = 0,
@@ -109,7 +113,6 @@ substitute (struct RE_block *re_blk, bool query, LinePtr l1, int char1, LinePtr 
 	bool	stop = NO;
 	daddr	UNDO_da = NULL_DADDR;
 	LinePtr	UNDO_lp = NULL;
-
 	lsave();
 
 	for (lp = l1; lp != l2->l_next; lp = lp->l_next) {
@@ -117,25 +120,27 @@ substitute (struct RE_block *re_blk, bool query, LinePtr l1, int char1, LinePtr 
 		bool	LineDone = NO;	/* already replaced last empty string on line? */
 
 		while (!LineDone
-		&& re_lindex(lp, offset, FORWARD, re_blk, NO, crater)
-		&& (lp != l2 || REeom <= char2))
-		{
+			&& re_lindex(lp, offset, FORWARD, re_blk, NO, crater)
+			&& (lp != l2 || REeom <= char2)) {
 			DotTo(lp, REeom);
 			offset = curchar;
+
 			if (query) {
 				ZXchar	c;
-
 				message("Replace (Type '?' for help)? ");
 reswitch:
 				redisplay();
 				c = kbd_getch();
-				if (c == AbortChar)
+
+				if (c == AbortChar) {
 					return numdone;
+				}
 
 				switch (CharUpcase(c)) {
 				case '.':
 					stop = YES;
-					/*FALLTHROUGH*/
+
+				/*FALLTHROUGH*/
 				case ' ':
 				case 'Y':
 					break;
@@ -145,20 +150,27 @@ reswitch:
 				case 'N':
 					if (REbom == REeom) {
 						offset += 1;
-						if (linebuf[REeom] == '\0')
+
+						if (linebuf[REeom] == '\0') {
 							LineDone = YES;
+						}
 					}
+
 					continue;
 
 				case CTL('W'):
 					re_dosub(re_blk, linebuf, YES);
-					if (lp == l2)
+
+					if (lp == l2) {
 						char2 += REdelta;
+					}
+
 					modify();
 					numdone += 1;
 					curchar = REbom;
 					makedirty(curline);
-					/*FALLTHROUGH*/
+
+				/*FALLTHROUGH*/
 				case CTL('R'):
 				case 'R':
 					RErecur();
@@ -173,10 +185,14 @@ reswitch:
 						rbell();
 						goto reswitch;
 					}
+
 					lp = UNDO_lp;
 					lp->l_dline = UNDO_da;
-					if (UNDO_lp == curline)
-						getDOT();	/* downdate line cache */
+
+					if (UNDO_lp == curline) {
+						getDOT();        /* downdate line cache */
+					}
+
 					makedirty(lp);
 					offset = 0;
 					numdone = UNDO_nd;
@@ -199,39 +215,51 @@ reswitch:
 
 				default:
 					rbell();
-message("Space or Y, Period, Delete or N, ^R or R, ^W, ^U or U, P or !, Return.");
+					message("Space or Y, Period, Delete or N, ^R or R, ^W, ^U or U, P or !, Return.");
 					goto reswitch;
 				}
 			}
+
 			if (UNDO_lp != curline) {
 				UNDO_da = curline->l_dline;
 				UNDO_lp = curline;
 				UNDO_nd = numdone;
 			}
-			if (REbom == REeom && linebuf[REeom] == '\0')
+
+			if (REbom == REeom && linebuf[REeom] == '\0') {
 				LineDone = YES;
+			}
+
 			re_dosub(re_blk, linebuf, NO);
-			if (lp == l2)
+
+			if (lp == l2) {
 				char2 += REdelta;
+			}
+
 			numdone += 1;
 			modify();
 			crater = offset = curchar = REeom;
 			makedirty(curline);
+
 			if (query) {
 				message(mesgbuf);	/* no blinking */
 				redisplay();		/* show the change */
 			}
-			if (stop)
+
+			if (stop) {
 				return numdone;
+			}
 		}
+
 		offset = 0;
 	}
+
 	return numdone;
 }
 
 /* prompt for search and replacement strings and do the substitution */
-private void 
-replace (bool query, bool inreg)
+private void
+replace(bool query, bool inreg)
 {
 	LinePtr	l1 = curline,
 		l2 = curbuf->b_last;
@@ -242,7 +270,6 @@ replace (bool query, bool inreg)
 
 	if (inreg) {
 		Mark	*m = CurMark();
-
 		l2 = m->m_line;
 		char2 = m->m_char;
 		(void) fixorder(&l1, &char1, &l2, &char2);
@@ -252,42 +279,41 @@ replace (bool query, bool inreg)
 	jamstr(rep_search,
 		ask(rep_search[0] ? rep_search : (char *)NULL, ProcFmt));
 	REcompile(rep_search, UseRE, &re_blk);
-
 	/* Now the replacement string.  Do_ask() so the user can play with
 	 * the default (previous) replacement string by typing ^R in ask(),
 	 * OR, can just hit Return to replace with nothing.
 	 */
 	{
 		const char	*rp = do_ask("\r\n",
-			NULL_ASK_EXT, rep_str, ": %f %s with ", rep_search);
-
-		jamstr(rep_str, rp == NULL? NullStr : rp);
+				NULL_ASK_EXT, rep_str, ": %f %s with ", rep_search);
+		jamstr(rep_str, rp == NULL ? NullStr : rp);
 	}
 
 	if ((numdone = substitute(&re_blk, query, l1, char1, l2, char2)) != 0
-	    && !inreg) {
+		&& !inreg) {
 		do_set_mark(l1, char1);
 		add_mess(" ");		/* just making things pretty */
 	} else {
 		message(NullStr);
 	}
+
 	add_mess("(%d substitution%n)", numdone, numdone);
 }
 
-void 
-RegReplace (void)
+void
+RegReplace(void)
 {
 	replace(NO, YES);
 }
 
-void 
-QRepSearch (void)
+void
+QRepSearch(void)
 {
 	replace(YES, NO);
 }
 
-void 
-RepSearch (void)
+void
+RepSearch(void)
 {
 	replace(NO, NO);
 }
@@ -300,13 +326,7 @@ RepSearch (void)
  * everything else will just work.
  */
 private bool
-lookup_tag(ispat, searchbuf, sbsize, filebuf, tag, file)
-bool	*ispat;
-char	*searchbuf;
-size_t	sbsize;
-char	*filebuf,
-	*tag,
-	*file;
+lookup_tag(bool *ispat, char *searchbuf, size_t sbsize, char *filebuf, char *tag, char *file)
 {
 	register size_t	taglen = strlen(tag);
 	char	line[JBUFSIZ],
@@ -314,12 +334,13 @@ char	*filebuf,
 	register File	*fp;
 	struct stat	stbuf;
 	bool	success = NO;
-
 	fp = open_file(file, iobuff, F_READ, NO);
+
 	if (fp == NULL) {
 		message(IOerr("open", file));
 		return NO;
 	}
+
 	/* Build a pattern to parse the tag line.
 	 *
 	 * - the tag name is at the start of the line.
@@ -351,20 +372,19 @@ char	*filebuf,
 	 *   AT_BOL	re.c	49;"	d	file:
 	 */
 	swritef(pattern, sizeof(pattern),
-	    /*tag name
-	     *========   file name
-	     *          ============            pattern
-	     *                           =====================      line number
-	     *                                                   =================        gunge
-	     *                                                                        =============
-	     */
-	    "^%s[^\t]*\t\\([^\t]*\\)\t\\{\\([?/]\\)\\(.*\\)\\2\\|\\(\\)\\([0-9]*\\)\\}\\{;\".*\\|\\}$",
-	    tag);
-
+		/*tag name
+		 *========   file name
+		 *          ============            pattern
+		 *                           =====================      line number
+		 *                                                   =================        gunge
+		 *                                                                        =============
+		 */
+		"^%s[^\t]*\t\\([^\t]*\\)\t\\{\\([?/]\\)\\(.*\\)\\2\\|\\(\\)\\([0-9]*\\)\\}\\{;\".*\\|\\}$",
+		tag);
 	/* ********BEGIN FAST TAG CODE******** */
-
 	/* Mac doesn't have fstat */
 #ifdef MAC
+
 	if (stat(file, &stbuf) >= 0)
 #else
 	if (fstat(fp->f_fd, &stbuf) >= 0)
@@ -387,30 +407,39 @@ char	*filebuf,
 			off_t	mid;
 			int	chars_eq;
 
-			if (upper - lower < JBUFSIZ)
-				break;	/* small range: search sequentially */
+			if (upper - lower < JBUFSIZ) {
+				break;        /* small range: search sequentially */
+			}
 
 			mid = (lower + upper) / 2;
 			f_seek(fp, mid);	/* mid will not be 0 */
 			f_toNL(fp);
-			if (f_gets(fp, line, sizeof line))
-				break;		/* unexpected: bail out */
+
+			if (f_gets(fp, line, sizeof line)) {
+				break;        /* unexpected: bail out */
+			}
 
 			chars_eq = numcomp(line, tag);
+
 			if ((size_t)chars_eq == taglen && jiswhite(line[chars_eq])) {
 				/* we hit the exact line: get out */
 				lower = mid;
 				break;
 			}
-			if (line[chars_eq] < tag[chars_eq])
-				lower = mid;	/* line is BEFORE tag */
-			else
-				upper = mid;	/* line is AFTER tag */
+
+			if (line[chars_eq] < tag[chars_eq]) {
+				lower = mid;        /* line is BEFORE tag */
+			} else {
+				upper = mid;        /* line is AFTER tag */
+			}
 		}
+
 		/* sequentially search from lower */
 		f_seek(fp, lower);
-		if (lower > 0)
+
+		if (lower > 0) {
 			f_toNL(fp);
+		}
 	}
 
 	/* END FAST TAG CODE */
@@ -420,38 +449,43 @@ char	*filebuf,
 
 		if (cmp == 0) {
 			cmp = strncmp(line, tag, taglen);
+
 			if (cmp == 0) {
 				/* we've found the match */
 				if (!LookingAt(pattern, line, 0)) {
 					complain("tag line confuses me: %s", line);
 					/* NOTREACHED */
-
 				} else {
 					char patdelim[2];
-
 					putmatch(1, filebuf, (size_t)FILESIZE);
 					putmatch(2, patdelim, sizeof(patdelim));
 					putmatch(3, searchbuf, sbsize);
 					*ispat = patdelim[0] != '\0';
 					success = YES;
 				}
+
 				break;
 			}
 		}
-		if (cmp > 0)
-			break;	/* failure: gone too far.  PRESUMES ALPHABETIC ORDER */
+
+		if (cmp > 0) {
+			break;        /* failure: gone too far.  PRESUMES ALPHABETIC ORDER */
+		}
 	}
+
 	close_file(fp);
 
-	if (!success)
+	if (!success) {
 		s_mess("Can't find tag \"%s\".", tag);
+	}
+
 	return success;
 }
 
 char	TagFile[FILESIZE] = "tags";	/* VAR: default tag file */
 
-void 
-find_tag (char *tag, bool localp)
+void
+find_tag(char *tag, bool localp)
 {
 	char	filebuf[FILESIZE],
 		sstr[200],	/* 100 wasn't big enough */
@@ -461,19 +495,23 @@ find_tag (char *tag, bool localp)
 	bool ispat;
 
 	if (lookup_tag(&ispat, sstr, sizeof(sstr), filebuf, tag,
-	  localp? TagFile : ask_file("With tag file ", TagFile, tfbuf)))
-	{
+			localp ? TagFile : ask_file("With tag file ", TagFile, tfbuf))) {
 		set_mark();
 		b = do_find(curwind, filebuf, YES, NO);
-		if (curbuf != b)
+
+		if (curbuf != b) {
 			SetABuf(curbuf);
+		}
+
 		SetBuf(b);
+
 		if (ispat) {
 			if ((bp = dosearch(sstr, BACKWARD, NO)) == NULL
-			&& (bp = dosearch(sstr, FORWARD, NO)) == NULL)
+				&& (bp = dosearch(sstr, FORWARD, NO)) == NULL) {
 				message("Well, I found the file, but the tag is missing.");
-			else
+			} else {
 				SetDot(bp);
+			}
 		} else {
 			long lnum = 0;   /* keep gcc -W quiet */
 
@@ -482,7 +520,6 @@ find_tag (char *tag, bool localp)
 				message(mesgbuf);
 			} else {
 				LinePtr tagline = next_line(curbuf->b_first, lnum - 1);
-
 				PushPntp(tagline);
 				SetLine(tagline);
 			}
@@ -490,20 +527,19 @@ find_tag (char *tag, bool localp)
 	}
 }
 
-void 
-FindTag (void)
+void
+FindTag(void)
 {
 	bool	localp = !is_an_arg();
 	char	tag[128];
-
 	jamstr(tag, ask((char *)NULL, ProcFmt));
 	find_tag(tag, localp);
 }
 
 /* Find Tag at Dot. */
 
-void 
-FDotTag (void)
+void
+FDotTag(void)
 {
 	int	c1 = curchar,
 		c2 = c1;
@@ -513,15 +549,21 @@ FDotTag (void)
 		complain("Not a tag!");
 		/* NOTREACHED */
 	}
-	while (c1 > 0 && jisident(linebuf[c1 - 1]))
+
+	while (c1 > 0 && jisident(linebuf[c1 - 1])) {
 		c1 -= 1;
-	while (jisident(linebuf[c2]))
+	}
+
+	while (jisident(linebuf[c2])) {
 		c2 += 1;
+	}
+
 	if ((c2 - c1) >= (int)sizeof(tagname)) {
 		complain("tag too long");
 		/* NOTREACHED */
 	}
-	null_ncpy(tagname, linebuf + c1, (size_t) (c2 - c1));
+
+	null_ncpy(tagname, linebuf + c1, (size_t)(c2 - c1));
 	find_tag(tagname, !is_an_arg());
 }
 
@@ -542,73 +584,82 @@ FDotTag (void)
 #define I_TOSTART	4
 
 private char
-	ISbuf[128],
-	*incp = NULL;
+ISbuf[128],
+      *incp = NULL;
 
 ZXchar	SExitChar = CR;	/* VAR: type this to stop i-search */
 
 private Bufpos *
-doisearch (register int dir, register ZXchar c, bool failing)
+doisearch(register int dir, register ZXchar c, bool failing)
 {
 	static Bufpos	buf;
 	Bufpos	*bp;
 
 	if (c != CTL('S') && c != CTL('R')) {
-		if (failing)
+		if (failing) {
 			return NULL;
+		}
 
 		DOTsave(&buf);
+
 		if (dir == FORWARD) {
 			if (ZXC(linebuf[curchar]) == c
-			|| (CaseIgnore && cind_eq(linebuf[curchar], c))) {
+				|| (CaseIgnore && cind_eq(linebuf[curchar], c))) {
 				buf.p_char = curchar + 1;
 				return &buf;
 			}
 		} else {
-			if (look_at(ISbuf))
+			if (look_at(ISbuf)) {
 				return &buf;
+			}
 		}
 	}
+
 	okay_wrap = YES;
-	if ((bp = dosearch(ISbuf, dir, NO)) == NULL)
-		rbell();	/* ring the first time there's no match */
+
+	if ((bp = dosearch(ISbuf, dir, NO)) == NULL) {
+		rbell();        /* ring the first time there's no match */
+	}
+
 	okay_wrap = NO;
 	return bp;
 }
 
-void 
-IncFSearch (void)
+void
+IncFSearch(void)
 {
 	IncSearch(FORWARD);
 }
 
-void 
-IncRSearch (void)
+void
+IncRSearch(void)
 {
 	IncSearch(BACKWARD);
 }
 
-private void 
-IncSearch (int dir)
+private void
+IncSearch(int dir)
 {
 	Bufpos	save_env;
-
 	DOTsave(&save_env);
 	ISbuf[0] = '\0';
 	incp = ISbuf;
-	if (isearch(dir, &save_env) == I_TOSTART)
+
+	if (isearch(dir, &save_env) == I_TOSTART) {
 		SetDot(&save_env);
-	else {
-		if (LineDist(curline, save_env.p_line) >= MarkThresh)
+	} else {
+		if (LineDist(curline, save_env.p_line) >= MarkThresh) {
 			do_set_mark(save_env.p_line, save_env.p_char);
+		}
 	}
+
 	setsearch(ISbuf);
 }
 
 /* Nicely recursive. */
 
-private int 
-isearch (int dir, Bufpos *bp)
+private int
+isearch(int dir, Bufpos *bp)
 {
 	Bufpos	pushbp;
 	ZXchar	c;
@@ -625,30 +676,40 @@ isearch (int dir, Bufpos *bp)
 		DOTsave(&pushbp);
 		failing = YES;
 	}
+
 	orig_incp = incp;
 	ndir = dir;		/* Same direction as when we got here, unless
 				   we change it with ^S or ^R. */
+
 	for (;;) {
 		SetDot(&pushbp);
 		message(NullStr);
-		if (failing)
+
+		if (failing) {
 			add_mess("Failing ");
-		if (dir == BACKWARD)
+		}
+
+		if (dir == BACKWARD) {
 			add_mess("reverse-");
+		}
+
 		add_mess("I-search: %s", ISbuf);
 		DrawMesg(NO);
 		add_mess(NullStr);	/* tell me this is disgusting ... */
 		c = getch();
-		if (c == SExitChar)
+
+		if (c == SExitChar) {
 			return I_STOP;
+		}
 
 		if (c == AbortChar) {
 			/* If we're failing, we backup until we're no longer
 			 * failing or we've reached the beginning; else, we
 			 * just abort the search and go back to the start.
 			 */
-			return failing? I_BACKUP : I_TOSTART;
+			return failing ? I_BACKUP : I_TOSTART;
 		}
+
 		switch (c) {
 		case DEL:
 		case BS:
@@ -656,9 +717,11 @@ isearch (int dir, Bufpos *bp)
 
 		case CTL('\\'):
 			c = CTL('S');
-			/*FALLTHROUGH*/
+
+		/*FALLTHROUGH*/
 		case CTL('S'):
 		case CTL('R'):
+
 			/* If this is the first time through and we have a
 			 * search string left over from last time, and Inputp
 			 * is not in use [kludge!], use that one now.
@@ -667,7 +730,9 @@ isearch (int dir, Bufpos *bp)
 				Inputp = getsearch();
 				continue;
 			}
+
 			ndir = (c == CTL('S')) ? FORWARD : BACKWARD;
+
 			/* If we're failing and we're not changing our
 			 * direction, don't recur since there's no way
 			 * the search can work.
@@ -676,6 +741,7 @@ isearch (int dir, Bufpos *bp)
 				rbell();
 				continue;
 			}
+
 			break;
 
 		case '\\':
@@ -683,9 +749,11 @@ isearch (int dir, Bufpos *bp)
 				rbell();
 				continue;
 			}
+
 			*incp++ = '\\';
 			add_mess("\\");
-			/*FALLTHROUGH*/
+
+		/*FALLTHROUGH*/
 		case CTL('Q'):
 		case CTL('^'):
 			add_mess(NullStr);
@@ -693,25 +761,30 @@ isearch (int dir, Bufpos *bp)
 			goto literal;
 
 		default:
+
 			/* check for "funny" characters */
 			if (!jisprint(c) || IsPrefixChar(c)) {
 				Ungetc(c);
 				return I_STOP;
 			}
-			/*FALLTHROUGH*/
+
+		/*FALLTHROUGH*/
 		case '\t':
-		literal:
+literal:
 			if (incp > &ISbuf[(sizeof ISbuf) - 1]) {
 				rbell();
 				continue;
 			}
-			*incp++ = c;
+
+			*incp++ = (char)c;
 			*incp = '\0';
 			break;
 		}
+
 		add_mess("%s", orig_incp);
 		add_mess(" ...");	/* so we know what's going on */
 		DrawMesg(NO);		/* do it now */
+
 		switch (isearch(ndir, doisearch(ndir, c, failing))) {
 		case I_TOSTART:
 			return I_TOSTART;
@@ -720,15 +793,17 @@ isearch (int dir, Bufpos *bp)
 			return I_STOP;
 
 		case I_BACKUP:
+
 			/* If we're not failing, we just continue to to the
 			 * for loop; otherwise we keep returning to the
 			 * previous levels until we find one that isn't
 			 * failing OR we reach the beginning.
 			 */
-			if (failing)
+			if (failing) {
 				return I_BACKUP;
+			}
 
-			/*FALLTHROUGH*/
+		/*FALLTHROUGH*/
 		case I_DELETE:
 			incp = orig_incp;
 			*incp = '\0';

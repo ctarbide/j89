@@ -37,17 +37,17 @@ typedef unsigned int	WORD;
 #define VideoBIOS(r)	int86(0x10, (r), (r));
 
 private BYTE
-	c_attr = 0x07,	/* current attribute white on black */
-	c_row = 0,	/* current row */
-	c_col = 0;	/* current column */
+c_attr = 0x07,	/* current attribute white on black */
+c_row = 0,	/* current row */
+c_col = 0;	/* current column */
 
 int
-	Txattr = 0x07,	/* VAR: text-attribute (white on black) */
-	Mlattr = 0x70,	/* VAR: mode-line-attribute (black on white) */
-	Hlattr = 0x10;	/* VAR: highlight-attribute */
+Txattr = 0x07,	/* VAR: text-attribute (white on black) */
+Mlattr = 0x70,	/* VAR: mode-line-attribute (black on white) */
+Hlattr = 0x10;	/* VAR: highlight-attribute */
 
-void 
-getTERM (void)
+void
+getTERM(void)
 {
 	/* Check if 101- or 102-key keyboard is installed.
 	 * This test is apparently unreliable, so we allow override.
@@ -58,17 +58,16 @@ getTERM (void)
 	pcSetTerm();
 }
 
-private void 
-setcolor (int attr)
+private void
+setcolor(int attr)
 {
 	c_attr = attr;
 }
 
-private void 
-set_cur (void)
+private void
+set_cur(void)
 {
 	union REGS vr;
-
 	vr.h.ah = VBS_set_cursor_position;
 	vr.h.bh = 0;	/* video page 0 */
 	vr.h.dl = c_col;
@@ -76,11 +75,10 @@ set_cur (void)
 	VideoBIOS(&vr);
 }
 
-private void 
-get_cur (void)
+private void
+get_cur(void)
 {
 	union REGS vr;
-
 	vr.h.ah = VBS_get_cursor_position_and_size;
 	vr.h.bh = 0;	/* video page 0 */
 	VideoBIOS(&vr);
@@ -88,11 +86,10 @@ get_cur (void)
 	c_row = vr.h.dh;
 }
 
-private BYTE 
-chpl (void)
+private BYTE
+chpl(void)
 {
 	union REGS vr;
-
 	vr.h.ah = VBS_get_current_video_state;
 	VideoBIOS(&vr);
 	return vr.h.ah;
@@ -100,37 +97,34 @@ chpl (void)
 
 #define cur_mov(r, c)	{ c_row = (r); c_col = (c); set_cur(); }
 
-private void 
-scr_win (int op, int no, int ur, int lr)
+private void
+scr_win(int op, int no, int ur, int lr)
 {
 	union REGS vr;
-
 	vr.h.ah = op;	/* scroll window up or down */
 	vr.h.al = no;	/* number of rows to scroll */
-
 	vr.h.ch = ur;	/* upper row */
 	vr.h.cl = 0;	/* left column */
 	vr.h.dh = lr;	/* lower row */
-	vr.h.dl = CO-1;	/* right column */
-
+	vr.h.dl = CO - 1;	/* right column */
 	vr.h.bh = c_attr;
 	VideoBIOS(&vr);
 }
 
-void 
-i_lines (int top, int bottom, int num)
+void
+i_lines(int top, int bottom, int num)
 {
 	scr_win(VBS_scroll_window_down, num, top, bottom);
 }
 
-void 
-d_lines (int top, int bottom, int num)
+void
+d_lines(int top, int bottom, int num)
 {
 	scr_win(VBS_scroll_window_up, num, top, bottom);
 }
 
-void 
-clr_page (void)
+void
+clr_page(void)
 {
 	SO_off();
 	/* Note: VBS_scroll_window_up with a count of 0 clears the screen! */
@@ -138,11 +132,10 @@ clr_page (void)
 	cur_mov(0, 0);
 }
 
-private void 
-ch_out (int c, int n)
+private void
+ch_out(int c, int n)
 {
 	union REGS vr;
-
 	vr.h.ah = VBS_write_character_and_attribute;
 	vr.h.al = c;
 	vr.h.bl = c_attr;
@@ -151,35 +144,37 @@ ch_out (int c, int n)
 	VideoBIOS(&vr);
 }
 
-void 
-clr_eoln (void)
+void
+clr_eoln(void)
 {
-	ch_out(' ', CO-c_col);
+	ch_out(' ', CO - c_col);
 }
 
 /* Video mode setting derived from code posted to comp.os.msdos.programmer
  * by Joe Huffman 1990 August 15 (found on SIMTEL in msdos/screen/vidmode.zip)
  */
 
-private BYTE 
-lpp (void)
+private BYTE
+lpp(void)
 {
 	union REGS vr;
 	int	lines;
-
 	vr.x.ax = VBSF_get_font_information;
 	vr.h.bh = 0;	/* we don't care which pointer we get back */
 	vr.h.dl = 0;	/* default, if BIOS doesn't know how to this */
 	VideoBIOS(&vr);
 	lines = vr.h.dl;	/* number of last line on screen */
+
 	switch (lines) {
 	default:
 		return lines + 1;
+
 	case 25:
 	case 28:
 	case 43:
 	case 50:
 		return lines;	/* IBM EGA BUG!*/
+
 	case 0:
 		return 25;	/* Who knows?  Just a guess. */
 	}
@@ -187,20 +182,17 @@ lpp (void)
 
 /* discover current video attribute */
 
-private void 
-get_c_attr (void)
+private void
+get_c_attr(void)
 {
 	union REGS vr;
-
 	vr.h.dl = ' ';	/* write out a SPace, using DOS */
 	vr.h.ah = 0x02;
 	int86(0x21, &vr, &vr);
-
 	vr.h.ah = VBS_TTY_character_output;	/* backspace over it, using BIOS */
 	vr.h.al = BS;
 	vr.h.bh = 0;	/* page number 0 */
 	VideoBIOS(&vr);
-
 	vr.h.ah = VBS_read_character_and_attribute;	/* find out attribute */
 	VideoBIOS(&vr);
 	c_attr = vr.h.ah;
@@ -236,14 +228,13 @@ get_c_attr (void)
 #define	EGA8x14	0x11	/* not 0x01 or 0x22 */
 #define	EGA8x16	0x14	/* not 0x04 or 0x24 */
 
-private void 
-EGAsetup (int scanlines, int font)
+private void
+EGAsetup(int scanlines, int font)
 {
 	union REGS vr;
 	vr.h.ah = VBS_select_active_display_page;
 	vr.h.al = 0;	/* page 0 */
 	VideoBIOS(&vr);
-
 	vr.h.ah = 0x12;	/* request EGA information */
 	vr.h.bl = 0x10;	/* function number */
 	vr.x.cx = 0x0000;
@@ -257,82 +248,96 @@ EGAsetup (int scanlines, int font)
 		VideoBIOS(&vr);
 
 		/* Note: bh is left over from VideoBIOS call *before* last! */
-		if (vr.h.bh == 0)
-			vr.x.ax = 0x0003;	/* monochrome */
-		else
-			vr.x.ax = 0x0007;	/* 80x25 color text */
-		VideoBIOS(&vr);
+		if (vr.h.bh == 0) {
+			vr.x.ax = 0x0003;        /* monochrome */
+		} else {
+			vr.x.ax = 0x0007;        /* 80x25 color text */
+		}
 
+		VideoBIOS(&vr);
 		vr.h.ah = 0x11;	/* load ROM font */
 		vr.h.al = font;
 		vr.h.bl = 0;	/* into block 0 */
 		VideoBIOS(&vr);
 	}
+
 	get_c_attr();
 }
 
-private bool 
-set_lines (int lines)
+private bool
+set_lines(int lines)
 {
 	switch (lines) {
 	case 25:
 		EGAsetup(EGA400, EGA8x16);
 		break;
+
 	case 28:
 		EGAsetup(EGA400, EGA8x14);
 		break;
+
 	case 43:
 		EGAsetup(EGA350, EGA8x8);
 		break;
+
 	case 50:
 		EGAsetup(EGA400, EGA8x8);
 		break;
+
 	default:
 		return NO;
 	}
+
 	return YES;
 }
 
 private bool	pc_set = NO;
 private int	unsetLI;
 
-void 
-pcSetTerm (void)
+void
+pcSetTerm(void)
 {
 	char	*t = getenv("TERM");
 
 	if (!pc_set) {
 		int	lines = lpp();
-
 		unsetLI = lines;
+
 		if (t != NULL) {
-			if (stricmp(t, "ega25") == 0)
+			if (stricmp(t, "ega25") == 0) {
 				lines = 25;
-			else if (stricmp(t, "ega28") == 0)
+			} else if (stricmp(t, "ega28") == 0) {
 				lines = 28;
-			else if (stricmp(t, "ega43") == 0)
+			} else if (stricmp(t, "ega43") == 0) {
 				lines = 43;
-			else if (stricmp(t, "ega50") == 0)
+			} else if (stricmp(t, "ega50") == 0) {
 				lines = 50;
+			}
 		}
-		if (lines != unsetLI && set_lines(lines))
+
+		if (lines != unsetLI && set_lines(lines)) {
 			pc_set = YES;
+		}
 	}
+
 	CO = chpl();
-	if (CO > MAXCOLS)
+
+	if (CO > MAXCOLS) {
 		CO = MAXCOLS;
+	}
+
 	LI = lpp();
 	ILI = LI - 1;
 	get_cur();
 }
 
-void 
-ttsize (void)
+void
+ttsize(void)
 {
 }
 
-void 
-pcUnsetTerm (void)
+void
+pcUnsetTerm(void)
 {
 	if (pc_set) {
 		pc_set = NO;
@@ -340,13 +345,14 @@ pcUnsetTerm (void)
 	}
 }
 
-private void 
-line_feed (void)
+private void
+line_feed(void)
 {
 	if (++c_row > ILI) {
 		c_row = ILI;
 		scr_win(VBS_scroll_window_up, 1, 0, ILI);
 	}
+
 	set_cur();
 }
 
@@ -355,21 +361,21 @@ line_feed (void)
 #define TIME_P 0x40			/* timer */
 #define TINI   182			/* 10110110b timer initialization */
 
-void 
-dobell (	/* declared in term.h */
-    int n
+void
+dobell(  /* declared in term.h */
+	int n
 )
 {
 	unsigned char	spkr_state = inp(BELL_P);
-
 	/* ??? Should accesses to timer be run with interrupts disabled?
 	 * It looks as if the timer would be in a bad state if a sequence
 	 * of accesses is interrupted. -- DHR 1995 Sept.
 	 */
-	outp(TIME_P+3, TINI);
-	outp(TIME_P+2, BELL_D&0xff);
-	outp(TIME_P+2, BELL_D>>8);
-	outp(BELL_P, spkr_state|3);		/* turn speaker on  */
+	outp(TIME_P + 3, TINI);
+	outp(TIME_P + 2, BELL_D & 0xff);
+	outp(TIME_P + 2, BELL_D >> 8);
+	outp(BELL_P, spkr_state | 3);		/* turn speaker on  */
+
 	while (n-- > 0) {
 #ifdef NEVER
 		/* Control duration by counting half cycles of the audio tone.
@@ -383,19 +389,24 @@ dobell (	/* declared in term.h */
 		bool	hi_is_0 = NO;	/* detect zero transitions; initial lie unimportant */
 
 		for (;;) {
-			(void) inp(TIME_P+2);	/* low-order counter 2 byte */
-			if ((inp(TIME_P+2) == 0) != hi_is_0) {
+			(void) inp(TIME_P + 2);	/* low-order counter 2 byte */
+
+			if ((inp(TIME_P + 2) == 0) != hi_is_0) {
 				hi_is_0 = !hi_is_0;
-				if (--half_cycs <= 0)
+
+				if (--half_cycs <= 0) {
 					break;
+				}
 			}
 		}
+
 #else
 		unsigned int i = 0x8888;	/* a CPU-speed dependent duration */
-
 		do {} while (--i > 0);
+
 #endif
 	}
+
 	outp(BELL_P, spkr_state);
 }
 
@@ -415,24 +426,32 @@ char c;
 	case LF:
 		line_feed();
 		break;
+
 	case CR:
 		c_col = 0;
 		set_cur();
 		break;
+
 	case BS:
-		if (c_col > 0)
+		if (c_col > 0) {
 			c_col--;
+		}
+
 		set_cur();
 		break;
+
 	case CTL('G'):	/* ??? is this ever used? */
 		dobell(1);
 		break;
+
 	default:
 		ch_out((c), 1);
-		if (++c_col > CO-1) {
+
+		if (++c_col > CO - 1) {
 			c_col = 0;
 			line_feed();
 		}
+
 		set_cur();
 		break;
 	}
@@ -442,8 +461,8 @@ char c;
  * Think about it: it would be silly!
  */
 
-void 
-Placur (int line, int col)
+void
+Placur(int line, int col)
 {
 	cur_mov(line, col);
 	CapCol = col;
@@ -451,24 +470,24 @@ Placur (int line, int col)
 }
 
 private bool
-	doing_so = NO,
-	doing_us = NO;
+doing_so = NO,
+doing_us = NO;
 
-private void 
-doattr (void)
+private void
+doattr(void)
 {
-	setcolor((doing_so? Mlattr : Txattr) ^ (doing_us? Hlattr : 0));
+	setcolor((doing_so ? Mlattr : Txattr) ^ (doing_us ? Hlattr : 0));
 }
 
-void 
-SO_effect (bool f)
+void
+SO_effect(bool f)
 {
 	doing_so = f;
 	doattr();
 }
 
-void 
-US_effect (bool f)
+void
+US_effect(bool f)
 {
 	doing_us = f;
 	doattr();

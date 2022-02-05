@@ -33,45 +33,51 @@ private int rbwrite proto((int, char *, int));
 private File	openfiles[MAXFILES];	/* must be zeroed initially */
 
 File *
-fd_open (const char *name, int flags, int fd, char *buffer, int buf_size)
+fd_open(const char *name, int flags, int fd, char *buffer, int buf_size)
 {
 	register File	*fp;
 	register int	i;
 
-	for (fp = openfiles, i = 0; i < MAXFILES; i++, fp++)
-		if (fp->f_flags == 0)
+	for (fp = openfiles, i = 0; i < MAXFILES; i++, fp++) {
+		if (fp->f_flags == 0) {
 			break;
+		}
+	}
 
 	if (i == MAXFILES) {
 		complain("[Too many open files!]");
 		/* NOTREACHED */
 	}
+
 	fp->f_bufsize = buf_size;
 	fp->f_cnt = 0;
 	fp->f_fd = fd;
 	fp->f_flags = flags;
+
 	if (buffer == NULL) {
 		buffer = emalloc((size_t)buf_size);
 		fp->f_flags |= F_MYBUF;
 	}
+
 	fp->f_base = fp->f_ptr = buffer;
 	fp->f_name = copystr(name);
-
 	return fp;
 }
 
-void 
-gc_openfiles (void)
+void
+gc_openfiles(void)
 {
 	register File	*fp;
 
-	for (fp = openfiles; fp < &openfiles[MAXFILES]; fp++)
-		if (fp->f_flags != 0 && (fp->f_flags & F_LOCKED) == 0)
+	for (fp = openfiles; fp < &openfiles[MAXFILES]; fp++) {
+		if (fp->f_flags != 0 && (fp->f_flags & F_LOCKED) == 0) {
 			f_close(fp);
+		}
+	}
 }
 
 File *
-f_open (const char *name, int flags, char *buffer, int buf_size)
+f_open(const char *name, int flags, char *buffer, int buf_size)
 {
 	register int	fd;
 
@@ -82,24 +88,27 @@ f_open (const char *name, int flags, char *buffer, int buf_size)
 
 	case F_APPEND:
 		fd = open(name, O_WRONLY | O_BINARY | O_CLOEXEC);
+
 		if (fd != -1) {
 			(void) lseek(fd, (off_t)0, 2);
 			break;
 		}
-		/* FALLTHROUGH */
+
+	/* FALLTHROUGH */
 	case F_WRITE:
 #ifdef O_CREAT
 		fd = open(name, O_CREAT | O_TRUNC | O_BINARY | O_RDWR | O_CLOEXEC,
 # ifdef UNIX
-			(jmode_t)CreatMode
+				(jmode_t)CreatMode
 # else
-			S_IWRITE | S_IREAD
+				S_IWRITE | S_IREAD
 # endif
 			);
 #else
 		fd = creat(name, (jmode_t)CreatMode);
 #endif
 #ifdef O_TRUNC_BROKEN
+
 		/*
 		 * Cygwin 3.1.2 open(..., O_TRUNC) seems to
 		 * not truncate files on VirtualBox shared
@@ -111,8 +120,10 @@ f_open (const char *name, int flags, char *buffer, int buf_size)
 		 * an error on ftruncate, which really should
 		 * never happen if we successfully opened the file!
 		 */
-		if (fd >= 0)
+		if (fd >= 0) {
 			(void) ftruncate(fd, 0);
+		}
+
 #endif
 		break;
 
@@ -121,35 +132,44 @@ f_open (const char *name, int flags, char *buffer, int buf_size)
 		error("invalid F_MODE");
 		/* NOTREACHED */
 	}
-	if (fd == -1)
+
+	if (fd == -1) {
 		return NULL;
+	}
 
 	return fd_open(name, flags, fd, buffer, buf_size);
 }
 
-void 
-f_close (File *fp)
+void
+f_close(File *fp)
 {
 	const char *what = "close";
 	int	err = 0;
 
-	if ((fp->f_flags & (F_WRITE|F_APPEND))
-	&& (fp->f_flags & F_ERR) == 0)
-	{
+	if ((fp->f_flags & (F_WRITE | F_APPEND))
+		&& (fp->f_flags & F_ERR) == 0) {
 		flushout(fp);
 #ifdef USE_FSYNC
+
 		if (fsync(fp->f_fd) != 0) {
 			what = "fsync";
 			err = errno;
 		}
+
 #endif
 	}
-	if (close(fp->f_fd) != 0 && err == 0)
+
+	if (close(fp->f_fd) != 0 && err == 0) {
 		err = errno;
-	if (fp->f_flags & F_MYBUF)
+	}
+
+	if (fp->f_flags & F_MYBUF) {
 		free((UnivPtr) fp->f_base);
+	}
+
 	free((UnivPtr) fp->f_name);
 	fp->f_flags = 0;	/* indicates that we're available */
+
 	if (err != 0) {
 		/* It would be nice to print fp->f_name, but it's gone.
 		 * Perhaps we should allow the memory to leak so that we
@@ -160,48 +180,56 @@ f_close (File *fp)
 	}
 }
 
-ZXchar 
-f_filbuf (File *fp)
+ZXchar
+f_filbuf(File *fp)
 {
-	if (fp->f_flags & (F_EOF|F_ERR))
+	if (fp->f_flags & (F_EOF | F_ERR)) {
 		return EOF;
+	}
 
 	fp->f_ptr = fp->f_base;
 #ifndef MSDOS
+
 	do {
 #endif /* MSDOS */
-		fp->f_cnt = read(fp->f_fd, (UnivPtr) fp->f_base, (size_t) fp->f_bufsize);
+		fp->f_cnt = (int)read(fp->f_fd, (UnivPtr) fp->f_base, (size_t) fp->f_bufsize);
 #ifndef MSDOS
 	} while (fp->f_cnt == -1 && errno == EINTR);
+
 #endif /* MSDOS */
+
 	if (fp->f_cnt == -1) {
 		/* I/O error -- treat as EOF */
 		writef("[Read error: %s]", strerror(errno));
 		fp->f_flags |= F_ERR | F_EOF;
 		return EOF;
 	}
+
 	if (fp->f_cnt == 0) {
 		fp->f_flags |= F_EOF;
 		return EOF;
 	}
+
 	io_chars += fp->f_cnt;
 	return f_getc(fp);
 }
 
-void 
-putstr (register const char *s)
+void
+putstr(register const char *s)
 {
 	register char	c;
 
-	while ((c = *s++) != '\0')
+	while ((c = *s++) != '\0') {
 		scr_putchar(c);
+	}
 }
 
-void 
-fputnchar (register char *s, register int n, register File *fp)
+void
+fputnchar(register char *s, register int n, register File *fp)
 {
-	while (--n >= 0)
+	while (--n >= 0) {
 		f_putc(*s++, fp);
+	}
 }
 
 #ifndef NO_JSTDOUT
@@ -212,22 +240,26 @@ flushscreen()
 }
 #endif /* !NO_JSTDOUT */
 
-void 
-f_seek (register File *fp, off_t offset)
+void
+f_seek(register File *fp, off_t offset)
 {
-	if (fp->f_flags & (F_WRITE|F_APPEND))
+	if (fp->f_flags & (F_WRITE | F_APPEND)) {
 		flushout(fp);
+	}
+
 	fp->f_cnt = 0;		/* next read will f_filbuf(), next write
 				   will flush() with no bad effects */
 	lseek(fp->f_fd, offset, L_SET);
 }
 
-void 
-flushout (register File *fp)
+void
+flushout(register File *fp)
 {
 	if (fp->f_flags & (F_READ | F_STRING | F_ERR)) {
-		if (fp->f_flags != F_STRING)
-			abort();	/* IMPOSSIBLE */
+		if (fp->f_flags != F_STRING) {
+			abort();        /* IMPOSSIBLE */
+		}
+
 		/* We just banged into the end of a string.
 		 * In the interests of continuing, we will cause
 		 * the rest of the output to be be heaped in the
@@ -240,26 +272,32 @@ flushout (register File *fp)
 
 		for (;;) {
 			JSSIZE_T
-				n = fp->f_ptr - p,
-				wr;
+			n = fp->f_ptr - p,
+			wr;
 
-			if (n <= 0)
+			if (n <= 0) {
 				break;
+			}
 
 #ifdef RAINBOW
 			wr = rbwrite(fp->f_fd, (UnivPtr) p, (size_t)n);
 #else
 			wr = write(fp->f_fd, (UnivPtr) p, (size_t)n);
 #endif
+
 			if (wr >= 0) {
 				p += wr;
 			} else {
 #ifndef MSDOS
+
 				if (errno != EINTR) {
 #endif /* MSDOS */
 #ifndef NO_JSTDOUT
-					if (fp == jstdout)
-						break;	/* bail out, silently */
+
+					if (fp == jstdout) {
+						break;        /* bail out, silently */
+					}
+
 #endif
 					fp->f_flags |= F_ERR;
 					error("[I/O error(%s); file = %s, fd = %d]",
@@ -267,6 +305,7 @@ flushout (register File *fp)
 					/* NOTREACHED */
 #ifndef MSDOS
 				}
+
 #endif /* MSDOS */
 			}
 		}
@@ -286,8 +325,9 @@ size_t	max;
 	register ZXchar	c;
 	char	*endp = buf + max - 1;
 
-	if (fp->f_flags & F_EOF)
+	if (fp->f_flags & F_EOF) {
 		return YES;
+	}
 
 	while ((c = f_getc(fp)) != EOF && c != EOL) {
 		/* We can't store NUL in our buffer, so ignore it.
@@ -297,31 +337,41 @@ size_t	max;
 		 */
 		if (c == '\0'
 #if NCHARS != UCHAR_ROOF
-		|| c >= NCHARS
+			|| c >= NCHARS
 #endif
-		)
+		) {
 			continue;
+		}
 
 		if (cp >= endp) {
 			fp->f_flags |= F_LINETOOLONG;
 			add_mess(" [Line too long]");
-                        rbell();
+			rbell();
 			return YES;
 		}
-		*cp++ = c;
+
+		*cp++ = (char)c;
 	}
+
 	*cp = '\0';
+
 	if (c == EOF) {
-		if (cp != buf)
+		if (cp != buf) {
 			add_mess(" [Incomplete last line]");
+		}
+
 		return YES;
 	}
+
 #ifdef USE_CRLF
+
 	/* a CR followed by a LF is treated as a NL.
 	 * Bug: the line-buffer is effectively shortened by one character.
 	 */
-	if (cp != buf && cp[-1] == '\r')
+	if (cp != buf && cp[-1] == '\r') {
 		*--cp = '\0';
+	}
+
 #endif /* USE_CRLF */
 	io_lines += 1;
 	return NO;	/* this means okay */
@@ -330,17 +380,19 @@ size_t	max;
 /* skip to beginning of next line, i.e., next read returns first
  * character of new line
  */
-void 
-f_toNL (register File *fp)
+void
+f_toNL(register File *fp)
 {
-	if (fp->f_flags & F_EOF)
+	if (fp->f_flags & F_EOF) {
 		return;
+	}
 
 	for (;;) {
 		switch (f_getc(fp)) {
 		case EOF:
 			fp->f_flags |= F_EOF;
-			/*FALLTHROUGH*/
+
+		/*FALLTHROUGH*/
 		case EOL:
 			return;
 		}
@@ -349,21 +401,20 @@ f_toNL (register File *fp)
 
 #ifdef PIPEPROCS
 size_t
-f_readn(fp, addr, n)
-register File	*fp;
-register char	*addr;
-size_t	n;
+f_readn(File	*fp, char	*addr, size_t	n)
 {
-	register size_t	nleft;
+	size_t	nleft;
 
 	for (nleft = n; nleft > 0; nleft--) {
 		ZXchar	c = f_getc(fp);
 
-		if (f_eof(fp))
+		if (f_eof(fp)) {
 			break;
+		}
 
-		*addr++ = c;
+		*addr++ = (char)c;
 	}
+
 	return n - nleft;
 }
 #endif /* PIPEPROCS */
@@ -394,8 +445,8 @@ File	*jstdout = &stdout_File;
 
 #include <dos.h>
 
-private int 
-rbwrite (int fd, char *buf, int cnt)
+private int
+rbwrite(int fd, char *buf, int cnt)
 {
 	union REGS vr;
 

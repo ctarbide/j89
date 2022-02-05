@@ -36,16 +36,16 @@ bool enhanced_keybrd;	/* VAR: exploit "enhanced" keyboard? */
 	(_bios_keybrd(enhanced_keybrd? _NKEYBRD_READY : _KEYBRD_READY) != 0)
 # else /* !_NKEYBRD_READY */
 #  ifdef ZTCDOS
-	/* Workaround for Zortech 3.0: use Zortech's asm() capability.
-	 *
-	 * Interrupt 16h, service 1h (get keyboard status) and
-	 * interrupt 16h, service 11h (get enhanced keyboard status)
-	 * return with ZF cleared iff there is a character.
-	 * The zkbready macro returns YES iff there is a character.
-	 *
-	 * Note that the nature of the Zortech asm facility demands
-	 * that the "service" argument be a constant expression.
-	 */
+/* Workaround for Zortech 3.0: use Zortech's asm() capability.
+ *
+ * Interrupt 16h, service 1h (get keyboard status) and
+ * interrupt 16h, service 11h (get enhanced keyboard status)
+ * return with ZF cleared iff there is a character.
+ * The zkbready macro returns YES iff there is a character.
+ *
+ * Note that the nature of the Zortech asm facility demands
+ * that the "service" argument be a constant expression.
+ */
 #   define zkbready(service)	(0 == (int) asm( \
 	0xB4, service,	/* mov ah,service */ \
 	0xCD, 0x16,	/* int 16h */ \
@@ -70,7 +70,7 @@ bool enhanced_keybrd;	/* VAR: exploit "enhanced" keyboard? */
 #  endif
 #  define jkbshift()	_bios_keybrd(enhanced_keybrd? _NKEYBRD_SHIFTSTATUS : _KEYBRD_SHIFTSTATUS)
 # else /* !kebready */
-   /* We don't know how to support the enhanced keyboard, so we won't */
+/* We don't know how to support the enhanced keyboard, so we won't */
 #  define jkbready()	_bios_keybrd(_KEYBRD_READY)
 #  define jkbread()	_bios_keybrd(_KEYBRD_READ)
 #  define jkbshift()	_bios_keybrd(_KEYBRD_SHIFTSTATUS)
@@ -83,18 +83,20 @@ static const char scanToAsciiLower[] = {
 	/* 00 */ 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\\', '\b',
 	/* 10 */ '-', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', 0, 0, 'a',
 	/* 20 */ 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', 0, '\r', 0, 'z', 'x',
-	/* 30 */ 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, 0, 0, 0, 0, ' ', 0, 0 };
+	/* 30 */ 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, 0, 0, 0, 0, ' ', 0, 0
+};
 
 static const char scanToAsciiUpper[] = {
 	/* 00 */ 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '|', '\177',
 	/* 10 */ '_', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', 0, 0, 'A',
 	/* 20 */ 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', 0, '\r', 0, 'Z', 'X',
-	/* 30 */ 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, 0, 0, 0, 0, ' ', 0, 0 };
+	/* 30 */ 'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0, 0, 0, 0, 0, ' ', 0, 0
+};
 
 #endif /* IBMPCDOS */
 
-ZXchar 
-getrawinchar (void)
+ZXchar
+getrawinchar(void)
 {
 #ifdef IBMPCDOS
 	unsigned scan;
@@ -116,17 +118,17 @@ getrawinchar (void)
 	 * recognized even if the it was pressed after the spacebar was
 	 * released!
 	 */
-	if ((scan&0xff) == ' ' && (jkbshift() & 0x04) && !jkbready())
+	if ((scan & 0xff) == ' ' && (jkbshift() & 0x04) && !jkbready()) {
 		scan = 0x0300;
+	}
 
-	if ((scan&0xff) == 0 || (scan&0xff) == 0xe0) {
+	if ((scan & 0xff) == 0 || (scan & 0xff) == 0xe0) {
 		ZXchar	next = ZXRC(scan >> 8);
 		ZXchar  asciiChar;
 
 		if (MetaKey && next < sizeof(scanToAsciiUpper)
-		&& 0 != (asciiChar = ((jkbshift() & 0x03) && !jkbready()
-			? scanToAsciiUpper : scanToAsciiLower)[next]))
-		{
+			&& 0 != (asciiChar = ((jkbshift() & 0x03) && !jkbready()
+						? scanToAsciiUpper : scanToAsciiLower)[next])) {
 			last = asciiChar;
 			scan = ESC;
 		} else {
@@ -134,16 +136,20 @@ getrawinchar (void)
 			 * PgUp, and PgDn from 71-83 to 171-183.  This hack depends on
 			 * the same heuristic as the ctrl-spacebar hack.
 			 */
-			if (71 <= next && next <= 83 && (jkbshift() & 0x03) && !jkbready())
+			if (71 <= next && next <= 83 && (jkbshift() & 0x03) && !jkbready()) {
 				next += 100;
+			}
+
 			/* Re-map keys that should have been ASCII */
 			switch (next) {
 			case 0x03:	/* ^@ and ^Space key */
 				scan = '\0';	/* ASCII NUL */
 				break;
+
 			case 0x53:	/* Delete key */
 				scan = DEL;	/* ASCII DEL */
 				break;
+
 			default:
 				last = next;	/* not ASCII: more to come next time */
 				scan = PCNONASCII;
@@ -151,21 +157,22 @@ getrawinchar (void)
 			}
 		}
 	}
-	return scan&0xff;
 
+	return scan & 0xff;
 #else /* !IBMPCDOS */
 # ifdef RAINBOW
-
 	union REGS regs;
-
 	rawkey_wait();
 
 	for (;;) {
 		regs.x.di = 2;
 		int86(0x18, &regs, &regs);
-		if (regs.h.al != 0)	/* should never happen, but who knows */
+
+		if (regs.h.al != 0) {	/* should never happen, but who knows */
 			return regs.h.al;
+		}
 	}
+
 # else /* !RAINBOW */
 	rawkey_wait();
 	return bdos(0x06, 0x00ff, 0xff) & 0xff;
@@ -175,16 +182,17 @@ getrawinchar (void)
 
 private bool	waiting = NO;
 
-bool 
-rawkey_ready (void)
+bool
+rawkey_ready(void)
 {
 #ifdef IBMPCDOS
 	return !waiting && (last != EOF || jkbready());
 #else /* !IBMPCDOS */
 	union REGS regs;
 
-	if (waiting)
+	if (waiting) {
 		return NO;
+	}
 
 # ifdef RAINBOW
 	regs.x.di = 4;
@@ -203,8 +211,8 @@ rawkey_ready (void)
 /* Wait for next character, updating the modeline if it displays the time.
  * NOTE: this is a busy wait.
  */
-private void 
-rawkey_wait (void)
+private void
+rawkey_wait(void)
 {
 	while (!rawkey_ready()) {
 		if (UpdModLine) {
@@ -214,8 +222,8 @@ rawkey_wait (void)
 		} else if (TimeDisplayed) {
 			struct dostime_t tc;
 			static char lastmin = 0;
-
 			_dos_gettime(&tc);
+
 			if (tc.minute != lastmin) {
 				UpdModLine = YES;
 				lastmin = tc.minute;
@@ -229,9 +237,9 @@ rawkey_wait (void)
 	}
 }
 
-void 
-ttysetattr (
-    bool n	/* also used as subscript! */
+void
+ttysetattr(
+	bool n	/* also used as subscript! */
 )
 {
 	static char break_state;
@@ -239,12 +247,10 @@ ttysetattr (
 	if (n) {
 		/* set the break state to off */
 		union REGS regs;
-
 		regs.h.ah = 0x33;		/* break status */
 		regs.h.al = 0x00;		/* request current state */
 		intdos(&regs, &regs);
 		break_state = regs.h.dl;
-
 		bdos(0x33, 0, 1);	/* turn off break */
 	} else {
 		/* restore the break state */

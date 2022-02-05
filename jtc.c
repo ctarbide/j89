@@ -139,12 +139,14 @@ private JTLevel jtc_emu[] = {
 };
 
 char *
-jtcarg1 (const char *fmt, int p)
+jtcarg1(const char *fmt, int p)
 {
-	if (fmt)
+	if (fmt) {
 		swritef(jtarg, sizeof jtarg, fmt, p);
-	else
+	} else {
 		jtarg[0] = '\0';
+	}
+
 	return jtarg;
 }
 
@@ -155,12 +157,14 @@ jtcarg1 (const char *fmt, int p)
  * hardwires the %i behaviour from terminfo/termcap
  */
 char *
-jtcarg2 (const char *fmt, int destcol, int destline)
+jtcarg2(const char *fmt, int destcol, int destline)
 {
-	if (fmt)
-		swritef(jtarg, sizeof jtarg, fmt, destline+1, destcol+1);
-	else
+	if (fmt) {
+		swritef(jtarg, sizeof jtarg, fmt, destline + 1, destcol + 1);
+	} else {
 		jtarg[0] = '\0';
+	}
+
 	return jtarg;
 }
 
@@ -170,19 +174,18 @@ jtcarg2 (const char *fmt, int destcol, int destline)
  * termcap.  A jdelay function ought to be factored out of jove.c
  * and moved to unix.c, ibmpcdos.c, win32.c, mac.c.
  */
-void 
-jdelay (int delay)
+void
+jdelay(int delay)
 {
 	struct timeval	timer;
 	fd_set	readfds;
-
 	timer.tv_sec = (delay / 10);
 	timer.tv_usec = (delay % 10) * 100000;
 	FD_ZERO(&readfds);
 	FD_SET(0, &readfds);
 	(void) select(1,
-		      &readfds, (fd_set *)NULL, (fd_set *)NULL,
-		      &timer);
+		&readfds, (fd_set *)NULL, (fd_set *)NULL,
+		&timer);
 }
 
 void
@@ -194,6 +197,7 @@ void (*putfunc) proto((int));
 	const char *cp = str;
 	ZXchar c;
 	bool needflush = NO;
+
 	while (cp && (c = ZXC(*cp++)) != '\0') {
 		if (c == '$') {
 			flushscreen();
@@ -203,40 +207,51 @@ void (*putfunc) proto((int));
 			(*putfunc)(c);
 		}
 	}
-	if (needflush) flushscreen();
+
+	if (needflush) {
+		flushscreen();
+	}
 }
 
-int 
-tgetent (char *buf, const char *tenv)
+int
+tgetent(char *buf, const char *tenv)
 {
 	const char *jtcenv = getenv("JOVEVT");
+
 	if (jtcenv != NULL) {
 		if (caseeqn(jtcenv, "alt", 3) || caseeqn(jtcenv, "vtalt", 5)) {
 			jtlev = VTALT;
 		} else if (caseeqn(jtcenv, "vt", 2)) {
-			jtlev = atoi(jtcenv+2);
+			jtlev = atoi(jtcenv + 2);
 		} else {
 			jtlev = atoi(jtcenv);
 		}
 	} else {
 		JTLevel *j = jtc_emu;
+
 		if (caseeqn(tenv, "vt", 2) && jisdigit(tenv[2])) {
 			jtlev = atoi(&tenv[2]);
 		}
+
 		for (j = jtc_emu;
-		     j < jtc_emu + (sizeof(jtc_emu)/sizeof(jtc_emu[0])); j++) {
+			j < jtc_emu + (sizeof(jtc_emu) / sizeof(jtc_emu[0])); j++) {
 			size_t tlen = strlen(j->tprefix);
+
 			if (caseeqn(tenv, j->tprefix, tlen) &&
-			    (tenv[tlen] == '\0' || tenv[tlen] == '-' ||
-			     tenv[tlen] == '.' || jisdigit(tenv[tlen]))) {
+				(tenv[tlen] == '\0' || tenv[tlen] == '-' ||
+					tenv[tlen] == '.' || jisdigit(tenv[tlen]))) {
 				jtlev = j->tlevel;
 				break;
 			}
 		}
 	}
+
 #ifdef TIOCGWINSZ
-	if (ioctl(0, TIOCGWINSZ, (UnivPtr) &jtwin) < 0)
+
+	if (ioctl(0, TIOCGWINSZ, (UnivPtr) &jtwin) < 0) {
 		return -1;
+	}
+
 #endif
 	return jtlev >= 0;
 }
@@ -244,13 +259,15 @@ tgetent (char *buf, const char *tenv)
 #define capeq(cap, val) (cap[0] == val[0] && cap[1] == val[1] && \
 			 cap[2] == val[2] && cap[2] == '\0')
 
-int 
-tgetflag (const char *capname)
+int
+tgetflag(const char *capname)
 {
-	if (capeq(capname, "mi") && jtlev >= VT125)
-		return YES; /* terminfo for vt102 does not have move-in-insert */
-	else if (capeq(capname, "km") && jtlev >= VTALT)
-		return YES; /* metakey only on modern terminal emulators */
+	if (capeq(capname, "mi") && jtlev >= VT125) {
+		return YES;        /* terminfo for vt102 does not have move-in-insert */
+	} else if (capeq(capname, "km") && jtlev >= VTALT) {
+		return YES;        /* metakey only on modern terminal emulators */
+	}
+
 	/*
 	 * NP is not checked on modern machines with select(),
 	 * which are the only ones with xterm etc where NP
@@ -260,8 +277,8 @@ tgetflag (const char *capname)
 }
 
 
-int 
-tgetnum (const char *capname)
+int
+tgetnum(const char *capname)
 {
 	if (capeq(capname, "co")) {
 		return JVTCOLS;
@@ -272,23 +289,27 @@ tgetnum (const char *capname)
 	} else if (capeq(capname, "ug") || capeq(capname, "sg")) {
 		return 0;
 	}
+
 	return -1;
 }
 
 const char *
-tgetstr (const char *capname, char **area)
+tgetstr(const char *capname, char **area)
 {
 	JTermcap *j;
-	for (j = jtc; j < jtc + (sizeof(jtc)/sizeof(jtc[0])); j++) {
+
+	for (j = jtc; j < jtc + (sizeof(jtc) / sizeof(jtc[0])); j++) {
 		if (capeq(j->capname, capname) && j->caplevel <= jtlev) {
 			if (area && *area) {
 				size_t caplen = strlen(j->capval) + 1;
 				memcpy(*area, j->capval, caplen);
 				*area += caplen;
 			}
+
 			return j->capval;
 		}
 	}
+
 	return 0;
 }
 
@@ -298,70 +319,80 @@ tgetstr (const char *capname, char **area)
  */
 
 /* make terminfo string printable */
-void 
-puts_encoded (const char *s)
+void
+puts_encoded(const char *s)
 {
 	unsigned c;
-	if (s) while ((c = (*s++)&0xff) != '\0') {
-		/*printf(" 0x%x\n", c);*/
-		if (c == 0x1b) {
-			/* convention for ESC per terminfo(5) */
-			printf("\\E");
-		} else if (c == 0x7f) {
-			/* convention for DEL e.g. terminfo(5) */
-			printf("^?");
-		} else if (c < ' ') {
-			/* ^ followed up uppercase letter */
-			printf("^%c", c | 0x40);
-		} else if (c < 0x7f) {
-			printf("%c", c);
-		} else {
-			printf("\\%03o", c);
+
+	if (s) while ((c = (*s++) & 0xff) != '\0') {
+			/*printf(" 0x%x\n", c);*/
+			if (c == 0x1b) {
+				/* convention for ESC per terminfo(5) */
+				printf("\\E");
+			} else if (c == 0x7f) {
+				/* convention for DEL e.g. terminfo(5) */
+				printf("^?");
+			} else if (c < ' ') {
+				/* ^ followed up uppercase letter */
+				printf("^%c", c | 0x40);
+			} else if (c < 0x7f) {
+				printf("%c", c);
+			} else {
+				printf("\\%03o", c);
+			}
 		}
-	}
+
 	printf("\n");
 }
 
-void 
-xtputs (int delay, const char *s, int li)
+void
+xtputs(int delay, const char *s, int li)
 {
 	tputs(s, li, putchar);
 	fflush(stdout);
 	jdelay(delay);
 }
 
-int 
-main (int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	int i, j;
 	static const char *capn[] = {"co", "li", "it", "ug", "sg", "xx"};
 	static const char *capf[] = {"NP", "mi", "km", "ul", "xs", "hz"};
 	const char *cp;
+
 	for (i = 1; i < argc; i++) {
 		int r = tgetent(NULL, argv[i]);
 		printf("tgetent(%s) -> %d jtlev=%d\n", argv[i], r, jtlev);
-		for (j = 0; j < sizeof(capn)/sizeof(capn[0]); j++) {
+
+		for (j = 0; j < sizeof(capn) / sizeof(capn[0]); j++) {
 			int v = tgetnum(capn[j]);
 			printf("  %s=%d\n", capn[j], v);
 		}
-		for (j = 0; j < sizeof(capf)/sizeof(capf[0]); j++) {
+
+		for (j = 0; j < sizeof(capf) / sizeof(capf[0]); j++) {
 			int v = tgetflag(capf[j]);
 			printf("  %s=%s\n", capf[j], v == YES ? "YES" : "NO");
 		}
-		for (j = 0; j < sizeof(jtc)/sizeof(jtc[0]); j++) {
+
+		for (j = 0; j < sizeof(jtc) / sizeof(jtc[0]); j++) {
 			const char *s = tgetstr(jtc[j].capname, NULL);
 			printf("  %s=", jtc[j].capname);
 			puts_encoded(s);
 		}
 	}
-	if (argc > 1) exit(0);
+
+	if (argc > 1) {
+		exit(0);
+	}
+
 	printf("about to enter screen mode:\n");
 	fflush(stdout);
 	jdelay(10);
 	cp = getenv("TERM");
 	tgetent(NULL, cp);
 	xtputs(1, tgetstr("ti", NULL), 0);
-	xtputs(1, jtcarg1(tgetstr("ks", NULL),0), 0);
+	xtputs(1, jtcarg1(tgetstr("ks", NULL), 0), 0);
 	xtputs(10, tgetstr("cl", NULL), 24);
 	xtputs(10, "hello\nworld", 2);
 	xtputs(1, jtcarg2(tgetstr("cm", NULL), 4, 0), 1);
@@ -379,29 +410,33 @@ main (int argc, char **argv)
 	xtputs(10, "222222", 1);
 	xtputs(5, jtcarg1(tgetstr("ho", NULL), 1), 1);
 	cp = tgetstr("SR", NULL);
-	if (cp)
+
+	if (cp) {
 		xtputs(10, jtcarg1(cp, 2), 2);
-	else {
+	} else {
 		xtputs(5, jtcarg1(tgetstr("sr", NULL), 1), 1);
 		xtputs(5, jtcarg1(tgetstr("sr", NULL), 1), 1);
 	}
-	xtputs(5, jtcarg2(tgetstr("cm", NULL),0,5), 1);
+
+	xtputs(5, jtcarg2(tgetstr("cm", NULL), 0, 5), 1);
 	cp = tgetstr("SF", NULL);
-	if (cp)
+
+	if (cp) {
 		xtputs(10, jtcarg1(cp, 2), 2);
-	else {
-		xtputs(5, jtcarg1(tgetstr("sf", NULL),1), 1);
-		xtputs(5, jtcarg1(tgetstr("sf"),1), 1);
+	} else {
+		xtputs(5, jtcarg1(tgetstr("sf", NULL), 1), 1);
+		xtputs(5, jtcarg1(tgetstr("sf"), 1), 1);
 	}
+
 	j = tgetnum("li");
 	xtputs(5, tgetstr("dl", NULL), 1);
 	xtputs(5, tgetstr("so", NULL), 1);
-	printf("%d",j);
+	printf("%d", j);
 	fflush(stdout);
 	xtputs(5, tgetstr("se", NULL), 1);
 	xtputs(5, tgetstr("vb", NULL), 1);
-	xtputs(5, jtcarg2(tgetstr("cs", NULL),j-1,0), 0);
-	xtputs(5, jtcarg2(tgetstr("cm", NULL),0,j-1), 0);
+	xtputs(5, jtcarg2(tgetstr("cs", NULL), j - 1, 0), 0);
+	xtputs(5, jtcarg2(tgetstr("cm", NULL), 0, j - 1), 0);
 	xtputs(5, tgetstr("ce", NULL), 0);
 	xtputs(0, tgetstr("ke", NULL), 0);
 	xtputs(0, tgetstr("te", NULL), 0);

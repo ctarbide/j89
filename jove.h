@@ -23,10 +23,6 @@
 
 #endif
 
-#ifdef USE_STDIO_H
-# include <stdio.h> /* for recover, setmaps */
-#endif
-
 #ifndef MAC
 # include <sys/types.h>
 #else
@@ -45,7 +41,7 @@
 #ifdef USE_PROTOTYPES
 # define proto(x)        x
 # ifdef NO_PTRPROTO
-   /* on these systems, a prototype cannot be used for a pointer to function */
+/* on these systems, a prototype cannot be used for a pointer to function */
 #  define ptrproto(x)		()
 # else
 #  define ptrproto(x)		x
@@ -90,8 +86,8 @@
 
 #ifdef REALSTDC
 
-  typedef void	*UnivPtr;
-  typedef const void	*UnivConstPtr;
+typedef void	*UnivPtr;
+typedef const void	*UnivConstPtr;
 
 #else /* !REALSTDC */
 
@@ -101,8 +97,8 @@
 # ifndef volatile
 #  define	volatile
 # endif
-  typedef char	*UnivPtr;
-  typedef const char	*UnivConstPtr;
+typedef char	*UnivPtr;
+typedef const char	*UnivConstPtr;
 
 #endif /* !REALSTDC */
 
@@ -161,7 +157,7 @@ typedef int	bool;
  * resetsighandler: the best way to re-establish a signal handler
  */
 
-typedef SIGRESTYPE (*SIGHANDLERTYPE) ptrproto((int));
+typedef SIGRESTYPE(*SIGHANDLERTYPE) ptrproto((int));
 
 #ifdef POSIX_SIGS
 extern SIGHANDLERTYPE setsighandler proto((int, SIGHANDLERTYPE));
@@ -171,23 +167,23 @@ extern SIGHANDLERTYPE setsighandler proto((int, SIGHANDLERTYPE));
 #  define setsighandler(signo, handler)	sigset((signo), (handler))
 #  define resetsighandler(signo, handler)	/* nothing */
 # else /* !USE_SIGSET */
-   /* BSD_SIGS or default: use signal() */
+/* BSD_SIGS or default: use signal() */
 #  define setsighandler(signo, handler)	signal((signo), (handler))
 # endif /* !USE_SIGSET */
 #endif /* !POSIX_SIGS */
 
 #ifndef resetsighandler
- /* On some systems, the signal handler is left established,
-  * but this is not the case with original UNIX signals.
-  * This code adjusts to the system at hand, at fairly low cost.
-  * This code is even used for BSD_SIGS, even though it should not
-  * be needed: it compensates for mis-configuration.
-  * Note: this routine will only work if every execution of a particular
-  * call is for the same handler.  Furthermore, all executions should
-  * be due to the handler being invoked by a signal.  These restrictions
-  * ensure that the setting of the static variable indicates whether
-  * signal handlers need to be re-established.
-  */
+/* On some systems, the signal handler is left established,
+ * but this is not the case with original UNIX signals.
+ * This code adjusts to the system at hand, at fairly low cost.
+ * This code is even used for BSD_SIGS, even though it should not
+ * be needed: it compensates for mis-configuration.
+ * Note: this routine will only work if every execution of a particular
+ * call is for the same handler.  Furthermore, all executions should
+ * be due to the handler being invoked by a signal.  These restrictions
+ * ensure that the setting of the static variable indicates whether
+ * signal handlers need to be re-established.
+ */
 # define resetsighandler(signo, handler)	{ \
 	static SIGHANDLERTYPE	reset_handler; \
  \
@@ -278,7 +274,7 @@ typedef int ZXchar;	/* type for expanded char (possibly EOF) */
 #   define ZXC(c)	((ZXchar) (unsigned char) (c))
 #  endif
 # else
-   /* ??? */
+/* ??? */
 # endif
 #endif
 
@@ -294,13 +290,13 @@ extern volatile bool	UpdModLine;	/* Does the mode line need to be updated? */
 /* term.c: universal termcap-like declarations */
 
 extern int
-	SG,		/* number of magic cookies left by SO and SE */
-	LI,		/* number of lines */
-	ILI,		/* number of internal lines (LI - 1) */
-	CO;		/* number of columns (CO <= MAXCOLS) */
+SG,		/* number of magic cookies left by SO and SE */
+LI,		/* number of lines */
+ILI,		/* number of internal lines (LI - 1) */
+CO;		/* number of columns (CO <= MAXCOLS) */
 
 extern bool
-	TABS;		/* terminal supports tabs */
+TABS;		/* terminal supports tabs */
 
 /* typedef pervasive structure definitions */
 
@@ -334,14 +330,14 @@ typedef struct FileStruct	File;	/* fp.h */
 /* paths */
 
 extern char
-	ShareDir[FILESIZE],	/* VAR: directory path of machine-independent library */
-	LibDir[FILESIZE],	/* VAR: directory path of machine-dependenty libray */
-	TmpDir[FILESIZE];	/* VAR: directory path to store tmp files */
+ShareDir[FILESIZE],	/* VAR: directory path of machine-independent library */
+	 LibDir[FILESIZE],	/* VAR: directory path of machine-dependenty libray */
+	 TmpDir[FILESIZE];	/* VAR: directory path to store tmp files */
 
 #ifdef SUBSHELL
 extern char
-	Shell[FILESIZE],	/* VAR: shell to use */
-	ShFlags[16];	/* VAR: flags to shell */
+Shell[FILESIZE],	/* VAR: shell to use */
+      ShFlags[16];	/* VAR: flags to shell */
 #endif
 
 
@@ -357,22 +353,22 @@ extern char	NullStr[];
 
 
 extern ZXchar
-	peekchar,	/* holds pushed-back getch output */
-	LastKeyStruck;	/* used by SelfInsert and friends */
+peekchar,	/* holds pushed-back getch output */
+LastKeyStruck;	/* used by SelfInsert and friends */
 
 extern int
-	RecDepth,	/* recursion depth (used by disp.c for modeline) */
-	SlowCmd;	/* depth of nesting of slow commands */
+RecDepth,	/* recursion depth (used by disp.c for modeline) */
+SlowCmd;	/* depth of nesting of slow commands */
 
 extern bool
-	TOabort,	/* flag set by Typeout() */
-	stickymsg,	/* the last message should stick around */
-	InputPending,	/* is there input waiting to be processed? */
-	Interactive;
+TOabort,	/* flag set by Typeout() */
+stickymsg,	/* the last message should stick around */
+InputPending,	/* is there input waiting to be processed? */
+Interactive;
 
 #ifdef UNIX
 extern bool
-	InSlowRead;	/* Can we do a redisplay in a signal handler? */
+InSlowRead;	/* Can we do a redisplay in a signal handler? */
 #endif
 
 extern char	*Inputp;
@@ -390,42 +386,42 @@ extern void	jcloseall proto((void));
 #endif
 
 extern SIGRESTYPE
-	finish proto((int code)) NEVER_RETURNS,	/* doesn't return at all! */
-	win_reshape proto((int /*junk*/));
+finish proto((int code)) NEVER_RETURNS,	/* doesn't return at all! */
+       win_reshape proto((int /*junk*/));
 
 extern bool
-	charp proto((void));
+charp proto((void));
 
 extern ZXchar
-	getch proto((void)),
-	kbd_getch proto((void)),
-	waitchar proto((void)),
-	ask_ks proto((void));
+getch proto((void)),
+      kbd_getch proto((void)),
+      waitchar proto((void)),
+      ask_ks proto((void));
 
 extern void
-	cmd_sync proto((void)),
-	add_stroke proto((ZXchar)),
-	error proto((const char *, ...)) NEVER_RETURNS,
-	complain proto((const char *, ...)) NEVER_RETURNS,
-	raw_complain proto((const char *, ...)),
-	confirm proto((const char *, ...)),
-	SitFor proto((int delay)),
-	pp_key_strokes proto((char *buffer, size_t size)),
-	tty_adjust proto ((void)),
-	Ungetc proto((ZXchar c)),
-	kbd_ungetch proto((ZXchar c));
+cmd_sync proto((void)),
+	 add_stroke proto((ZXchar)),
+	 error proto((const char *, ...)) NEVER_RETURNS,
+	 complain proto((const char *, ...)) NEVER_RETURNS,
+	 raw_complain proto((const char *, ...)),
+	 confirm proto((const char *, ...)),
+	 SitFor proto((int delay)),
+	 pp_key_strokes proto((char *buffer, size_t size)),
+	 tty_adjust proto((void)),
+	 Ungetc proto((ZXchar c)),
+	 kbd_ungetch proto((ZXchar c));
 
 /* Commands: */
 
 extern void
 #ifdef JOB_CONTROL
-	PauseJove proto((void)),
+PauseJove proto((void)),
 #endif
 #ifdef SUBSHELL
-	Push proto((void)),
+	  Push proto((void)),
 #endif
-	Recur proto((void)),
-	ShowVersion proto((void));
+	  Recur proto((void)),
+	  ShowVersion proto((void));
 
 /* Variables: */
 

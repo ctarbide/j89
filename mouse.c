@@ -27,6 +27,7 @@
 #include "marks.h"
 #include "move.h"
 #include "wind.h"
+#include "ttystate.h"
 #include "term.h"		/* for M_SR */
 #include "fp.h"		/* for putstr */
 #include "jctype.h"
@@ -93,14 +94,14 @@ private bool	xtMouseState = NO;	/* have we enabled the mouse? */
 
 /* sequences to enable/disable mouse hilite tracking in xterm */
 private const char
-	xtMouseEnable[] = "\033[?1001h",
+xtMouseEnable[] = "\033[?1001h",
 	xtMouseDisable[] = "\033[?1001l";
 
 private int	but_state;	/* button state (and more) at mouse event */
 private int	x_coord;	/* mouse x-coordinate, in pixels, origin 0 */
 private int	y_coord;	/* mouse y-coordinate, in characters, origin 0 */
 private int		/* xterm drag range coordinates */
-	startx, starty,
+startx, starty,
 	endx, endy;
 private int	font_width;	/* width of a character in pixels */
 private Window	*oldwind;
@@ -117,26 +118,28 @@ private int last_mouse_act = LMA_NONE;
 
 private const char *saved_M_SR = NULL;	/* KLUDGE for xterm/termcap bug */
 
-void 
-MouseOn (void)
+void
+MouseOn(void)
 {
 	if (XtermMouse != xtMouseState) {
 		/* KLUDGE for xterm/termcap bug */
 		if (XtermMouse && M_SR != NULL) {
-		    size_t len = strlen(M_SR);
+			size_t len = strlen(M_SR);
+			saved_M_SR = M_SR;
 
-		    saved_M_SR = M_SR;
-		    if (len > 0 && M_SR[len-1] == 'T')
-			M_SR = NULL;
+			if (len > 0 && M_SR[len - 1] == 'T') {
+				M_SR = NULL;
+			}
 		}
+
 		/* end if KLUDGE */
-		putstr(XtermMouse? xtMouseEnable : xtMouseDisable);
+		putstr(XtermMouse ? xtMouseEnable : xtMouseDisable);
 		xtMouseState = XtermMouse;
 	}
 }
 
-void 
-MouseOff (void)
+void
+MouseOff(void)
 {
 	if (xtMouseState) {
 		putstr(xtMouseDisable);
@@ -147,8 +150,8 @@ MouseOff (void)
 
 /* Set cursor position to that of mouse pointer. */
 
-private void 
-SetCursor (void)
+private void
+SetCursor(void)
 {
 	int	line_pos = in_window(curwind, curline);
 	int	offset = PhysScreen[y_coord].s_offset;
@@ -158,23 +161,27 @@ SetCursor (void)
 		SetLine(curwind->w_top);
 		line_pos = in_window(curwind, curline);
 	}
+
 	num_moves = y_coord - line_pos;
-	if (num_moves > 0)
+
+	if (num_moves > 0) {
 		line_move(FORWARD, num_moves, NO);
-	if (num_moves < 0)
+	}
+
+	if (num_moves < 0) {
 		line_move(BACKWARD, -num_moves, NO);
+	}
 
 	curchar = how_far(curline,
-		(x_coord + font_width/2) / font_width + offset
-		- (W_NUMWIDTH(curwind) + SIWIDTH(offset)));
+			(x_coord + font_width / 2) / font_width + offset
+			- (W_NUMWIDTH(curwind) + SIWIDTH(offset)));
 }
 
-private void 
-ScrollToMouse (void)
+private void
+ScrollToMouse(void)
 {
-	register int	lc;
-	const int	width = (CO - 1 - (4 * SG)) * font_width;	/* must match size in ModeLine */
-	int	top;
+	long	lc, top;
+	const long	width = (CO - 1 - (4 * SG)) * font_width;	/* must match size in ModeLine */
 
 	/* This code ought to match the scroll-bar layout computed by
 	 * WindowRange().
@@ -186,20 +193,26 @@ ScrollToMouse (void)
 	 *   region (except near the ends, of course).
 	 */
 	lc = LinesTo(curbuf->b_first, (LinePtr)NULL);
-	top = 1 + (long)(x_coord-font_width) * (lc-2) / (width-2*font_width)
-		- WSIZE(curwind)/2;
-	if (top > lc - WSIZE(curwind))
+	top = 1 + (x_coord - font_width) * (lc - 2) / (width - 2 * font_width)
+		- WSIZE(curwind) / 2;
+
+	if (top > lc - WSIZE(curwind)) {
 		top = lc - WSIZE(curwind);
-	if (top < 0)
+	}
+
+	if (top < 0) {
 		top = 0;
+	}
 
 	SetTop(curwind, next_line(curbuf->b_first, top));
-	if (in_window(curwind, curline) == -1)
-		SetLine(next_line(curwind->w_top, WSIZE(curwind)/2));
+
+	if (in_window(curwind, curline) == -1) {
+		SetLine(next_line(curwind->w_top, WSIZE(curwind) / 2));
+	}
 }
 
-private bool 
-ObeyProc (cmdproc_t p)
+private bool
+ObeyProc(cmdproc_t p)
 {
 	if (BufMinorMode(curbuf, BReadOnly)) {
 		rbell();
@@ -213,23 +226,22 @@ ObeyProc (cmdproc_t p)
 
 /* Get next value in number sequence */
 
-private int 
-NextValue (void)
+private int
+NextValue(void)
 {
 	int val;
-
 	(void) waitchar();
 	Digit();
-	val = arg_value();
+	val = arg_value_as_int();
 	clr_arg_value();
 	return val;
 }
 
 /* Select appropriate window */
 
-private int 
-SelectWind (
-    Window *winforce	/* if non-null, must be within this window */
+private int
+SelectWind(
+	Window *winforce	/* if non-null, must be within this window */
 )
 {
 	register Window *wp = fwind;
@@ -238,13 +250,17 @@ SelectWind (
 	/* Find which window mouse pointer is in. */
 	while (y_coord >= total_lines) {
 		wp = wp->w_next;
-		if (wp == fwind)
+
+		if (wp == fwind) {
 			return -1;
+		}
 
 		total_lines += wp->w_height;
 	}
-	if (winforce != NULL && wp != winforce)
+
+	if (winforce != NULL && wp != winforce) {
 		return -1;
+	}
 
 	SetWind(wp);		/* Set current window */
 	return (total_lines - y_coord - 1);	/* Cursor pos within window */
@@ -252,26 +268,27 @@ SelectWind (
 
 /* get an origin-0 coordinate in funny representation used by xterm */
 
-private int 
-xtGetCoord (int upb)
+private int
+xtGetCoord(int upb)
 {
 	ZXchar	c = waitchar();	/* coordinate */
 
 	/* undo MetaKey if we think it was done */
-	if (c == ESC && MetaKey)
+	if (c == ESC && MetaKey) {
 		c = waitchar() | METABIT;
+	}
 
 	/* It appears that mouse events near the extreme right hand edge of
 	 * a window can give coordinates as large as LI.  Perhaps this is
 	 * true for CO too.  So the range is inclusive.
 	 */
-	return '!' <= c && c - '!' <= upb? c - '!' : -1;
+	return '!' <= c && c - '!' <= upb ? c - '!' : -1;
 }
 
 /* get some X Y pair from xterm; return indication of success */
 
-private bool 
-xtGetXY (int *xp, int *yp)
+private bool
+xtGetXY(int *xp, int *yp)
 {
 	int x = xtGetCoord(CO);
 
@@ -285,6 +302,7 @@ xtGetXY (int *xp, int *yp)
 			return YES;
 		}
 	}
+
 	return NO;
 }
 
@@ -319,30 +337,27 @@ xtGetXY (int *xp, int *yp)
  */
 #define XTERMHLBUG	1	/* always enable: we think that it is safe */
 
-static void 
-hl_mode (int hl_setting, int startx, int starty, int endx, int endy)
+static void
+hl_mode(int hl_setting, int a_startx, int a_starty, int a_endx, int a_endy)
 {
 	static const char	hl_fmt[] = "\033[%d;%d;%d;%d;%dT";
-	char	buf[sizeof(hl_fmt) + 4*(5-2)];
-
-	swritef(buf, sizeof(buf), hl_fmt, hl_setting, startx, starty, endx, endy);
+	char	buf[sizeof(hl_fmt) + 4 * (5 - 2)];
+	swritef(buf, sizeof(buf), hl_fmt, hl_setting, a_startx, a_starty, a_endx, a_endy);
 	putstr(buf);
 #ifdef XTERMHLBUG
 	scr_putchar('\0');
 #endif
 }
 
-private bool 
-MouseParams (int mproto)
+private bool
+MouseParams(int mproto)
 {
 	/* The mouse commands will be invoked by hitting a mouse
 	 * button but can also be invoked by typing the escape sequence
 	 * CTRL-Xm so the following validation checks are necessary.
 	 */
-
 	static int	wind_pos;		/* reverse y-coordinate within window */
 	static bool	mode_mode = NO;		/* true while doing modeline */
-
 	/* up_expected is an extended bool: it can be YES, NO, and -1!
 	 * -1 signifies that we are in xterm mouse hilite tracking mode
 	 * which appears to fail to yield an up event if it deems the
@@ -350,7 +365,6 @@ MouseParams (int mproto)
 	 */
 	static int	up_expected = NO;	/* true while button held down */
 	static int	estartx, estarty;	/* from last enable */
-
 	bool	input_good = NO;
 
 	/* This switch reads and decodes the control sequence.
@@ -360,55 +374,70 @@ MouseParams (int mproto)
 	 *   and up_expected is -1, the decoder should adjust up_expected.
 	 */
 	switch (mproto) {
-	case MPROTO_XTERM:
-		{
-			ZXchar	cb = LastKeyStruck;
+	case MPROTO_XTERM: {
+		ZXchar	cb = LastKeyStruck;
 
-			switch (cb) {
-			default:
-				if (' ' <= cb && cb < ' '+040 && xtGetXY(&x_coord, &y_coord)) {
-					/* ^[ [ M buttoninfo mousex mousey
-					 * Button event with coordinates.
-					 * On a release event we aren't told which button
-					 * is being released.
-					 */
-					cb -= ' ';
-					if ((cb & 03) == 03) {
-						/* guess that released button is last depressed */
-						but_state = (but_state & JT_BUTMASK) | JT_UPEVENT;
-						/* We are welcome in xterm mouse hilite tracking mode */
-						if (up_expected == -1)
-							up_expected = YES;
-					} else {
-						static const int butcode[] = { JT_LEFT, JT_MIDDLE, JT_RIGHT };
+		switch (cb) {
+		default:
+			if (' ' <= cb && cb < ' ' + 040 && xtGetXY(&x_coord, &y_coord)) {
+				/* ^[ [ M buttoninfo mousex mousey
+				 * Button event with coordinates.
+				 * On a release event we aren't told which button
+				 * is being released.
+				 */
+				cb -= ' ';
 
-						but_state = butcode[cb & 03] | JT_DOWNEVENT;
-						/* We are welcome in xterm mouse hilite tracking mode */
-						if (up_expected == -1)
-							up_expected = NO;
+				if ((cb & 03) == 03) {
+					/* guess that released button is last depressed */
+					but_state = (but_state & JT_BUTMASK) | JT_UPEVENT;
+
+					/* We are welcome in xterm mouse hilite tracking mode */
+					if (up_expected == -1) {
+						up_expected = YES;
 					}
-#ifdef NEVER	/* surprise: xterm won't generate these modifiers! */
-					if (cb & 04)
-						but_state |= JT_SHIFT;
-					if (cb & 010)
-						but_state |= JT_META;
-#endif
-					if (cb & 020)
-						but_state |= JT_CONTROL;
-					input_good = YES;
+				} else {
+					static const int butcode[] = { JT_LEFT, JT_MIDDLE, JT_RIGHT };
+					but_state = butcode[cb & 03] | JT_DOWNEVENT;
+
+					/* We are welcome in xterm mouse hilite tracking mode */
+					if (up_expected == -1) {
+						up_expected = NO;
+					}
 				}
-				break;
+
+#ifdef NEVER	/* surprise: xterm won't generate these modifiers! */
+
+				if (cb & 04) {
+					but_state |= JT_SHIFT;
+				}
+
+				if (cb & 010) {
+					but_state |= JT_META;
+				}
+
+#endif
+
+				if (cb & 020) {
+					but_state |= JT_CONTROL;
+				}
+
+				input_good = YES;
 			}
+
+			break;
 		}
-		break;
+	}
+	break;
 
 	case MPROTO_XTDRAG:
+
 		/* handle xterm hilite tracking drag event: ^[ [ t or ^[ [ T
 		 * These are only generated for left-button acts.
 		 * Each is some drag-like event.
 		 */
 		switch (LastKeyStruck) {
 		case 'T':
+
 			/* ^[ [ T startx starty endx endy mousex mousey
 			 * returned on Left Button release beyond end-of-line,
 			 * or (undocumented) a drag to left or up, or
@@ -422,18 +451,18 @@ MouseParams (int mproto)
 			 * relying on undocumented features!
 			 */
 			if (xtGetXY(&startx, &starty)
-			&& xtGetXY(&endx, &endy)
-			&& xtGetXY(&x_coord, &y_coord))
-			{
+				&& xtGetXY(&endx, &endy)
+				&& xtGetXY(&x_coord, &y_coord)) {
 				input_good = YES;
-				if (((  endy != estarty || endx != estartx
-				     || y_coord > estarty
-				     || (y_coord == estarty && x_coord >= estartx)
-				     )	/* it isn't a drag left or up */
-				&&   (  endx != 0 || startx == endx
-				     )	/* it isn't a drag across an e-o-l */
-				    )
-				||  (but_state & JT_CLICKMASK) == JT_CLICK2)
+
+				if (((endy != estarty || endx != estartx
+							|| y_coord > estarty
+							|| (y_coord == estarty && x_coord >= estartx)
+						)	/* it isn't a drag left or up */
+						&& (endx != 0 || startx == endx
+						)	/* it isn't a drag across an e-o-l */
+					)
+					|| (but_state & JT_CLICKMASK) == JT_CLICK2)
 					/* it is clearly a third click */
 				{
 					/* a complex selection */
@@ -442,9 +471,11 @@ MouseParams (int mproto)
 						 * endx == 0 implies that we
 						 * missed the second one
 						 */
+					{
 						but_state = JT_LEFT | JT_DRAGEVENT | JT_CLICK3;
-					else
+					} else {
 						but_state = JT_LEFT | JT_DRAGEVENT | JT_CLICK2;
+					}
 				} else {
 					/* A simple drag.
 					 * Note: code is the same as for case 't' below.
@@ -452,9 +483,11 @@ MouseParams (int mproto)
 					but_state = JT_LEFT | JT_DRAGEVENT;
 				}
 			}
+
 			break;
 
 		case 't':
+
 			/* ^[ [ t mousex mousey
 			 * returned on Left Button release within valid text.
 			 * A simple drag.
@@ -464,51 +497,59 @@ MouseParams (int mproto)
 				but_state = JT_LEFT | JT_DRAGEVENT;
 				input_good = YES;
 			}
+
 			break;
 		}
+
 		/* We are welcome in xterm mouse hilite tracking mode */
-		if (input_good && up_expected == -1)
+		if (input_good && up_expected == -1) {
 			up_expected = YES;
+		}
+
 		break;
 
 	case MPROTO_JOVETOOL:
 		if (waitchar() == '(') {
 			but_state = NextValue();	/* Read in parameters */
+
 			switch (waitchar()) {
-			case ' ':
-				{
-					int x = NextValue();
+			case ' ': {
+				int x = NextValue();
+
+				if (waitchar() == ' ') {
+					int y = NextValue();
 
 					if (waitchar() == ' ') {
-						int y = NextValue();
+						font_width = NextValue();
 
-						if (waitchar() == ' ') {
-							font_width = NextValue();
-							if (waitchar() == ')'
-							&& waitchar() == '\r')
-							{
-								input_good = YES;
-								x_coord = x;
-								y_coord = y;
-							}
+						if (waitchar() == ')'
+							&& waitchar() == '\r') {
+							input_good = YES;
+							x_coord = x;
+							y_coord = y;
 						}
 					}
 				}
-				break;
+			}
+			break;
+
 			case ')':
 				input_good = (waitchar() == '\r');
 				break;
 			}
 		}
+
 		break;
 	}
+
 	this_cmd = OTHER_CMD;	/* no longer gathering args */
 
 	if (!input_good) {
 		if (XtermProto(mproto) && but_state == (JT_LEFT | JT_DOWNEVENT)) {
 			/* abort Hilite mode to prevent hangups */
-			hl_mode(0,1,1,1,1);
+			hl_mode(0, 1, 1, 1, 1);
 		}
+
 		complain("[mouse input of wrong format]");
 		/* NOTREACHED */
 	}
@@ -520,41 +561,45 @@ MouseParams (int mproto)
 	 */
 
 	/* check: button_(was)_held iff currently event is UP or DRAG */
-	if (up_expected != ((but_state & JT_EVENTMASK)!=JT_DOWNEVENT)
-	|| (up_expected == YES && last_cmd != MOUSE_CMD)) {
+	if (up_expected != ((but_state & JT_EVENTMASK) != JT_DOWNEVENT)
+		|| (up_expected == YES && last_cmd != MOUSE_CMD)) {
 		if (XtermProto(mproto) && but_state == (JT_LEFT | JT_DOWNEVENT)) {
 			/* abort Hilite mode to prevent hangups */
-			hl_mode(0,1,1,1,1);
+			hl_mode(0, 1, 1, 1, 1);
 		}
+
 		up_expected = NO;	/* resynch in neutral */
 		complain("[Mouse events out of order]");
 		/* NOTREACHED */
 	}
 
 	/* update up_expected to reflect new state */
-	up_expected = XtermProto(mproto) && (but_state&JT_EVENTMASK) == JT_DRAGEVENT
+	up_expected = XtermProto(mproto) && (but_state & JT_EVENTMASK) == JT_DRAGEVENT
 		? -1 : (but_state & JT_EVENTMASK) != JT_UPEVENT;
-	if (up_expected != NO)
+
+	if (up_expected != NO) {
 		this_cmd = MOUSE_CMD;
+	}
 
 	if ((but_state & JT_EVENTMASK) == JT_DOWNEVENT
-	&& (but_state & JT_PASTEMASK) && (but_state & JT_CSMASK) == 0)
-	{
+		&& (but_state & JT_PASTEMASK) && (but_state & JT_CSMASK) == 0) {
 		/* Hugh: ??? is this leak possible? -- checking code added as a probe. */
 		/* CHL believes assert oldpos==NULL */
 		if (oldpos != NULL) {
 			complain("[internal error: mark leak from MouseParams]");
 			/* NOTREACHED */
 		}
+
 		oldpos = MakeMark(curline, curchar);
 	}
 
 	/* UP events in xterm should do nothing in foreign windows */
 	if (XtermProto(mproto)
-	&& (but_state & JT_EVENTMASK) == JT_UPEVENT
-	&& curwind != oldwind
-	&& !mode_mode)
+		&& (but_state & JT_EVENTMASK) == JT_UPEVENT
+		&& curwind != oldwind
+		&& !mode_mode) {
 		return NO;
+	}
 
 	if ((but_state & (JT_CLICKMASK | JT_EVENTMASK)) == JT_DOWNEVENT) {
 		/* button down, and first click at that:
@@ -564,6 +609,7 @@ MouseParams (int mproto)
 		oldwind = curwind;
 		wind_pos = SelectWind((Window *) NULL);
 		mode_mode = (wind_pos == 0);
+
 		if (XtermProto(mproto) && but_state == (JT_LEFT | JT_DOWNEVENT)) {
 			/* Initiate or abort mouse hilite tracking.  We use hilite
 			 * tracking if we are not on the modeline.
@@ -572,11 +618,13 @@ MouseParams (int mproto)
 			 */
 			bool	use_hilite = !mode_mode;
 
-			if (use_hilite)
-				up_expected = -1;	/* half-expect an up */
+			if (use_hilite) {
+				up_expected = -1;        /* half-expect an up */
+			}
+
 			hl_mode(use_hilite,
-				(estartx = x_coord)+1,
-				(estarty = y_coord)+1,
+				(estartx = x_coord) + 1,
+				(estarty = y_coord) + 1,
 				y_coord + wind_pos - curwind->w_height + 2,
 				y_coord + wind_pos + 1);
 		}
@@ -592,26 +640,30 @@ MouseParams (int mproto)
 		 * multiclicks indicate a confused user.
 		 */
 		if ((but_state & JT_BUTMASK) == JT_LEFT
-		&& (but_state & JT_EVENTMASK) != JT_UPEVENT)
-		{
+			&& (but_state & JT_EVENTMASK) != JT_UPEVENT) {
 			ScrollToMouse();
+
 			if (but_state & (JT_CSMASK | JT_CLICKMASK)) {
 				complain("[You are just scrolling a window]");
 				/* NOTREACHED */
 			}
 		} else if ((but_state & JT_BUTMASK) == JT_MIDDLE
-		&& (but_state & (JT_UPEVENT | JT_DRAGEVENT)) != 0)
-		{
+			&& (but_state & (JT_UPEVENT | JT_DRAGEVENT)) != 0) {
 			oldwind = curwind;
-			if ((wind_pos = SelectWind((Window *) NULL)) < 0)
+
+			if ((wind_pos = SelectWind((Window *) NULL)) < 0) {
 				return NO;
+			}
 
 			if (curwind == oldwind->w_next) {
 				wind_pos -= curwind->w_height;
 				SetWind(oldwind);
 			}
-			if (curwind == oldwind && curwind->w_next != fwind)
+
+			if (curwind == oldwind && curwind->w_next != fwind) {
 				WindSize(curwind->w_next, wind_pos);
+			}
+
 			if (but_state & (JT_CSMASK | JT_CLICKMASK)) {
 				complain("[You are just resizing a window]");
 				/* NOTREACHED */
@@ -635,53 +687,59 @@ MouseParams (int mproto)
 		/* We've run the gauntlet.  Give the OK for action. */
 		return YES;
 	}
+
 	last_mouse_act = LMA_NONE;
+
 	if (oldpos != NULL) {
 		SetWind(oldwind);
 		DelMark(oldpos);
 		oldpos = NULL;
 	}
+
 	return NO;
 }
 
-private void 
-MousePoint (int mproto)
+private void
+MousePoint(int mproto)
 {
 	last_mouse_act = LMA_NONE;
-	if (MouseParams(mproto))
+
+	if (MouseParams(mproto)) {
 		SetCursor();
+	}
 }
 
-void 
-xjMousePoint (void)
+void
+xjMousePoint(void)
 {
 	MousePoint(MPROTO_JOVETOOL);
 }
 
-void 
-xtMousePoint (void)
+void
+xtMousePoint(void)
 {
 	MousePoint(MPROTO_XTERM);
 }
 
-private void 
-MouseMark (int mproto)
+private void
+MouseMark(int mproto)
 {
 	last_mouse_act = LMA_NONE;
+
 	if (MouseParams(mproto)) {
 		SetCursor();
 		set_mark();
 	}
 }
 
-void 
-xjMouseMark (void)
+void
+xjMouseMark(void)
 {
 	MouseMark(MPROTO_JOVETOOL);
 }
 
-void 
-xtMouseMark (void)
+void
+xtMouseMark(void)
 {
 	MouseMark(MPROTO_XTERM);
 }
@@ -690,20 +748,22 @@ xtMouseMark (void)
  * Although xtMousePointYank should be more useful,
  * xtMouseYank is more like XTerm's native behavior.
  */
-void 
-xtMouseYank (void)
+void
+xtMouseYank(void)
 {
 	last_mouse_act = LMA_NONE;
+
 	if (MouseParams(MPROTO_XTERM)) {
 		ObeyProc(Yank);
 		this_cmd = MOUSE_CMD;
 	}
 }
 
-void 
-xtMousePointYank (void)
+void
+xtMousePointYank(void)
 {
 	last_mouse_act = LMA_NONE;
+
 	if (MouseParams(MPROTO_XTERM)) {
 		SetCursor();
 		ObeyProc(Yank);
@@ -711,12 +771,12 @@ xtMousePointYank (void)
 	}
 }
 
-void 
-xtMouseCutPointYank (void)
+void
+xtMouseCutPointYank(void)
 {
 	Mark *m;
-
 	last_mouse_act = LMA_NONE;
+
 	if (MouseParams(MPROTO_XTERM) && ObeyProc(set_mark)) {
 		SetCursor();
 		set_mark();
@@ -731,8 +791,8 @@ xtMouseCutPointYank (void)
 	}
 }
 
-void 
-xtMouseNull (void)
+void
+xtMouseNull(void)
 {
 	MouseParams(MPROTO_XTERM);
 }
@@ -744,40 +804,48 @@ xtMouseNull (void)
  * two ends of the selected (un)identifier.  Note that the selection can be
  * empty.
  */
-private void 
-startMouseWord (void)
+private void
+startMouseWord(void)
 {
 	bool	in_id;
 
-	if (eolp() && !bolp())
+	if (eolp() && !bolp()) {
 		curchar -= 1;
+	}
+
 	in_id = jisident(linebuf[curchar]);
-	while (!bolp() && jisident(linebuf[curchar-1]) == in_id)
+
+	while (!bolp() && jisident(linebuf[curchar - 1]) == in_id) {
 		curchar -= 1;
+	}
 }
 
-private void 
-endMouseWord (void)
+private void
+endMouseWord(void)
 {
 	bool	in_id;
 
-	if (eolp() && !bolp())
+	if (eolp() && !bolp()) {
 		curchar -= 1;
+	}
+
 	in_id = jisident(linebuf[curchar]);
-	while (!eolp() && jisident(linebuf[curchar]) == in_id)
+
+	while (!eolp() && jisident(linebuf[curchar]) == in_id) {
 		curchar += 1;
+	}
 }
 
-private void 
-doMouseWord (void)
+private void
+doMouseWord(void)
 {
 	startMouseWord();
 	set_mark();
 	endMouseWord();
 }
 
-private void 
-doMouseLine (void)
+private void
+doMouseLine(void)
 {
 	Bol();
 	set_mark();
@@ -790,13 +858,14 @@ doMouseLine (void)
  * selected by dragging, single or double clicking).  If used to shrink the
  * region, it is the point end (not the mark end) that gets moved.
  */
-private bool 
-doMouseExtend (void)
+private bool
+doMouseExtend(void)
 {
 	bool	region_forward, new_forward;
 
-	if (last_mouse_act == LMA_NONE)
-		return NO;	/* treat as xtMouseNull */
+	if (last_mouse_act == LMA_NONE) {
+		return NO;        /* treat as xtMouseNull */
+	}
 
 	region_forward = !inorder(curline, curchar, curmark->m_line, curmark->m_char);
 	ExchPtMark();	/* for better effect when shrinking region */
@@ -810,28 +879,39 @@ doMouseExtend (void)
 			PopMark();
 			SetCursor();
 		}
+
 		break;
+
 	case LMA_WORD:
 		if (region_forward != new_forward) {
 			PopMark();
 			SetCursor();
 		}
-		if (new_forward)
+
+		if (new_forward) {
 			endMouseWord();
-		else
+		} else {
 			startMouseWord();
+		}
+
 		break;
+
 	case LMA_LINE:
 		if (region_forward != new_forward) {
 			PopMark();
 			SetCursor();
 		}
+
 		Bol();
-		if (new_forward)
+
+		if (new_forward) {
 			line_move(FORWARD, 1, NO);
+		}
+
 		break;
 	}
-	return !(curmark->m_line==curline && curmark->m_char==curchar);
+
+	return !(curmark->m_line == curline && curmark->m_char == curchar);
 }
 
 /* This command is intended to be bound to ^[ [ t and ^[ [ T, which
@@ -857,8 +937,8 @@ doMouseExtend (void)
  *   closest to the final mouse position.  This sounds simple, but it may
  *   be slightly surprising when no drag was done.
  */
-void 
-xtMouseMarkDragPointCopy (void)
+void
+xtMouseMarkDragPointCopy(void)
 {
 	if (MouseParams(MPROTO_XTDRAG)) {
 		/* assert((but_state & JT_EVENTMASK) == JT_DRAGEVENT) */
@@ -873,10 +953,11 @@ xtMouseMarkDragPointCopy (void)
 			/* select based on JOVE's notion of words */
 			doMouseWord();
 			last_mouse_act = LMA_WORD;
-			if (doMouseExtend())
-				CopyRegion();
 
-		} else /* ((but_state & JT_CLICKMASK) == JT_CLICK3) */ {
+			if (doMouseExtend()) {
+				CopyRegion();
+			}
+		} else { /* ((but_state & JT_CLICKMASK) == JT_CLICK3) */
 			/* select lines */
 			if (last_mouse_act == LMA_WORD) {
 				/* Second click was not missed.
@@ -885,11 +966,15 @@ xtMouseMarkDragPointCopy (void)
 				PopMark();
 				DelKillRing();
 			}
+
 			doMouseLine();
 			last_mouse_act = LMA_LINE;
-			if (doMouseExtend())
+
+			if (doMouseExtend()) {
 				CopyRegion();
+			}
 		}
+
 #else
 		} else {
 			/* select based on xterm's selection: startxy through endxy
@@ -903,9 +988,13 @@ xtMouseMarkDragPointCopy (void)
 				PopMark();
 				DelKillRing();
 			}
+
 			which_end = (y_coord - starty) - (endy - y_coord);
-			if (which_end == 0)
+
+			if (which_end == 0) {
 				which_end = (x_coord - startx) - (endx - x_coord);
+			}
+
 			x_coord = startx;
 			y_coord = starty;
 			SetCursor();
@@ -913,11 +1002,15 @@ xtMouseMarkDragPointCopy (void)
 			x_coord = endx;
 			y_coord = endy;
 			SetCursor();
-			if (which_end < 0)
+
+			if (which_end < 0) {
 				ExchPtMark();
+			}
+
 			CopyRegion();
-			last_mouse_act = last_mouse_act == LMA_WORD? LMA_LINE : LMA_WORD;
+			last_mouse_act = last_mouse_act == LMA_WORD ? LMA_LINE : LMA_WORD;
 		}
+
 #endif
 	}
 }
@@ -926,8 +1019,8 @@ xtMouseMarkDragPointCopy (void)
  * (depending on last_mouse_act).  Only valid after an event which
  * selects and copies a region (e.g. xtMouseMarkDragPointCop).
  */
-void 
-xtMouseExtend (void)
+void
+xtMouseExtend(void)
 {
 	if (MouseParams(MPROTO_XTERM)) {
 		if (doMouseExtend()) {
@@ -938,33 +1031,37 @@ xtMouseExtend (void)
 }
 
 /* undo effect of preceding MouseCopyCut, if any */
-private void 
-MouseUndo (void)
+private void
+MouseUndo(void)
 {
 	if (last_mouse_act & LMA_PASTE) {
 		ObeyProc(DelReg);	/* at old curwind/line/char */
 		this_cmd = MOUSE_CMD;
 		PopMark();
 	}
+
 	SelectWind((Window *)NULL);
+
 	switch (last_mouse_act & ~LMA_PASTE) {
 	case LMA_CUT:
 		ToMark(CurMark());
 		Yank();
 		this_cmd = MOUSE_CMD;
 		PopMark();
-		/*FALLTHROUGH*/
+
+	/*FALLTHROUGH*/
 	case LMA_COPY:
 		/* remove the entry we previously put in the kill-ring */
 		ToMark(CurMark());
 		DelKillRing();
 	}
+
 	PopMark();
 	last_mouse_act = LMA_NONE;
 }
 
-void 
-xjMouseWord (void)
+void
+xjMouseWord(void)
 {
 	if (MouseParams(MPROTO_JOVETOOL)) {
 		MouseUndo();
@@ -972,8 +1069,8 @@ xjMouseWord (void)
 	}
 }
 
-void 
-xjMouseLine (void)
+void
+xjMouseLine(void)
 {
 	if (MouseParams(MPROTO_JOVETOOL)) {
 		MouseUndo();
@@ -982,34 +1079,38 @@ xjMouseLine (void)
 	}
 }
 
-void 
-xjMouseYank (void)
+void
+xjMouseYank(void)
 {
 	last_mouse_act = LMA_NONE;
+
 	if (MouseParams(MPROTO_JOVETOOL)) {
 		SetCursor();
-		if (but_state & JT_CONTROL)
+
+		if (but_state & JT_CONTROL) {
 			ObeyProc(Yank);
+		}
 	}
 }
 
-void 
-xjMouseCopyCut (void)
+void
+xjMouseCopyCut(void)
 {
 	register Mark	*mp = curmark;
 
 	if (MouseParams(MPROTO_JOVETOOL)) {
-		if (mp!=NULL
-		&& (mp->m_line != curline || mp->m_char != curchar))
-		{
-			switch(but_state & (JT_CSMASK | JT_PASTEMASK)) {
+		if (mp != NULL
+			&& (mp->m_line != curline || mp->m_char != curchar)) {
+			switch (but_state & (JT_CSMASK | JT_PASTEMASK)) {
 			case JT_CONTROL:
 				CopyRegion();
 				last_mouse_act = LMA_COPY;
 				break;
+
 			case JT_CONTROL | JT_SHIFT:
-				last_mouse_act = ObeyProc(DelReg)? LMA_CUT : LMA_NONE;
+				last_mouse_act = ObeyProc(DelReg) ? LMA_CUT : LMA_NONE;
 				break;
+
 			case JT_PASTE:
 				CopyRegion();
 				SetWind(oldwind);
@@ -1019,6 +1120,7 @@ xjMouseCopyCut (void)
 				oldpos = NULL;
 				last_mouse_act = LMA_COPY | LMA_PASTE;
 				break;
+
 			case JT_CUT:
 				ObeyProc(DelReg);
 				SetWind(oldwind);
@@ -1028,7 +1130,7 @@ xjMouseCopyCut (void)
 				oldpos = NULL;
 				last_mouse_act = LMA_CUT | LMA_PASTE;
 				break;
-			/* default: ignore */
+				/* default: ignore */
 			}
 		} else if (but_state & JT_PASTEMASK) {
 			SetWind(oldwind);

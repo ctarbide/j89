@@ -9,7 +9,7 @@ typedef void(*cmdproc_t)  ptrproto((void));
 
 struct cmd {
 	/* Type and Name must match data_obj */
-	int	Type;
+	unsigned	Type;
 	const char	*Name;
 	const cmdproc_t 	c_proc;
 #ifdef MAC
@@ -21,7 +21,7 @@ struct cmd {
 extern const struct cmd	commands[];
 
 extern const struct cmd
-	*FindCmd proto((cmdproc_t));
+*FindCmd proto((cmdproc_t));
 
 extern void
-	ExecCmd proto((const data_obj *cp));
+ExecCmd proto((const data_obj *cp));

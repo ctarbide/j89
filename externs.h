@@ -9,22 +9,22 @@
 /* UNIX Library/System Routine Emulations for old Macintosh (mac.c) */
 
 extern int
-	creat proto((const char *, jmode_t)),
-	/* open may have an optional third argument, promo(jmode_t) mode */
-	open proto((const char */*path*/, int /*flags*/, ...)),
-	close proto((int)),
-	unlink proto((const char *)),
-	chdir proto((const char *));
+creat proto((const char *, jmode_t)),
+      /* open may have an optional third argument, promo(jmode_t) mode */
+      open proto((const char */*path*/, int /*flags*/, ...)),
+      close proto((int)),
+      unlink proto((const char *)),
+      chdir proto((const char *));
 
 extern JSSIZE_T
-	read proto((int /*fd*/, UnivPtr /*buf*/, size_t /*nbytes*/)),
-	write proto((int /*fd*/, UnivConstPtr /*buf*/, size_t /*nbytes*/));
+read proto((int /*fd*/, UnivPtr /*buf*/, size_t /*nbytes*/)),
+     write proto((int /*fd*/, UnivConstPtr /*buf*/, size_t /*nbytes*/));
 
 extern off_t	lseek proto((int /*fd*/, off_t /*offset*/, int /*whence*/));
 extern time_t	time proto((time_t *));
 
 extern void
-	menus_off proto((void));	/* called by real_ask, findcom, waitchar */
+menus_off proto((void));	/* called by real_ask, findcom, waitchar */
 
 #endif /* MAC */
 
@@ -49,21 +49,21 @@ extern void	exit proto((int));
 extern int	atoi proto((const char */*nptr*/));
 
 extern void	qsort proto((UnivPtr /*base*/, size_t /*nmemb*/,
-	size_t /*size*/, int (*/*compar*/) ptrproto((UnivConstPtr, UnivConstPtr))));
+		size_t /*size*/, int ( */*compar*/) ptrproto((UnivConstPtr, UnivConstPtr))));
 extern UnivPtr	bsearch(UnivConstPtr /*key*/, UnivConstPtr /*base*/,
-			size_t /*nmemb*/, size_t /*size*/,
-			int (*compar) ptrproto((UnivConstPtr, UnivConstPtr)));
+	size_t /*nmemb*/, size_t /*size*/,
+	int (*compar) ptrproto((UnivConstPtr, UnivConstPtr)));
 
 extern char	*getenv proto((const char *));
 extern int	system proto((const char *));
 
 extern void
-	free proto((UnivPtr));
+free proto((UnivPtr));
 
 extern UnivPtr
-	calloc proto((size_t, size_t)),
-	malloc proto((size_t)),
-	realloc proto((UnivPtr, size_t));
+calloc proto((size_t, size_t)),
+       malloc proto((size_t)),
+       realloc proto((UnivPtr, size_t));
 
 /* Date and Time <time.h> */
 
@@ -127,7 +127,7 @@ extern int	access proto((const char */*path*/, int /*mode*/));
 # endif
 
 extern int	creat proto((const char */*path*/, jmode_t /*mode*/));
-	/* open may have an optional third argument, promo(jmode_t) mode */
+/* open may have an optional third argument, promo(jmode_t) mode */
 extern int	open proto((const char */*path*/, int /*flags*/, ...));
 
 extern jmode_t umask proto((jmode_t));
@@ -165,7 +165,7 @@ extern int	execl proto((const char * /*path*/, const char * /*arg*/, ...));
 extern int	execlp proto((const char * /*file*/, const char * /*arg*/, ...));
 extern int	execv proto((const char * /*path*/, char *const /*argv*/[]));
 extern int	execve proto((const char * /*path*/, char *const /*argv*/[],
-			      char *const /*envp*/[]));
+		char *const /*envp*/[]));
 extern int	execvp proto((const char * /*file*/, char *const /*argv*/[]));
 # endif
 
@@ -190,14 +190,14 @@ extern int	unlink proto((const char */*path*/));
 #endif /* !POSIX_UNISTD */
 
 #if defined(IBMPCDOS) || defined(WIN32)
-  /*
-   * At least as of 2007, perhaps earlier, the Microsoft runtime has
-   * no X_OK and considers a value of 1 to be invalid, e.g see
-   * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=30972
-   * https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-waccess?view=vs-2019
-   * Older runtimes may have accepted it, but VS 2019, in Win 7 Pro,
-   * crashes the program.
-   */
+/*
+ * At least as of 2007, perhaps earlier, the Microsoft runtime has
+ * no X_OK and considers a value of 1 to be invalid, e.g see
+ * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=30972
+ * https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-waccess?view=vs-2019
+ * Older runtimes may have accepted it, but VS 2019, in Win 7 Pro,
+ * crashes the program.
+ */
 # define J_X_OK F_OK
 #else
 # define J_X_OK X_OK
@@ -226,8 +226,8 @@ extern void	UNMACRO(bzero) proto((UnivPtr, size_t));
 #ifdef TERMCAP
 # ifdef JTC
 #define DEFINE_PC_BC_UP_OSPEED 1 /* curses declares these, jtc does not! should it?*/
-extern char *	UNMACRO(jtcarg1) proto((const char *, int /* parm */));
-extern char *	UNMACRO(jtcarg2) proto((const char *, int /*destcol*/, int /*destline*/));
+extern char 	*UNMACRO(jtcarg1) proto((const char *, int /* parm */));
+extern char 	*UNMACRO(jtcarg2) proto((const char *, int /*destcol*/, int /*destline*/));
 #  define	targ1(s, i)	jtcarg1(s, i)
 #  define	targ2(s, c, l)	jtcarg2(s, c, l)
 # else /* !JTC */

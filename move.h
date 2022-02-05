@@ -6,27 +6,27 @@
  **************************************************************************/
 
 extern void
-	b_char proto((long n)),
-	f_char proto((long n)),
-	f_word proto((long num)),
-	line_move proto((int dir, long n, bool line_cmd));
+b_char proto((long n)),
+       f_char proto((long n)),
+       f_word proto((long num)),
+       line_move proto((int dir, long n, bool line_cmd));
 
 extern int
-	how_far proto((LinePtr line,int col));
+how_far proto((LinePtr line, int col));
 
 /* Commands: */
 
 extern void
-	BackChar proto((void)),
-	BackWord proto((void)),
-	Bof proto((void)),
-	Bol proto((void)),
-	Bos proto((void)),
-	Eof proto((void)),
-	Eol proto((void)),
-	Eos proto((void)),
-	ForChar proto((void)),
-	ForWord proto((void)),
-	ForIdent proto((void)),
-	NextLine proto((void)),
-	PrevLine proto((void));
+BackChar proto((void)),
+	 BackWord proto((void)),
+	 Bof proto((void)),
+	 Bol proto((void)),
+	 Bos proto((void)),
+	 Eof proto((void)),
+	 Eol proto((void)),
+	 Eos proto((void)),
+	 ForChar proto((void)),
+	 ForWord proto((void)),
+	 ForIdent proto((void)),
+	 NextLine proto((void)),
+	 PrevLine proto((void));

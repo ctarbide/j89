@@ -32,16 +32,16 @@ extern struct termios	sg[2];
 # endif
 
 # if defined(TERMIO) || defined(TERMIOS)
-  /* JOVE needs to know about tab expansion to infer whether it should
-   * use tabs to optimize output (jove.c).
-   * It also must be able to turn tab expansion off for a pty (iproc.c).
-   * The "normal" way of signifying tab expansion in a termio or termios
-   * struct is to set the bits in c_oflag masked by TABDLY to TAB3.
-   * Instead, some systems (eg. 386BSD) have a single bit named OXTABS,
-   * from which we synthesize fake definitions of TABDLY and TAB3.
-   * Some other systems have no bit, so we must presume that tabs don't
-   * work and that we needn't change the setting.
-   */
+/* JOVE needs to know about tab expansion to infer whether it should
+ * use tabs to optimize output (jove.c).
+ * It also must be able to turn tab expansion off for a pty (iproc.c).
+ * The "normal" way of signifying tab expansion in a termio or termios
+ * struct is to set the bits in c_oflag masked by TABDLY to TAB3.
+ * Instead, some systems (eg. 386BSD) have a single bit named OXTABS,
+ * from which we synthesize fake definitions of TABDLY and TAB3.
+ * Some other systems have no bit, so we must presume that tabs don't
+ * work and that we needn't change the setting.
+ */
 #  ifndef TABDLY
 #   ifdef OXTABS
 #    define TABDLY	OXTABS
@@ -76,13 +76,13 @@ extern int	lmword[2];		/* local mode word */
 # endif /* SGTTY */
 
 # ifndef NO_IOCTL_H_TTY
-  /* In an attempt to get a definition for TIOCGWINSZ,
-   * we include <sys/ioctl.h>.  In a perfect world, we could always
-   * include it, but at least SunOS 4.[01] <sys/ioctl.h>
-   * conflicts seriously with <termios.h>.  Some systems require it
-   * to define TIOCGWINSZ (e.g. BSDI), or TIOCSCTTY (OSF, other
-   * POSIX?).
-   */
+/* In an attempt to get a definition for TIOCGWINSZ,
+ * we include <sys/ioctl.h>.  In a perfect world, we could always
+ * include it, but at least SunOS 4.[01] <sys/ioctl.h>
+ * conflicts seriously with <termios.h>.  Some systems require it
+ * to define TIOCGWINSZ (e.g. BSDI), or TIOCSCTTY (OSF, other
+ * POSIX?).
+ */
 #  include <sys/ioctl.h>
 # endif
 

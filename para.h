@@ -6,26 +6,26 @@
  **************************************************************************/
 
 extern void
-	DoJustify proto((LinePtr l1, int c1,
+DoJustify proto((LinePtr l1, int c1,
 		LinePtr l2, int c2, bool scrunch, int indent)),
-	do_rfill proto((bool ulm));
+			do_rfill proto((bool ulm));
 
 /* Commands: */
 
 extern void
-	BackPara proto((void)),
-	ForPara proto((void)),
-	FillParagraph proto((void)),
-	FillRegion proto((void));
+BackPara proto((void)),
+	 ForPara proto((void)),
+	 FillParagraph proto((void)),
+	 FillRegion proto((void));
 
 /* Variables: */
 
 extern bool
-	SpaceSent2;		/* VAR: space-sentence-2 */
+SpaceSent2;		/* VAR: space-sentence-2 */
 
 extern int
-	LMargin,		/* VAR: left margin */
-	RMargin;		/* VAR: right margin */
+LMargin,		/* VAR: left margin */
+RMargin;		/* VAR: right margin */
 
 extern char
-	ParaDelim[128];	/* VAR: paragraph-delimiter-pattern */
+ParaDelim[128];	/* VAR: paragraph-delimiter-pattern */

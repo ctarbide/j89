@@ -5,6 +5,12 @@
  * this notice is included in all the source files and documentation.     *
  **************************************************************************/
 
+#define PASTE2(x,y)	x ## y
+#define EXPAND_THEN_PASTE(a, b) PASTE2(a,b)
+#define C89_STATIC_ASSERT(x, msg) typedef char \
+	EXPAND_THEN_PASTE(STATIC_ASSERT_FAIL_AT_LINE_,__LINE__) \
+	[x ? (int)sizeof(msg) : -1]
+
 /*
  * System Feature Selection: describe OS and C system to JOVE.  See sysdep.doc
  * for a better description of what the different #define feature symbols
@@ -246,8 +252,9 @@
  * change.
  */
 # if defined(PTYPROCS) && !defined(USE_SELECT)
-   sysdep.h: Sorry, PTYPROCS requires the select() system call.  You must
-   either define USE_SELECT or undefine PTYPROCS.
+sysdep.h:
+Sorry, PTYPROCS requires the select() system call.  You must
+either define USE_SELECT or undefine PTYPROCS.
 # endif
 # if defined(SIGCLD) && !defined(SIGCHLD)
 #  define SIGCHLD	SIGCLD
@@ -303,13 +310,83 @@
 # define POSIX_UNISTD	1
 #endif
 
-/* JSSIZE_T: result type of read() and write() */
-#ifdef FULL_UNISTD
-# define JSSIZE_T    ssize_t
+#ifdef USE_STDIO_H
+# include <stdio.h> /* for recover, setmaps */
 #endif
 
-#ifndef JSSIZE_T
-# define JSSIZE_T    int
+/* JSSIZE_T: result type of read() and write() */
+#ifdef FULL_UNISTD
+# define JSSIZE_T	ssize_t
+#endif
+
+#if defined(JSSIZE_T) && !defined(SSIZE_T)
+# define SSIZE_T	JSSIZE_T
+#endif
+
+#if defined(SSIZE_T) && !defined(JSSIZE_T)
+# define JSSIZE_T	SSIZE_T
+#endif
+
+#ifndef SSIZE_T
+# error SSIZE_T not defined
+#endif
+
+C89_STATIC_ASSERT(((SSIZE_T)-1) < 0, "SSIZE_T is signed");
+C89_STATIC_ASSERT(sizeof(SSIZE_T) == sizeof(long), "long can hold a SSIZE_T and vice-versa");
+C89_STATIC_ASSERT(sizeof(SSIZE_T) == sizeof(size_t), "size_t can hold a SSIZE_T and vice-versa");
+
+#ifdef USE_LIMITS_H
+# include <limits.h>
+#endif
+
+#ifdef USE_STDINT_H
+# include <stdint.h>
+# define UINTPTR_T	uintptr_t
+# define INTPTR_T	intptr_t
+#endif
+
+#ifndef UINTPTR_T
+# error UINTPTR_T not defined
+#endif
+
+#ifndef INTPTR_T
+# error INTPTR_T not defined
+#endif
+
+#ifndef USHRT_MAX
+#define USHRT_MAX ((unsigned short)-1)
+#endif
+
+#ifndef SHRT_MAX
+#define SHRT_MAX (short)(USHRT_MAX>>1)
+#endif
+
+#ifndef SHRT_MIN
+#define SHRT_MIN (short)(~SHRT_MAX)
+#endif
+
+#ifndef UINT_MAX
+#define UINT_MAX ((unsigned)-1)
+#endif
+
+#ifndef INT_MAX
+#define INT_MAX (int)(UINT_MAX>>1)
+#endif
+
+#ifndef INT_MIN
+#define INT_MIN (int)(~INT_MAX)
+#endif
+
+#ifndef ULONG_MAX
+#define ULONG_MAX ((unsigned long)-1)
+#endif
+
+#ifndef LONG_MAX
+#define LONG_MAX (long)(ULONG_MAX>>1)
+#endif
+
+#ifndef LONG_MIN
+#define LONG_MIN (long)(~LONG_MAX)
 #endif
 
 /* jmode_t: the type for file modes
@@ -336,12 +413,12 @@
 #endif
 
 #ifdef JSMALL
-  /*
-   * On small memory/no-VM machines, save as much data space
-   * as we can.  Going to hit either Out of lines, Tmp file
-   * too large, or Out of memory (for open files) at some
-   * point, alas.
- */
+/*
+ * On small memory/no-VM machines, save as much data space
+ * as we can.  Going to hit either Out of lines, Tmp file
+ * too large, or Out of memory (for open files) at some
+ * point, alas.
+*/
 typedef unsigned short	daddr;    /* index of line contents in tmp file, see temp.h. */
 # define LG_FILESIZE	7	/* log2 maximum path length (including '\0'): currently, 2+1+64+3+1+3+1 == 80 ought to be OK */
 # define MAXCOLS	132	/* maximum number of columns */
@@ -354,11 +431,11 @@ typedef unsigned short	daddr;    /* index of line contents in tmp file, see temp
 # endif
 
 #else
-  /*
-   * On most modern machines (VM, or lots of memory), use
-   * slightly more generous buffer sizes to improve speed
-   * and/or convenience.
-   */
+/*
+ * On most modern machines (VM, or lots of memory), use
+ * slightly more generous buffer sizes to improve speed
+ * and/or convenience.
+ */
 typedef unsigned long	daddr;    /* index of line contents in tmp file, see temp.h. */
 # define LG_FILESIZE	8	/* log2 maximum path length (including '\0') */
 # define MAXCOLS	512	/* maximum number of columns */

@@ -32,114 +32,127 @@ struct abbrev {
 };
 
 private	void
-	define proto((struct abbrev **, char *, char *));
+define proto((struct abbrev **, char *, char *));
 
 #define GLOBAL	NMAJORS
 private struct abbrev	*A_tables[NMAJORS + 1][HASHSIZE];	/* Must be zeroed! */
 
 bool AutoCaseAbbrev = YES;	/* VAR: automatically do case on abbreviations */
 
-private unsigned int 
-hash (register const char *a)
+private unsigned
+hash(const char *a)
 {
-	register unsigned int	hashval = 0;
-	register char	c;
+	unsigned hashval = 0;
+	char	c;
 
-	while ((c = *a++) != '\0')
-		hashval = (hashval << 2) + c;
+	while ((c = *a++) != '\0') {
+		hashval = (hashval << 2) + (unsigned)c;
+	}
 
 	return hashval;
 }
 
-private void 
-def_abbrev (struct abbrev *table[HASHSIZE])
+private void
+def_abbrev(struct abbrev *table[HASHSIZE])
 {
 	char	abbrev[100],
 		phrase[100];
-
 	jamstr(abbrev, ask((char *)NULL, "abbrev: "));
 	jamstr(phrase, ask((char *)NULL, "abbrev: %s phrase: ", abbrev));
 	define(table, abbrev, phrase);
 }
 
 private struct abbrev *
-lookup_abbrev (register struct abbrev *table[HASHSIZE], register const char *abbrev)
+lookup_abbrev(register struct abbrev *table[HASHSIZE], register const char *abbrev)
 {
 	register struct abbrev	*ap;
 	unsigned int	h;
-
 	h = hash(abbrev);
-	for (ap = table[h % HASHSIZE]; ap; ap = ap->a_next)
-		if (ap->a_hash == h && strcmp(ap->a_abbrev, abbrev) == 0)
+
+	for (ap = table[h % HASHSIZE]; ap; ap = ap->a_next) {
+		if (ap->a_hash == h && strcmp(ap->a_abbrev, abbrev) == 0) {
 			break;
+		}
+	}
+
 	return ap;
 }
 
-private void 
-define (register struct abbrev *table[HASHSIZE], char *abbrev, char *phrase)
+private void
+define(register struct abbrev *table[HASHSIZE], char *abbrev, char *phrase)
 {
 	register struct abbrev	*ap;
-
 	ap = lookup_abbrev(table, abbrev);
+
 	if (ap == NULL) {
 		register unsigned int	h = hash(abbrev);
-
-		ap = (struct abbrev *) emalloc(sizeof *ap);
+		ap = (struct abbrev *) emalloc(sizeof * ap);
 		ap->a_hash = h;
 		ap->a_abbrev = copystr(abbrev);
 		h %= HASHSIZE;
 		ap->a_next = table[h];
 		ap->a_cmdhook = NULL;
 		table[h] = ap;
-	} else
+	} else {
 		free((UnivPtr) ap->a_phrase);
+	}
+
 	ap->a_phrase = copystr(phrase);
 }
 
-void 
-AbbrevExpand (void)
+void
+AbbrevExpand(void)
 {
 	char	wordbuf[100];
-	register char
-		*wp = wordbuf,
-		*cp;
+	char
+	*wp = wordbuf,
+	 *cp;
 	int	col;
-	register char	c;
+	char	c;
 	int	UC_count = 0;
 	struct abbrev	*ap;
-
 	col = curchar;
-	while (col != 0 && jisident(linebuf[col - 1]))
+
+	while (col != 0 && jisident(linebuf[col - 1])) {
 		col -= 1;
-	if (curchar-col >= (int)sizeof(wordbuf))
-		return;	/* too long for us -- ignore it */
+	}
+
+	if (curchar - col >= (int)sizeof(wordbuf)) {
+		return;        /* too long for us -- ignore it */
+	}
 
 	while (col < curchar) {
 		c = linebuf[col];
+
 		if (AutoCaseAbbrev && jisupper(c)) {
 			UC_count += 1;
-			c = CharDowncase(c);
+			c = (char)CharDowncase(c);
 		}
+
 		*wp++ = c;
 		col += 1;
 	}
+
 	*wp = '\0';
 
 	if ((ap = lookup_abbrev(A_tables[curbuf->b_major], wordbuf)) != NULL
-	|| (ap = lookup_abbrev(A_tables[GLOBAL], wordbuf)) != NULL)
-	{
+		|| (ap = lookup_abbrev(A_tables[GLOBAL], wordbuf)) != NULL) {
 		del_char(BACKWARD, (int)(wp - wordbuf), NO);
 
-		for (cp = ap->a_phrase; (c = *cp) != '\0'; ) {
+		for (cp = ap->a_phrase; (c = *cp) != '\0';) {
 			if (UC_count > 0 && jislower(c)
-			&& (cp == ap->a_phrase
-			   || (UC_count > 1 && (jiswhite(cp[-1]) || cp[-1] == '-'))))
-				c = CharUpcase(c);
+				&& (cp == ap->a_phrase
+					|| (UC_count > 1 && (jiswhite(cp[-1]) || cp[-1] == '-')))) {
+				c = (char)CharUpcase(c);
+			}
+
 			insert_c(c, 1);
 			cp += 1;
 		}
-		if (ap->a_cmdhook != NULL)
+
+		if (ap->a_cmdhook != NULL) {
 			ExecCmd(ap->a_cmdhook);
+		}
 	}
 }
 
@@ -153,49 +166,51 @@ private const char	*const mode_names[NMAJORS + 1] = {
 	"Global"
 };
 
-private void 
-save_abbrevs (char *file)
+private void
+save_abbrevs(char *file)
 {
 	File	*fp;
 	struct abbrev	*ap,
-			**tp;
+			 **tp;
 	char	buf[LBSIZE];
 	int	i,
 		count = 0;
-
 	fp = open_file(file, buf, F_WRITE, YES);
+
 	for (i = 0; i <= GLOBAL; i++) {
 		fwritef(fp, "------%s abbrevs------\n", mode_names[i]);
-		for (tp = A_tables[i]; tp < &A_tables[i][HASHSIZE]; tp++)
+
+		for (tp = A_tables[i]; tp < &A_tables[i][HASHSIZE]; tp++) {
 			for (ap = *tp; ap; ap = ap->a_next) {
 				fwritef(fp, "%s:%s\n",
 					ap->a_abbrev,
 					ap->a_phrase);
 				count += 1;
 			}
+		}
 	}
+
 	f_close(fp);
 	add_mess(" %d written.", count);
 }
 
-private void 
-rest_abbrevs (char *file)
+private void
+rest_abbrevs(char *file)
 {
 	int
-		mode = -1,	/* Should be ++'d immediately */
-		lnum = 0;
+	mode = -1,	/* Should be ++'d immediately */
+	lnum = 0;
 	char	*phrase_p;
 	File	*fp;
 	char	buf[LBSIZE];
-
 	fp = open_file(file, buf, F_READ, YES);
-	while (mode<=GLOBAL && !f_gets(fp, genbuf, (size_t) LBSIZE)
-		&& genbuf[0] != '\0')
-	{
-		static const char	sep[] = "------";
 
+	while (mode <= GLOBAL && !f_gets(fp, genbuf, (size_t) LBSIZE)
+		&& genbuf[0] != '\0') {
+		static const char	sep[] = "------";
 		lnum += 1;
-		if (strncmp(genbuf, sep, sizeof(sep)-1) == 0) {
+
+		if (strncmp(genbuf, sep, sizeof(sep) - 1) == 0) {
 			mode += 1;
 		} else if (mode == -1 || (phrase_p = strchr(genbuf, ':')) == NULL) {
 			complain("Abbrev. format error, line %d.", file, lnum);
@@ -205,50 +220,51 @@ rest_abbrevs (char *file)
 			define(A_tables[mode], genbuf, phrase_p);
 		}
 	}
+
 	f_close(fp);
 	message(NullStr);
 }
 
-void 
-DefGAbbrev (void)
+void
+DefGAbbrev(void)
 {
 	def_abbrev(A_tables[GLOBAL]);
 }
 
-void 
-DefMAbbrev (void)
+void
+DefMAbbrev(void)
 {
 	def_abbrev(A_tables[curbuf->b_major]);
 }
 
-void 
-SaveAbbrevs (void)
+void
+SaveAbbrevs(void)
 {
 	char	filebuf[FILESIZE];
-
 	save_abbrevs(ask_file((char *)NULL, (char *)NULL, filebuf));
 }
 
-void 
-RestAbbrevs (void)
+void
+RestAbbrevs(void)
 {
 	char	filebuf[FILESIZE];
-
 	rest_abbrevs(ask_file((char *)NULL, (char *)NULL, filebuf));
 }
 
-void 
-EditAbbrevs (void)
+void
+EditAbbrevs(void)
 {
 	char	tname[128];
 	static const char	EditName[] = "Abbreviation Edit";
 	Buffer	*obuf = curbuf,
-		*ebuf;
+		 *ebuf;
 
 	if ((ebuf = buf_exists(EditName)) != NULL) {
-		if (ebuf->b_type != B_SCRATCH)
+		if (ebuf->b_type != B_SCRATCH) {
 			confirm("Over-write buffer %b? ", ebuf);
+		}
 	}
+
 	SetBuf(ebuf = do_select(curwind, EditName));
 	ebuf->b_type = B_SCRATCH;
 	buf_clear(ebuf);
@@ -261,33 +277,35 @@ EditAbbrevs (void)
 #else
 		"jaXXXXXX"
 #endif
-		);
-
+	);
 	/* do a safe form of mktemp */
 	close(MakeTemp(tname, "abbrevs"));
-
 	save_abbrevs(tname);
 	setfname(ebuf, tname);
 	read_file(tname, NO);
 	message("[Edit definitions and then type ^X ^C]");
 	Recur();		/* We edit them ... now */
+
 	if (IsModified(ebuf)) {
 		file_write(tname, NO);
 		rest_abbrevs(tname);
 	}
+
 	(void) unlink(tname);
-	if (valid_bp(obuf))
+
+	if (valid_bp(obuf)) {
 		SetBuf(do_select(curwind, obuf->b_name));
+	}
 }
 
-void 
-BindMtoW (void)
+void
+BindMtoW(void)
 {
 	struct abbrev	*ap;
 	const char	*word = ask((char *)NULL, "Word: ");
 
 	if ((ap = lookup_abbrev(A_tables[curbuf->b_major], word)) == NULL
-	&& (ap = lookup_abbrev(A_tables[GLOBAL], word)) == NULL) {
+		&& (ap = lookup_abbrev(A_tables[GLOBAL], word)) == NULL) {
 		complain("%s: unknown abbrev.", word);
 		/* NOTREACHED */
 	}

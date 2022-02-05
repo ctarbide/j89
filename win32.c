@@ -31,14 +31,14 @@ private BOOL WINAPI ctrlHandler proto((DWORD type));	/* Control handler */
 #define CHECK(fn)	{ if (!(fn)) ConsoleFail(#fn); }
 private void ConsoleFail(char *fdef);
 
-void 
-getTERM (void)
+void
+getTERM(void)
 {
 }
 
-void 
-ttysetattr (
-    bool n	/* also used as subscript! */
+void
+ttysetattr(
+	bool n	/* also used as subscript! */
 )
 {
 	CONSOLE_SCREEN_BUFFER_INFO info;
@@ -57,29 +57,28 @@ ttysetattr (
 			old_stderr = GetStdHandle(STD_ERROR_HANDLE);
 			CHECK(GetConsoleScreenBufferInfo(old_stdout, &info));
 			old_attributes = info.wAttributes;
-			conout = CreateConsoleScreenBuffer(GENERIC_READ|GENERIC_WRITE,
-				FILE_SHARE_READ|FILE_SHARE_WRITE,
-				NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+			conout = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
+					FILE_SHARE_READ | FILE_SHARE_WRITE,
+					NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 			CHECK(DuplicateHandle(GetCurrentProcess(), conout,
 					GetCurrentProcess(), &conerr,
 					0, TRUE, DUPLICATE_SAME_ACCESS));
-			bufsize.X = info.srWindow.Right-info.srWindow.Left+1;
-			bufsize.Y = info.srWindow.Bottom-info.srWindow.Top+1;
+			bufsize.X = info.srWindow.Right - info.srWindow.Left + 1;
+			bufsize.Y = info.srWindow.Bottom - info.srWindow.Top + 1;
 			CHECK(SetConsoleScreenBufferSize(conout, bufsize));
 			version = GetVersion();
 #ifdef DEBUG
 			{
 				char tracebuf[100];
-
 				wsprintf(tracebuf, "%s Windows %d.%d Build %d\n",
 					(version > 0 ? "MS-DOS" : "NT"),
 					LOBYTE(LOWORD(version)), HIBYTE(LOWORD(version)),
-					HIWORD(version)&0x7FFF);
+					HIWORD(version) & 0x7FFF);
 				OutputDebugString(tracebuf);
 				wsprintf(tracebuf, "Console Size=(%d,%d), Window=(%d,%d) to (%d,%d)\n",
-							info.dwSize.X, info.dwSize.Y,
-							info.srWindow.Left, info.srWindow.Top,
-							info.srWindow.Right, info.srWindow.Bottom);
+					info.dwSize.X, info.dwSize.Y,
+					info.srWindow.Left, info.srWindow.Top,
+					info.srWindow.Right, info.srWindow.Bottom);
 				OutputDebugString(tracebuf);
 			}
 #endif
@@ -87,10 +86,10 @@ ttysetattr (
 			CHECK(SetStdHandle(STD_ERROR_HANDLE, conerr));
 			CHECK(SetConsoleActiveScreenBuffer(conout));
 		}
+
 		CHECK(SetConsoleTitle("Jove for Win32"));
 		conin = GetStdHandle(STD_INPUT_HANDLE);
 		/* conout = GetStdHandle(STD_OUTPUT_HANDLE); */
-
 # ifdef MOUSE
 		SetConsoleMode(conin,
 			ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT);
@@ -117,8 +116,8 @@ ttysetattr (
 	}
 }
 
-void 
-ttsize (void)
+void
+ttsize(void)
 {
 	/* ??? We really ought to wait until the screen is big enough:
 	 * at least three lines high (one line each for buffer, mode,
@@ -128,17 +127,22 @@ ttsize (void)
 	 */
 	CONSOLE_SCREEN_BUFFER_INFO info;
 	GetConsoleScreenBufferInfo(conout, &info);
-	maxpos.X = info.srWindow.Right-info.srWindow.Left+1;
-	maxpos.Y = info.srWindow.Bottom-info.srWindow.Top+1;
+	maxpos.X = info.srWindow.Right - info.srWindow.Left + 1;
+	maxpos.Y = info.srWindow.Bottom - info.srWindow.Top + 1;
+
 	if (maxpos.X != info.dwSize.X || maxpos.Y != info.dwSize.Y) {
 		CHECK(SetConsoleScreenBufferSize(conout, maxpos));
 		curpos.X = curpos.Y = 0;
 	} else {
 		curpos = info.dwCursorPosition;
 	}
+
 	CO = maxpos.X;
-	if (CO > MAXCOLS)
+
+	if (CO > MAXCOLS) {
 		CO = MAXCOLS;
+	}
+
 	LI = maxpos.Y;
 	ILI = LI - 1;
 }
@@ -149,68 +153,76 @@ formatChar(char c)
 {
 	static char cbuf[6];
 
-	if (c >= ' ' && c <= '~')
+	if (c >= ' ' && c <= '~') {
 		wsprintf(cbuf, "%c", c);
-	else
+	} else {
 		wsprintf(cbuf, "\\%03o", (unsigned char)c);
+	}
+
 	return cbuf;
 }
 
 private char *
-formatEvent(INPUT_RECORD* event)
+formatEvent(INPUT_RECORD *event)
 {
 	static char buffer[128];
 
 	switch (event->EventType) {
-	  case KEY_EVENT:
+	case KEY_EVENT:
 		wsprintf(buffer, "KEY%s '%s%s%s%s'[%d times] Scan=%d Keycode=%d\n",
-			event->Event.KeyEvent.bKeyDown?"DOWN":"UP",
+			event->Event.KeyEvent.bKeyDown ? "DOWN" : "UP",
 			(event->Event.KeyEvent.dwControlKeyState &
-				(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED) ? "ALT-" : ""),
+				(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED) ? "ALT-" : ""),
 			(event->Event.KeyEvent.dwControlKeyState &
-				(RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED) ? "CTRL-" : ""),
+				(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED) ? "CTRL-" : ""),
 			(event->Event.KeyEvent.dwControlKeyState &
 				(SHIFT_PRESSED) ? "SHIFT-" : ""),
 			formatChar(event->Event.KeyEvent.uChar.AsciiChar),
 			event->Event.KeyEvent.wRepeatCount,
 			event->Event.KeyEvent.wVirtualScanCode,
 			event->Event.KeyEvent.wVirtualKeyCode
-			);
+		);
 		break;
-	  case MOUSE_EVENT:
+
+	case MOUSE_EVENT:
 		wsprintf(buffer, "MOUSE%s%s %s%s%s%s%s%s (%d,%d)\n",
-				(event->Event.MouseEvent.dwEventFlags&MOUSE_MOVED ?
-						" MOVED" : ""),
-				(event->Event.MouseEvent.dwEventFlags&DOUBLE_CLICK?
-						" DOUBLE_CLICK" : ""),
-				(event->Event.MouseEvent.dwButtonState&1 ? "LEFT" : ""),
-				(event->Event.MouseEvent.dwButtonState&2 ? "RIGHT" : ""),
-				(event->Event.MouseEvent.dwButtonState&4 ? "MIDDLE" : ""),
-				(event->Event.MouseEvent.dwControlKeyState &
-					(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED) ? "ALT-" : ""),
-				(event->Event.MouseEvent.dwControlKeyState &
-					(RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED) ? "CTRL-" : ""),
-				(event->Event.MouseEvent.dwControlKeyState &
-					(SHIFT_PRESSED) ? "SHIFT-" : ""),
-				event->Event.MouseEvent.dwMousePosition.X,
-				event->Event.MouseEvent.dwMousePosition.Y
-				);
+			(event->Event.MouseEvent.dwEventFlags & MOUSE_MOVED ?
+				" MOVED" : ""),
+			(event->Event.MouseEvent.dwEventFlags & DOUBLE_CLICK ?
+				" DOUBLE_CLICK" : ""),
+			(event->Event.MouseEvent.dwButtonState & 1 ? "LEFT" : ""),
+			(event->Event.MouseEvent.dwButtonState & 2 ? "RIGHT" : ""),
+			(event->Event.MouseEvent.dwButtonState & 4 ? "MIDDLE" : ""),
+			(event->Event.MouseEvent.dwControlKeyState &
+				(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED) ? "ALT-" : ""),
+			(event->Event.MouseEvent.dwControlKeyState &
+				(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED) ? "CTRL-" : ""),
+			(event->Event.MouseEvent.dwControlKeyState &
+				(SHIFT_PRESSED) ? "SHIFT-" : ""),
+			event->Event.MouseEvent.dwMousePosition.X,
+			event->Event.MouseEvent.dwMousePosition.Y
+		);
 		break;
-	  case WINDOW_BUFFER_SIZE_EVENT:
+
+	case WINDOW_BUFFER_SIZE_EVENT:
 		wsprintf(buffer, "RESIZE (%d,%d)\n",
 			eventp->Event.WindowBufferSizeEvent.dwSize.Y,
 			eventp->Event.WindowBufferSizeEvent.dwSize.X);
 		break;
-	  case MENU_EVENT:
+
+	case MENU_EVENT:
 		wsprintf(buffer, "MENU %d\n", eventp->Event.MenuEvent.dwCommandId);
 		break;
-	  case FOCUS_EVENT:
+
+	case FOCUS_EVENT:
 		wsprintf(buffer, "FOCUS %d\n", eventp->Event.FocusEvent.bSetFocus);
 		break;
-	  default:
+
+	default:
 		wsprintf(buffer, "UNKNOWN %d\n", eventp->EventType);
 		break;
 	}
+
 	return buffer;
 }
 #endif /* DEBUG */
@@ -221,24 +233,22 @@ formatEvent(INPUT_RECORD* event)
  * running the MS-DOS version of Jove).
  */
 private int
-MapKeyEventToChars(KEY_EVENT_RECORD* key, char *bptr)
+MapKeyEventToChars(KEY_EVENT_RECORD *key, char *bptr)
 {
 	int cnt = 0;
 
 	if (key->bKeyDown) {
 		if (key->uChar.AsciiChar) {
 			if ((key->dwControlKeyState &
-				(RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED))
-			&& key->uChar.AsciiChar == ' ')
-			{
+					(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED))
+				&& key->uChar.AsciiChar == ' ') {
 				bptr[cnt++] = '\0';
 			} else if (key->dwControlKeyState &
-				(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED))
-			{
+				(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
 				bptr[cnt++] = PCNONASCII;
+
 				if (key->wVirtualScanCode >= 2
-				&& key->wVirtualScanCode <= 13)
-				{
+					&& key->wVirtualScanCode <= 13) {
 					/* Top row (numeric keys) */
 					bptr[cnt++] = key->wVirtualScanCode + 118;
 				} else {
@@ -258,39 +268,62 @@ MapKeyEventToChars(KEY_EVENT_RECORD* key, char *bptr)
 				: (plain))
 
 			switch (key->wVirtualKeyCode) {
-			  case VK_F1: case VK_F2: case VK_F3: case VK_F4: case VK_F5:
-			  case VK_F6: case VK_F7: case VK_F8: case VK_F9: case VK_F10:
+			case VK_F1:
+			case VK_F2:
+			case VK_F3:
+			case VK_F4:
+			case VK_F5:
+			case VK_F6:
+			case VK_F7:
+			case VK_F8:
+			case VK_F9:
+			case VK_F10:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = key->wVirtualKeyCode - VK_F1
 					+ ShiftSelect(59, 84, 94, 104);
 				break;
-			  case VK_F11: case VK_F12:
+
+			case VK_F11:
+			case VK_F12:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = key->wVirtualKeyCode - VK_F11
 					+ ShiftSelect(133, 135, 137, 139);
 				break;
-			  case '1': case '2': case '3': case '4': case '5':
-			  case '6': case '7': case '8': case '9': case '0':
+
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case '0':
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = key->wVirtualScanCode + 118;
 				break;
-			  case VK_HOME:
+
+			case VK_HOME:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(71, 171, 119, 151);
 				break;
-			  case VK_UP:
+
+			case VK_UP:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(72, 171, 141, 152);
 				break;
-			  case VK_PRIOR:
+
+			case VK_PRIOR:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(73, 172, 132, 153);
 				break;
-			  case VK_SUBTRACT:	/* KEYPAD- */
+
+			case VK_SUBTRACT:	/* KEYPAD- */
 				bptr[cnt++] = PCNONASCII;
+
 				if (key->dwControlKeyState &
-						(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED))
-				{
+					(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
 					if (key->dwControlKeyState & SHIFT_PRESSED) {
 						bptr[cnt++] = 174;
 					} else {
@@ -299,20 +332,24 @@ MapKeyEventToChars(KEY_EVENT_RECORD* key, char *bptr)
 				} else {
 					bptr[cnt++] = 142;
 				}
+
 				break;
-			  case VK_LEFT:
+
+			case VK_LEFT:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(75, 175, 115, 155);
 				break;
-			  case VK_RIGHT:
+
+			case VK_RIGHT:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(77, 177, 116, 157);
 				break;
-			  case VK_ADD:	/* KEYPAD+ */
+
+			case VK_ADD:	/* KEYPAD+ */
 				bptr[cnt++] = PCNONASCII;
+
 				if (key->dwControlKeyState &
-						(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED))
-				{
+					(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
 					if (key->dwControlKeyState & SHIFT_PRESSED) {
 						bptr[cnt++] = 178;
 					} else {
@@ -321,101 +358,120 @@ MapKeyEventToChars(KEY_EVENT_RECORD* key, char *bptr)
 				} else {
 					bptr[cnt++] = 144;
 				}
+
 				break;
-			  case VK_END:
+
+			case VK_END:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(79, 179, 117, 159);
 				break;
-			  case VK_DOWN:
+
+			case VK_DOWN:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(80, 180, 145, 160);
 				break;
-			  case VK_NEXT:
+
+			case VK_NEXT:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(81, 181, 118, 161);
 				break;
-			  case VK_INSERT:
+
+			case VK_INSERT:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = ShiftSelect(82, 182, 146, 162);
 				break;
-			  case VK_DELETE:
+
+			case VK_DELETE:
 				if (key->dwControlKeyState & SHIFT_PRESSED) {
 					bptr[cnt++] = PCNONASCII;
 					bptr[cnt++] = 183;
 				} else if (key->dwControlKeyState &
-					(RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED))
-				{
+					(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED)) {
 					bptr[cnt++] = PCNONASCII;
 					bptr[cnt++] = 147;
 				} else if (key->dwControlKeyState &
-					(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED))
-				{
+					(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
 					bptr[cnt++] = PCNONASCII;
 					bptr[cnt++] = 163;
 				} else {
 					bptr[cnt++] = '\177';	/* Mapped to ASCII DEL */
 				}
+
 				break;
-			  case VK_DIVIDE:	/* KEYPAD/ */
+
+			case VK_DIVIDE:	/* KEYPAD/ */
 				bptr[cnt++] = PCNONASCII;
+
 				if (key->dwControlKeyState &
-						(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED))
-				{
+					(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
 					bptr[cnt++] = 164;
 				} else {
 					bptr[cnt++] = 149;
 				}
+
 				break;
-			  case VK_MULTIPLY:	/* KEYPAD* */
+
+			case VK_MULTIPLY:	/* KEYPAD* */
 				bptr[cnt++] = PCNONASCII;
+
 				if (key->dwControlKeyState &
-						(RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED))
-				{
+					(RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
 					bptr[cnt++] = 55;
 				} else {
 					bptr[cnt++] = 150;
 				}
+
 				break;
-			  case VK_NUMPAD5:
+
+			case VK_NUMPAD5:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = 143;
 				break;
-			  case VK_PRINT:	/* PRINT SCREEN */
+
+			case VK_PRINT:	/* PRINT SCREEN */
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = 113;
 				break;
-			  case VK_ESCAPE:
-				if (key->dwControlKeyState & (RIGHT_ALT_PRESSED|LEFT_ALT_PRESSED)) {
+
+			case VK_ESCAPE:
+				if (key->dwControlKeyState & (RIGHT_ALT_PRESSED | LEFT_ALT_PRESSED)) {
 					bptr[cnt++] = PCNONASCII;
 					bptr[cnt++] = key->wVirtualScanCode;
 				} else {
 					bptr[cnt++] = '\033';	/* ASCII ESC */
 				}
+
 				break;
-			  case 'C':	/* PRINT SCREEN */
-				if (key->dwControlKeyState & (RIGHT_CTRL_PRESSED|LEFT_CTRL_PRESSED)) {
+
+			case 'C':	/* PRINT SCREEN */
+				if (key->dwControlKeyState & (RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED)) {
 					bptr[cnt++] = '\003';	/* Ctrl-C : remapped in Windows 95 */
 				} else {
 					bptr[cnt++] = PCNONASCII;
 					bptr[cnt++] = key->wVirtualScanCode;
 				}
+
 				break;
-			  case VK_CAPITAL:
-			  case VK_SHIFT:
-			  case VK_CONTROL:
-			  case VK_MENU:
-			  case VK_NUMLOCK:
-			  case VK_SCROLL:
+
+			case VK_CAPITAL:
+			case VK_SHIFT:
+			case VK_CONTROL:
+			case VK_MENU:
+			case VK_NUMLOCK:
+			case VK_SCROLL:
 				/* Modifiers - ignore them. */
 				break;
-			  default:
+
+			default:
 				bptr[cnt++] = PCNONASCII;
 				bptr[cnt++] = key->wVirtualScanCode;
 				break;
 			}
+
 #			undef ShiftSelect
 		}
 	}
+
 	return cnt;
 }
 
@@ -424,45 +480,57 @@ getInputEvents(char *bp, int size)
 {
 	int nchars = 0;
 
-	if (eventp >= in_event+nevents) {
+	if (eventp >= in_event + nevents) {
 		if (!ReadConsoleInput(conin, in_event, NCHARS, &nevents)) {
 			complain("ReadConsole failed (shouldn't happen)");
 			/* NOTREACHED */
 		}
+
 		eventp = in_event;
 	}
-	while (eventp < in_event+nevents) {
+
+	while (eventp < in_event + nevents) {
 		switch (eventp->EventType) {
-		  case KEY_EVENT:
-			nchars += MapKeyEventToChars(&eventp->Event.KeyEvent, bp+nchars);
-			if (--eventp->Event.KeyEvent.wRepeatCount == 0)
+		case KEY_EVENT:
+			nchars += MapKeyEventToChars(&eventp->Event.KeyEvent, bp + nchars);
+
+			if (--eventp->Event.KeyEvent.wRepeatCount == 0) {
 				eventp += 1;
+			}
+
 			break;
-		  case MOUSE_EVENT:
+
+		case MOUSE_EVENT:
 #ifdef MOUSE
+
 			/* We are only interested in hits */
 			if (eventp->Event.MouseEvent.dwButtonState != 0) {
 				bp[nchars++] = PCNONASCII;
-				bp[nchars++] = '\xb0'+((char)eventp->Event.MouseEvent.dwButtonState&017);
+				bp[nchars++] = '\xb0' + ((char)eventp->Event.MouseEvent.dwButtonState & 017);
 				bp[nchars++] = (char)eventp->Event.MouseEvent.dwMousePosition.X;
 				bp[nchars++] = (char)eventp->Event.MouseEvent.dwMousePosition.Y;
 			}
+
 #endif
 			eventp += 1;
 			break;
 
-		  case WINDOW_BUFFER_SIZE_EVENT:
+		case WINDOW_BUFFER_SIZE_EVENT:
 			maxpos = eventp->Event.WindowBufferSizeEvent.dwSize;
 			eventp += 1;
 			ResizePending = YES;
 			break;
-		  default:
+
+		default:
 			eventp += 1;
 			break;
 		}
-		if (nchars >= size - 5)
+
+		if (nchars >= size - 5) {
 			break;
+		}
 	}
+
 	return nchars;
 }
 
@@ -475,31 +543,38 @@ inputEventWaiting(int period)
 	INPUT_RECORD evnt[10];
 	PINPUT_RECORD pEvnt;
 	DWORD cnt;
-	static BOOL first=TRUE;
+	static BOOL first = TRUE;
 
-	if (first)
-		return first=FALSE;	/* Force display on first call */
+	if (first) {
+		return first = FALSE;        /* Force display on first call */
+	}
 
-	if (eventp < in_event+nevents)
-		return TRUE;	/* Already something in the queue */
+	if (eventp < in_event + nevents) {
+		return TRUE;        /* Already something in the queue */
+	}
 
 	while (WaitForSingleObject(conin, period) == WAIT_OBJECT_0) {
 		if (!PeekConsoleInput(conin, evnt
-		, sizeof(evnt)/sizeof(evnt[0]), &cnt))
+				, sizeof(evnt) / sizeof(evnt[0]), &cnt)) {
 			break;
+		}
 
 		/* Check if the waiting event is of interest. */
-		for (pEvnt=evnt; pEvnt<evnt+cnt; ++pEvnt) {
+		for (pEvnt = evnt; pEvnt < evnt + cnt; ++pEvnt) {
 			if ((pEvnt->EventType == KEY_EVENT
-			  && pEvnt->Event.KeyEvent.bKeyDown)
-			|| pEvnt->EventType == WINDOW_BUFFER_SIZE_EVENT
-			|| pEvnt->EventType == MOUSE_EVENT)
+					&& pEvnt->Event.KeyEvent.bKeyDown)
+				|| pEvnt->EventType == WINDOW_BUFFER_SIZE_EVENT
+				|| pEvnt->EventType == MOUSE_EVENT) {
 				return TRUE;
+			}
 		}
+
 		/* If we reach here, the event(s) are uninteresting - chuck them. */
-		if (!ReadConsoleInput(conin, evnt, cnt, &cnt))
+		if (!ReadConsoleInput(conin, evnt, cnt, &cnt)) {
 			break;
+		}
 	}
+
 	return FALSE;
 #endif
 }
@@ -512,13 +587,14 @@ SaveBufferFile(Buffer *b)
 
 	if (b->b_fname) {
 		wsprintf(title, "Save Jove buffer `%s'?", b->b_name);
-		if (MessageBox(NULL, b->b_fname, title, MB_YESNO) != IDYES)
+
+		if (MessageBox(NULL, b->b_fname, title, MB_YESNO) != IDYES) {
 			return;
+		}
 	} else {
 		OPENFILENAME ofn;	/* common dialog box structure */
 		char szFile[_MAX_PATH];	/* filename string */
 		char szDirPath[_MAX_PATH];	/* filename string */
-
 		/* Set the members of the OPENFILENAME structure. */
 		memset(&ofn, 0, sizeof(ofn));
 		ofn.lStructSize = sizeof(OPENFILENAME);
@@ -526,17 +602,18 @@ SaveBufferFile(Buffer *b)
 		ofn.lpstrFile = szFile;
 		ofn.nMaxFile = _MAX_PATH;;
 		ofn.lpstrFilter =	"All (*.*)\0*.*\0"
-							"C source (*.c;*.cpp;*.cxx)\0*.c;*.cpp;*,cxx\0"
-							"C header (*.h;*.hpp;*.hxx)\0*.h;*.hpp;*.hxx\0";
+			"C source (*.c;*.cpp;*.cxx)\0*.c;*.cpp;*,cxx\0"
+			"C header (*.h;*.hpp;*.hxx)\0*.h;*.hpp;*.hxx\0";
 		ofn.lpstrInitialDir = szDirPath;
 		ofn.lpstrTitle = title;
 		wsprintf(title, "Save Jove buffer `%s' as:", b->b_name);
-
-		getcwd(szDirPath, _MAX_PATH-1);
+		getcwd(szDirPath, _MAX_PATH - 1);
 		ofn.Flags = OFN_SHOWHELP | OFN_OVERWRITEPROMPT |
 			OFN_PATHMUSTEXIST;
-		if (!GetSaveFileName(&ofn))
+
+		if (!GetSaveFileName(&ofn)) {
 			return;
+		}
 
 		setfname(b, ofn.lpstrFile);
 	}
@@ -547,8 +624,8 @@ SaveBufferFile(Buffer *b)
 	SetBuf(save_buf);
 }
 
-private void 
-MessageCloseFiles (void)
+private void
+MessageCloseFiles(void)
 {
 	/* We use a static buffer pointer so that we can detect if we
 	 * have been re-entered.  If so, we do nothing.  This can happen
@@ -556,41 +633,46 @@ MessageCloseFiles (void)
 	 */
 	static Buffer *b;
 
-	if (b == NULL)
+	if (b == NULL) {
 		for (b = world; b != NULL; b = b->b_next)
 			if (b->b_type != B_SCRATCH
-			&& b->b_type == B_FILE
-			&& IsModified(b))
+				&& b->b_type == B_FILE
+				&& IsModified(b)) {
 				SaveBufferFile(b);
+			}
+	}
 }
 
 /* Control interrupt handler deals with CTRL-BREAK and exit requests */
 private BOOL WINAPI
 ctrlHandler(DWORD type)
 {
-	switch(type) {
-	  case CTRL_C_EVENT:
+	switch (type) {
+	case CTRL_C_EVENT:
 		return TRUE;	/* Ignore, keyboard handler will see it. */
-	  case CTRL_BREAK_EVENT:
+
+	case CTRL_BREAK_EVENT:
 		return FALSE;
-	  case CTRL_CLOSE_EVENT:
-	  case CTRL_LOGOFF_EVENT:
-	  case CTRL_SHUTDOWN_EVENT:
+
+	case CTRL_CLOSE_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
 		MessageCloseFiles();
 		break;
 	}
+
 	return FALSE;	/* Carry on */
 }
 
 private WORD
-	c_attr = 0x07,	/* current attribute white on black */
-	c_row = 0,	/* current row */
-	c_col = 0;	/* current column */
+c_attr = 0x07,	/* current attribute white on black */
+c_row = 0,	/* current row */
+c_col = 0;	/* current column */
 
 int
-	Txattr = 0x07,	/* VAR: text-attribute (white on black) */
-	Mlattr = 0x70,	/* VAR: mode-line-attribute (black on white) */
-	Hlattr = 0x10;	/* VAR: highlight-attribute */
+Txattr = 0x07,	/* VAR: text-attribute (white on black) */
+Mlattr = 0x70,	/* VAR: mode-line-attribute (black on white) */
+Hlattr = 0x10;	/* VAR: highlight-attribute */
 
 #define c_row curpos.Y
 #define c_col curpos.X
@@ -627,7 +709,7 @@ freeReason(void)
 }
 
 char *
-getLastErrorString (void)
+getLastErrorString(void)
 {
 	static BOOL cleanupRegistered;
 	char *ptr;
@@ -636,13 +718,17 @@ getLastErrorString (void)
 		atexit(freeReason);
 		cleanupRegistered = TRUE;
 	}
+
 	freeReason();
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_ALLOCATE_BUFFER,
-				NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
-				(char*)&reason, 0, NULL);
+	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+		NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL),
+		(char *)&reason, 0, NULL);
+
 	if (((ptr = strchr(reason, '\r')) != NULL)
-	|| ((ptr = strchr(reason, '\n')) != NULL))
-		*ptr = '\0';	/* Trim off carriage control */
+		|| ((ptr = strchr(reason, '\n')) != NULL)) {
+		*ptr = '\0';        /* Trim off carriage control */
+	}
+
 	return reason;
 }
 
@@ -651,10 +737,11 @@ ConsoleFail(char *fdef)
 {
 	char why[200];
 	char *reason = getLastErrorString();
-
 	wsprintf(why, "Console function \"%s\" failed", fdef);
-	if (MessageBox(NULL, getLastErrorString(), why, MB_OKCANCEL) == IDCANCEL)
+
+	if (MessageBox(NULL, getLastErrorString(), why, MB_OKCANCEL) == IDCANCEL) {
 		abort();
+	}
 }
 
 private void
@@ -664,7 +751,6 @@ scr_win(int no, int ulr, int ulc, int lrr, int lrc)
 	COORD whereto;
 	CHAR_INFO charinfo;
 	short height = lrr - ulr + 1;
-
 	clip.Top = ulr;
 	clip.Left = ulc;
 	clip.Bottom = lrr;
@@ -672,6 +758,7 @@ scr_win(int no, int ulr, int ulc, int lrr, int lrc)
 	whereto.X = ulc;
 	r.Left = ulc;
 	r.Right = lrc;
+
 	if (no > 0) {
 		r.Top = ulr + no;
 		r.Bottom = lrr;
@@ -684,7 +771,6 @@ scr_win(int no, int ulr, int ulc, int lrr, int lrc)
 
 	charinfo.Char.AsciiChar = ' ';
 	charinfo.Attributes = c_attr;
-
 	CHECK(ScrollConsoleScreenBuffer(conout, &r, &clip, whereto, &charinfo));
 
 	/* If the scrolled region is less than half of the clip area, there will
@@ -692,42 +778,40 @@ scr_win(int no, int ulr, int ulc, int lrr, int lrc)
 	 */
 	if (no > 0) {
 		whereto.Y += (r.Bottom - r.Top + 1);
+
 		while (whereto.Y < r.Top) {
 			DWORD written;
-
-			CHECK(FillConsoleOutputCharacter(conout, ' ', lrc-ulc+1, whereto, &written));
+			CHECK(FillConsoleOutputCharacter(conout, ' ', lrc - ulc + 1, whereto, &written));
 			whereto.Y += 1;
 		}
 	} else {
 		while (--whereto.Y > r.Bottom) {
 			DWORD written;
-
-			CHECK(FillConsoleOutputCharacter(conout, ' ', lrc-ulc+1, whereto, &written));
+			CHECK(FillConsoleOutputCharacter(conout, ' ', lrc - ulc + 1, whereto, &written));
 		}
 	}
 }
 
-void 
-i_lines (int top, int bottom, int num)
+void
+i_lines(int top, int bottom, int num)
 {
-	scr_win(-num, top, 0, bottom, CO-1);
+	scr_win(-num, top, 0, bottom, CO - 1);
 }
 
-void 
-d_lines (int top, int bottom, int num)
+void
+d_lines(int top, int bottom, int num)
 {
-	scr_win(num, top, 0, bottom, CO-1);
+	scr_win(num, top, 0, bottom, CO - 1);
 }
 
-void 
-clr_page (void)
+void
+clr_page(void)
 {
 	long written;
-
 	SO_off();
 	cur_mov(0, 0);
-	CHECK(FillConsoleOutputCharacter(conout, ' ', maxpos.X*maxpos.Y, curpos, &written));
-	CHECK(FillConsoleOutputAttribute(conout, c_attr, maxpos.X*maxpos.Y, curpos, &written));
+	CHECK(FillConsoleOutputCharacter(conout, ' ', maxpos.X * maxpos.Y, curpos, &written));
+	CHECK(FillConsoleOutputAttribute(conout, c_attr, maxpos.X * maxpos.Y, curpos, &written));
 }
 
 void
@@ -735,41 +819,40 @@ flushscreen()
 {
 	if (bufpos != 0) {
 		DWORD written;
-
 		CHECK(WriteConsole(conout, displaybuf, bufpos, &written, NULL));
+
 		if (written != bufpos) {
 			byte_move(displaybuf + written, displaybuf, bufpos - written);
 		}
+
 		bufpos = 0;
 	}
 }
 
-void 
-clr_eoln (void)
+void
+clr_eoln(void)
 {
 	DWORD written;
-
-	CHECK(FillConsoleOutputCharacter(conout, ' ', CO-c_col, curpos, &written));
-	CHECK(FillConsoleOutputAttribute(conout, c_attr, CO-c_col, curpos, &written));
+	CHECK(FillConsoleOutputCharacter(conout, ' ', CO - c_col, curpos, &written));
+	CHECK(FillConsoleOutputAttribute(conout, c_attr, CO - c_col, curpos, &written));
 }
 
-void 
-dobell (	/* declared in term.h */
-    int n
+void
+dobell(  /* declared in term.h */
+	int n
 )
 {
 	MessageBeep(n);
 }
 
-void 
-ResizeWindow (void)
+void
+ResizeWindow(void)
 {
 	/* Must update window size to eliminate those ugly scroll bars */
 	SMALL_RECT newsize;
-
 	newsize.Top = newsize.Left = 0;
-	newsize.Right = maxpos.X-1;
-	newsize.Bottom = maxpos.Y-1;
+	newsize.Right = maxpos.X - 1;
+	newsize.Bottom = maxpos.Y - 1;
 	/* Note: the following fails with "invalid address". If you can figure out why, please fix it. */
 	SetConsoleWindowInfo(conout, TRUE, &newsize);
 }
@@ -780,28 +863,38 @@ ResizeWindow (void)
 void
 scr_putchar(char c)
 {
-	if (bufpos >= sizeof(displaybuf))
+	if (bufpos >= sizeof(displaybuf)) {
 		flushscreen();
+	}
+
 	displaybuf[bufpos++] = c;
+
 	switch (c) {
 	case LF:
 		c_row += 1;
 		break;
+
 	case CTL('M'): /* CR */
 		c_col = 0;
 		break;
+
 	case BS:
-		if (c_col > 0)
+		if (c_col > 0) {
 			c_col -= 1;
+		}
+
 		break;
+
 	case CTL('G'):	/* ??? is this ever used? */
 		dobell(1);
 		break;
+
 	default:
-		if (++c_col > CO-1) {
+		if (++c_col > CO - 1) {
 			c_col = 0;
 			c_row += 1;
 		}
+
 		break;
 	}
 }
@@ -810,8 +903,8 @@ scr_putchar(char c)
  * Think about it: it would be silly!
  */
 
-void 
-Placur (int line, int col)
+void
+Placur(int line, int col)
 {
 	flushscreen();
 	cur_mov(line, col);
@@ -820,34 +913,34 @@ Placur (int line, int col)
 }
 
 private bool
-	doing_so = NO,
-	doing_us = NO;
+doing_so = NO,
+doing_us = NO;
 
-private void 
-doattr (void)
+private void
+doattr(void)
 {
 	flushscreen();
-	setcolor((doing_so? Mlattr : Txattr) ^ (doing_us? Hlattr : 0));
+	setcolor((doing_so ? Mlattr : Txattr) ^ (doing_us ? Hlattr : 0));
 }
 
-void 
-SO_effect (bool f)
+void
+SO_effect(bool f)
 {
 	doing_so = f;
 	doattr();
 }
 
-void 
-US_effect (bool f)
+void
+US_effect(bool f)
 {
 	doing_us = f;
 	doattr();
 }
 
 int
-FatalErrorMessage(char* str)
+FatalErrorMessage(char *str)
 {
-	return MessageBox(NULL, str, NULL, MB_YESNO) == IDYES? 'y' : 'n';
+	return MessageBox(NULL, str, NULL, MB_YESNO) == IDYES ? 'y' : 'n';
 }
 
 #endif /* WIN32 */

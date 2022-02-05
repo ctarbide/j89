@@ -1,16 +1,807 @@
-__END_DECLS private void 
-get_hdir (register char *user, register char *buf)
+/**************************************************************************
+ * This program is Copyright (C) 1986-2002 by Jonathan Payne.  JOVE is    *
+ * provided by Jonathan and Jovehacks without charge and without          *
+ * warranty.  You may copy, modify, and/or distribute JOVE, provided that *
+ * this notice is included in all the source files and documentation.     *
+ **************************************************************************/
+
+#include "jove.h"
+#include "list.h"
+#include "fp.h"
+#include "jctype.h"
+#include "disp.h"
+#include "ask.h"
+#include "fmt.h"
+#include "insert.h"
+#include "marks.h"
+#include "sysprocs.h"
+#include "proc.h"
+#include "wind.h"	/* only used by JReadFile for fixup */
+#include "rec.h"
+
+#ifdef MAC
+# include "mac.h"
+#else
+# include <sys/stat.h>
+#endif
+
+#ifdef UNIX
+# include <sys/file.h>
+#endif
+
+#ifdef MSFILESYSTEM
+# include <direct.h>
+# include <dos.h>
+# include <stdlib.h>	/* _splitpath, _makepath */
+extern int UNMACRO(rename)(const char *old, const char *new);	/* <stdin.h> */
+# ifndef _MAX_DIR
+#  define _MAX_DIR FILESIZE
+# endif
+# ifndef _MAX_FNAME
+#  define _MAX_FNAME 9
+# endif
+# ifndef _MAX_EXT
+#  define _MAX_EXT 4
+# endif
+#endif /* MSFILESYSTEM */
+
+private void
+	filemunge proto((char *newname)),
+	chk_divergence proto((Buffer *thisbuf, const char *fname, const char *how));
+
+private struct block	*lookup_block proto((daddr));
+
+private char	*getblock proto((daddr, bool));
+
+private bool	f_getputl proto((LinePtr line,File *fp));
+
+#ifdef BACKUPFILES
+private void
+	file_backup proto((char *fname));
+#endif
+
+long	io_chars;		/* number of chars in this open_file */
+long	io_lines;		/* number of lines in this open_file */
+
+#ifdef BACKUPFILES
+bool	BkupOnWrite = NO;	/* VAR: make backup files when writing */
+#endif
+
+#ifndef MSFILESYSTEM
+
+#define	Dchdir(to)  chdir(to)
+
+#else /* MSFILESYSTEM */
+
+# ifdef WIN32
+#  define _dos_getdrive(dd)		(*(dd)=_getdrive())
+#  define _dos_setdrive(d, n)	((*(n)=_getdrive()), _chdrive((d)))
+# endif
+
+# ifdef ZTCDOS
+
+#  define _dos_getdrive(dd)	dos_getdrive(dd)
+#  define _dos_setdrive(d, n)	dos_setdrive((d), (n))
+
+private void
+_splitpath(const char *path, char *drv, char *dir, char *fn, char *ext)
+{
+	const char	*p;
+	size_t	l;
+
+	if (path[0]!='\0' && path[1]==':') {
+		*drv++ = *path++;
+		*drv++ = *path++;
+	}
+	*drv = '\0';
+
+	p = strrchr(path, '/');
+	if (p != NULL) {
+		/* ??? should we have / at the end of the directory? */
+		p++;
+		memcpy(dir, path, (size_t) (p-path));
+		dir += p-path;
+		path = p;
+	}
+	*dir = '\0';
+
+	p = strchr(path, '.');
+	if (p == NULL)
+		p = path+strlen(path);
+	l = p-path;
+	if (l > 8)
+		l = 8;
+	null_ncpy(fn, path, l);
+
+	l = strlen(p);
+	if (l > 4)
+		l = 4;
+	null_ncpy(ext, p, l);
+}
+
+private void
+_makepath(char *path, const char *drv, const char *dir, const char *fn, const char *ext)
+{
+	if (drv[0] != '\0') {
+		*path++ = drv[0];
+		*path++ = ':';
+		*path = '\0';
+	}
+	if (dir[0] != '\0') {
+		strcpy(path, dir);
+		path += strlen(path);
+		if (path[-1] != '/' && path[-1] != '\\') {
+			*path++ = '/';
+			*path = '\0';
+		}
+	}
+	strcpy(path, fn);
+	path += strlen(path);
+	switch (ext[0]) {
+	case '\0':
+		break;
+	default:
+		*path++ = '.';
+		/*FALLTHROUGH*/
+	case '.':
+		strcpy(path, ext);
+		break;
+	}
+}
+# endif /* ZTCDOS */
+
+/* Change drive and directory
+ * This is not quite like a UNIX chdir because each drive has a
+ * separate current directory.  If the path is not absolute, it
+ * will be relative to the current directory of the drive.
+ * On the other hand, this is not the DOS chdir because it does
+ * change the current drive if one is specified.
+ */
+private int
+Dchdir(to)
+char *to;
+{
+	unsigned d, dd;
+
+	if (to[1] == ':') {
+		d = CharUpcase(to[0]) - ('A' - 1);
+		if (d < 'A'-('A'-1) || 'Z'-('A'-1) < d) {
+			complain("invalid drive");
+			/* NOTREACHED */
+		}
+		_dos_getdrive(&dd);
+		if (dd != d)
+			_dos_setdrive(d, &dd);	/* ??? no failure report? */
+		to += 2;	/* skip drive spec */
+	}
+	return *to == '\0'? 0 : chdir(to);
+}
+
+private char *
+fixpath(path)
+char *path;
+{
+	char *p;
+
+	for (p = path; *p != '\0'; p++)
+		if (*p == '\\')
+			*p = '/';
+# ifdef MSDOS
+	return strlwr(path);
+# else
+	return path; /* Win32 is case-preserving. */
+# endif
+}
+
+private void
+abspath(so, dest)
+char *so, *dest;
+{
+	char	cwd[FILESIZE],
+		cwdD[3], cwdDIR[_MAX_DIR], cwdF[_MAX_FNAME], cwdEXT[_MAX_EXT],
+		soD[3], soDIR[_MAX_DIR], soF[_MAX_FNAME], soEXT[_MAX_EXT];
+
+	_splitpath(fixpath(so), soD, soDIR, soF, soEXT);
+	getcwd(cwd, FILESIZE);
+	if (*soD != '\0') {
+		/* Find current working directory on specified drive
+		 * There is a DOS system call to do this (service 0x47),
+		 * but the C library doesn't have a glue routine for it.
+		 * We get the same effect with this kludgy code.
+		 */
+		Dchdir(soD);	/* note: without a path, current directory is unchanged */
+		getcwd(cwdDIR, FILESIZE);
+		cwd[2] = '\0';	/* toss away path, leaving only drive spec */
+		Dchdir(cwd);
+		strcpy(cwd, cwdDIR);
+	}
+	(void) fixpath(cwd);
+	if (cwd[strlen(cwd)-1] != '/')
+		strcat(cwd, "/x.x");	/* need dummy filename */
+
+	_splitpath(fixpath(cwd), cwdD, cwdDIR, cwdF, cwdEXT);
+	/* Reconstruct the path as follows:
+	 * - If it is NOT a UNC (network) name, and doesn't have a drive letter,
+	 *   add one.
+	 * - If it is a relative path, add the current drive/directory
+	 *   to convert it to an absolute path.
+	 */
+	_makepath(dest,
+		*soD == '\0' && (soDIR[0]!='/'||soDIR[1]!='/') ? cwdD : soD,
+		*soDIR != '/'? strcat(cwdDIR, soDIR) : soDIR, soF, soEXT);
+	fixpath(dest);	/* can't do it often enough */
+}
+
+#endif /* MSFILESYSTEM */
+
+
+int
+MakeTemp(buf, complaint)
+char	*buf;
+const char	*complaint;
+{
+	const char *errfmt = "cannot create \"%s\" for %s: %s (%d)";
+#ifdef NO_MKSTEMP
+# ifdef NO_MKTEMP
+	/* Some systems don't provide mkstemp or mktemp (nor should
+	 * they -- ANSI defines tmpnam).  Unfortunately tmpnam doesn't
+	 * do what we want either, so we roll one by hand.
+	 */
+	char	*seq;
+	char	*p;
+
+	for (seq = buf + strlen(buf); seq>buf && seq[-1]=='X'; seq--)
+		;
+	for (p = seq; *p != '\0'; p++)
+		*p = '0';
+	for (;;) {
+		struct stat	sb;
+
+		jdbg("stat temp \"%s\"\n", buf);
+		if (stat(buf, &sb) < 0
+# ifdef ZTCDOS
+		/* Zortech yields ENOTDIR when path isn't found,
+		 * even if the prefix does exist.  Pretty silly!
+		 */
+		&& errno == ENOTDIR
+# else
+		&& errno == ENOENT
+# endif
+		) {
+# ifdef O_EXCL
+			int fd = open(buf, O_CREAT | O_EXCL | O_RDWR | O_BINARY,
+					S_IWRITE | S_IREAD);
+# else /* !O_EXCL */
+			int fd = creat(buf, 0600);
+# endif /* !O_EXCL */
+			jdbg("opened temp \"%s\" %d %d\n", buf, fd, errno);
+
+			if (fd != -1)
+				return fd;
+		}
+		for (p = seq; ; ) {
+			if (*p == '\0') {
+				/* we ran out of possible names! */
+				complain(errfmt, buf, complaint, "ran out of names", 0);
+				/*NOTREACHED*/
+			} else if (*p == '9') {
+				*p++ = '0';
+			} else {
+				*p += 1;
+				break;
+			}
+		}
+	}
+# else /* !NO_MKTEMP */
+	int fd;
+
+	jdbg("mktemp \"%s\"\n", buf);
+	if (mktemp(buf) == NULL
+	|| -1 == (fd =
+#  ifdef O_EXCL
+		open(buf, O_CREAT | O_EXCL | O_RDWR | O_BINARY, S_IWRITE | S_IREAD)
+#  else /* !O_EXCL */
+		creat(buf, 0600)
+#  endif /* !O_EXCL */
+	))
+	{
+		complain(errfmt, buf, complaint, strerror(errno), errno);
+		/* NOTREACHED */
+	}
+	return fd;
+# endif /* !NO_MKTEMP */
+#else /* !NO_MKSTEMP */
+	/* Ordinary mkstemp, except that we juggle umask to ensure
+	 * that the file is only readable by the owner.
+	 * Modern mkstemp implementations don't need this,
+	 * because they create the tempfile with 0600,
+	 * but old ones use 0666.  Making the umask 0077 should
+	 * solve this.
+	 */
+	jmode_t saved_umask
+#ifdef S_IRWXG
+		= umask(S_IRWXG | S_IRWXO);
+#else
+		= umask(077);
+#endif
+	int fd = mkstemp(buf);
+	int saved_errno = errno;
+
+	jdbg("mkstemp \"%s\" %d %d\n", buf, fd, saved_errno);
+	(void) umask(saved_umask);
+	errno = saved_errno;
+	if (fd == -1) {
+		complain(errfmt, buf, complaint, strerror(errno), errno);
+		/*NOTREACHED*/
+	}
+	return fd;
+#endif /* !NO_MKSTEMP */
+}
+
+void
+close_file(fp)
+File	*fp;
+{
+	if (fp != NULL) {
+		if (fp->f_flags & F_TELLALL)
+			add_mess(" %D lines, %D characters.",
+				 io_lines, io_chars);
+		f_close(fp);
+	}
+}
+
+/* Write the region from line1/char1 to line2/char2 to FP.  This
+ * never CLOSES the file since we don't know if we want to.
+ */
+bool	EndWNewline = 1;	/* VAR: end files with a blank line */
+
+void
+putreg(fp, line1, char1, line2, char2, makesure)
+register File	*fp;
+LinePtr	line1,
+	line2;
+int	char1,
+	char2;
+bool	makesure;
+{
+	if (makesure)
+		(void) fixorder(&line1, &char1, &line2, &char2);
+	while (line1 != line2->l_next) {
+		register char	*lp = lcontents(line1) + char1;
+
+		if (line1 == line2) {
+			fputnchar(lp, (char2 - char1), fp);
+			io_chars += (char2 - char1);
+		} else {
+			register char	c;
+
+			while ((c = *lp++) != '\0') {
+				f_putc(c, fp);
+				io_chars += 1;
+			}
+		}
+		if (line1 != line2) {
+			io_lines += 1;
+			io_chars += 1;
+#ifdef USE_CRLF
+			f_putc('\r', fp);
+#endif /* USE_CRLF */
+			f_putc(EOL, fp);
+		}
+		line1 = line1->l_next;
+		char1 = 0;
+	}
+	flushout(fp);
+}
+
+private void
+dofread(File *fp)
+{
+	char	end[LBSIZE];
+	bool	xeof;
+	LinePtr	savel = curline;
+	int	savec = curchar;
+
+	strcpy(end, linebuf + curchar);
+	xeof = f_gets(fp, linebuf + curchar, (size_t) (LBSIZE - curchar));
+	SavLine(curline, linebuf);
+	while(!xeof) {
+		curline = listput(curbuf, curline);
+		xeof = f_getputl(curline, fp);
+	}
+	getDOT();
+	linecopy(linebuf, (curchar = (int)strlen(linebuf)), end);
+	SavLine(curline, linebuf);
+	IFixMarks(savel, savec, curline, curchar);
+}
+
+void
+read_file(char	*file, bool is_insert)
+{
+	Bufpos	save;
+	File	*fp;
+	bool	err;
+	int	save_type;
+	char	*tmpfname,
+		*save_fname;
+
+	tmpfname = NULL;
+
+	if (!is_insert)
+		curbuf->b_ntbf = NO;
+	fp = open_file(file, iobuff, F_READ | F_TELLALL, NO);
+	if (fp == NULL) {
+		if (!is_insert && errno == ENOENT)
+			s_mess("(new file)");
+		else
+			s_mess(IOerr("open", file));
+		return;
+	}
+	if (!is_insert) {
+		(void) do_stat(curbuf->b_fname, curbuf, DS_SET);
+		set_arg_value((fp->f_flags & F_READONLY)? 1 : 0);
+		TogMinor(BReadOnly);
+	}
+
+	DOTsave(&save);
+
+	/*
+	 * if read fails, e.g. too long line, it would be
+	 * dangerous to save the buffer back to the real
+	 * filename, so we mark the buffer as scratch (unless
+	 * we are inserting, in which case the buffer might
+	 * have other valuable info worth saving, even with
+	 * the truncated line, sigh!), and give it a temporary
+	 * fname, which we restore after the read succeeds.
+	 */
+	save_type = curbuf->b_type;
+	save_fname = curbuf->b_fname;
+	if (save_fname) {
+		tmpfname = (char *)emalloc(FILESIZE);
+		backup_name(save_fname, "+", tmpfname, FILESIZE);
+		jdbg("temporary name \"%s\"\n", tmpfname);
+		curbuf->b_fname = tmpfname;
+	}
+	if (!is_insert)
+		curbuf->b_type = B_SCRATCH;
+
+	dofread(fp);
+
+	if (is_insert && io_chars > 0) {
+		modify();
+		set_mark();
+	}
+	SetDot(&save);
+	getDOT();
+	err = (fp->f_flags & (F_ERR | F_LINETOOLONG)) != 0;
+	close_file(fp);
+	if (err) {
+		if (save_fname)
+			free((UnivPtr)save_fname);
+		complain("[Error reading file%s]", is_insert ? ", buffer has tmp name now" : ", buffer marked as scratch with tmp name");
+		/* NOTREACHED */
+	}
+	curbuf->b_type = save_type;
+	if (save_fname) {
+		jdbg("restoring original name \"%s\"\n", save_fname);
+		curbuf->b_fname = save_fname;
+		if (tmpfname != NULL) {
+			free((UnivPtr) tmpfname);
+		}
+	}
+}
+
+void
+SaveFile()
+{
+	if (!IsModified(curbuf) && !curbuf->b_diverged) {
+		if (curbuf->b_fname != NULL)
+			(void) do_stat(curbuf->b_fname, curbuf, DS_NONE);
+		if (!curbuf->b_diverged) {
+			message("No changes need to be written.");
+			return;
+		}
+	}
+	if (curbuf->b_fname == NULL) {
+		/* We change LastCmd because otherwise the prompt for
+		 * the filename will be ": visit-file".  With this
+		 * fudge, it will be ": write-file".
+		 */
+		const data_obj	*saved_lc = LastCmd;
+		static const data_obj	dummy = { 0, "write-file" };
+
+		LastCmd = &dummy;
+		JWriteFile();
+		LastCmd = saved_lc;
+	} else {
+		filemunge(curbuf->b_fname);
+		chk_divergence(curbuf, curbuf->b_fname, "save");
+		file_write(curbuf->b_fname, NO);
+	}
+}
+
+const char	*HomeDir;	/* home directory */
+size_t	HomeLen;	/* length of home directory string */
+
+private List		*DirStack = NULL;
+#define dir_name(dp)	((char *) list_data((dp)))
+#define PWD_PTR		(list_data(DirStack))
+#define PWD		((char *) PWD_PTR)
+
+char *
+pwd()
+{
+	return PWD;
+}
+
+/* Format a file name without redundant prefix.
+ * The result will be in a static buffer.
+ * Note: by always using the static buffer, we allow ask_ford,
+ * as it is currently coded, to accept aliased arguments.
+ * The result will always fit in a FILESIZE buffer.
+ */
+char *
+pr_name(fname, okay_home)
+const char	*fname;
+bool	okay_home;
+{
+	if (fname == NULL) {
+		return NULL;
+	} else {
+		static char	name_buf[FILESIZE];
+		size_t	PWDlen = strlen(PWD);
+		size_t	improvement = 0;
+
+		if (strlen(fname) >= (size_t)FILESIZE) {
+			complain("filename longer than %d", FILESIZE-1);
+			/* NOTREACHED */
+		}
+		strcpy(name_buf, fname);	/* default: unchanged */
+		if (strncmp(fname, PWD, PWDlen) == 0 && fname[PWDlen] == '/') {
+			/* Below current directory: strip prefix and /.
+			 * Assumption: fname[PWDlen+1] is not / or \0.
+			 */
+			strcpy(name_buf, fname + PWDlen + 1);
+			improvement = PWDlen + 1;
+		}
+		if (okay_home && HomeLen > improvement + 1
+		&& strncmp(fname, HomeDir, HomeLen) == 0 && fname[HomeLen] == '/')
+		{
+			/* Below home directory: replace prefix with ~. */
+			name_buf[0] = '~';
+			strcpy(name_buf + 1, fname + HomeLen);
+			/* improvement = HomeLen - 1; */
+		}
+		return name_buf;
+	}
+}
+
+void
+Chdir()
+{
+	char	dirbuf[FILESIZE];
+
+	(void) ask_dir((char *)NULL, PWD, dirbuf);
+	if (Dchdir(dirbuf) == -1)
+	{
+		s_mess("cd: cannot change into %s.", dirbuf);
+		return;
+	}
+	UpdModLine = YES;
+	setCWD(dirbuf);
+	prCWD();
+#ifdef MAC
+	Bufchange = YES;
+#endif
+}
+
+#ifdef USE_GETWD
+extern char	*getwd proto((char *));
+
+/* ARGSUSED bufsize */
+char *
+getcwd(buffer, bufsize)
+char	*buffer;
+size_t	bufsize;
+{
+	return getwd(buffer);
+}
+#endif
+
+#ifdef USE_PWD
+/* ARGSUSED bufsize */
+char *
+getcwd(char *buffer, size_t bufsize)
+{
+	Buffer	*old = curbuf;
+	char	*ret_val;
+
+	/* ??? The use of a buffer ought to be more polite --
+	 * what if it were already in use?  (a) the buffer contents
+	 * might be valuable, so we should ask whether we can clobber,
+	 * and (b) we don't have any code to empty the buffer anyway.
+	 * Luckily, this is only called once, at the beginning of time,
+	 * so things ought to be OK.  Perhaps we should delete this buffer
+	 * after we are finished with it.
+	 * (MSDOS calls its own version of this routine more often,
+	 * but that version is quite different.)
+	 */
+	SetBuf(do_select((Window *)NULL, "pwd-output"));
+	curbuf->b_type = B_PROCESS;
+	(void) UnixToBuf(0, "pwd-output", (char *)NULL, "/bin/pwd");
+	ToFirst();
+	jamstrsub(buffer, linebuf, bufsize);
+	SetBuf(old);
+	return buffer;
+}
+#endif /* USE_PWD */
+
+/* Check if dn is the name of the current working directory
+ * and that it is in cannonical form
+ */
+
+bool
+chkCWD(dn)
+char	*dn;
+{
+#ifdef USE_INO
+	char	filebuf[FILESIZE];
+	struct stat	dnstat,
+			dotstat;
+
+	if (dn[0] != '/')
+		return NO;		/* need absolute pathname */
+
+	PathParse(dn, filebuf);
+	return stat(filebuf, &dnstat) == 0
+		&& stat(".", &dotstat) == 0
+		&& dnstat.st_dev == dotstat.st_dev
+		&& dnstat.st_ino == dotstat.st_ino;
+#else /* !USE_INO */
+	return NO;	/* no way of telling */
+#endif /* !USE_INO */
+}
+
+void
+setCWD(d)
+char	*d;
+{
+	if (DirStack == NULL)
+		list_push(&DirStack, (UnivPtr)NULL);
+	PWD_PTR = freealloc((UnivPtr) PWD, strlen(d) + 1);
+	strcpy(PWD, d);
+}
+
+void
+getCWD()
+{
+	char	*cwd;
+	char	pathname[FILESIZE];
+
+#ifndef MAC	/* no environment in MacOS */
+	cwd = getenv("CWD");
+	if (cwd == NULL || !chkCWD(cwd)) {
+		cwd = getenv("PWD");
+		if (cwd == NULL || !chkCWD(cwd)) {
+#endif
+			cwd = getcwd(pathname, sizeof(pathname));
+			if (cwd == NULL) {
+				error("Cannot get current directory");
+				/* NOTREACHED */
+			}
+#ifndef MAC	/* no environment in MacOS */
+		}
+	}
+#endif
+#ifdef MSFILESYSTEM
+	cwd = fixpath(cwd);
+#endif /* MSFILESYSTEM */
+	setCWD(cwd);
+}
+
+void
+prDIRS()
+{
+	register List	*lp;
+
+	s_mess(ProcFmt);
+	for (lp = DirStack; lp != NULL; lp = list_next(lp))
+		add_mess("%s ", pr_name(dir_name(lp), YES));
+}
+
+void
+prCWD()
+{
+	f_mess(": %f => \"%s\"", PWD);
+	stickymsg = YES;
+}
+
+private void
+doPushd(char *newdir)
+{
+	UpdModLine = YES;
+	if (*newdir == '\0') {	/* Wants to swap top two entries */
+		if (list_next(DirStack) == NULL) {
+			complain("pushd: no other directory.");
+			/* NOTREACHED */
+		}
+		newdir = dir_name(list_next(DirStack));
+		if (Dchdir(newdir) == -1)
+		{
+			s_mess("pushd: cannot change back into %s.", newdir);
+			return;
+		}
+		list_data(list_next(DirStack)) = list_data(DirStack);
+		list_data(DirStack) = (UnivPtr) newdir;
+	} else {
+		if (Dchdir(newdir) == -1)
+		{
+			s_mess("pushd: cannot change into %s.", newdir);
+			return;
+		}
+		(void) list_push(&DirStack, (UnivPtr)NULL);
+		setCWD(newdir);
+	}
+	prDIRS();
+}
+
+void
+Pushd()
+{
+	char	dirbuf[FILESIZE];
+
+	(void) ask_dir((char *)NULL, NullStr, dirbuf);
+	doPushd(dirbuf);
+}
+
+void
+Pushlibd()
+{
+	char	dirbuf[FILESIZE];
+
+	PathParse(ShareDir, dirbuf);
+	doPushd(dirbuf);
+}
+
+void
+Popd()
+{
+	char *newdir;
+
+	if (list_next(DirStack) == NULL) {
+		complain("popd: directory stack is empty.");
+		/* NOTREACHED */
+	}
+	newdir = dir_name(list_next(DirStack));
+	if (Dchdir(newdir) == -1) {
+		s_mess("popd: cannot change back into %s.", newdir);
+		return;
+	}
+	UpdModLine = YES;
+	free((UnivPtr) list_pop(&DirStack));
+	prDIRS();
+}
+
+#ifdef UNIX
+
+# ifdef USE_GETPWNAM
+
+#include <pwd.h>
+
+private void
+get_hdir(register char *user, register char *buf)
 {
 	struct passwd	*p;
-
 	p = getpwnam(user);
 	endpwent();
+
 	if (p == NULL) {
 		add_mess(" [unknown user: %s]", user);
 		SitFor(7);
 		complain((char *)NULL);
 		/* NOTREACHED */
 	}
+
 	jamstrsub(buf, p->pw_dir, (size_t)FILESIZE);
 }
 
@@ -18,25 +809,27 @@ get_hdir (register char *user, register char *buf)
 
 #  include "re.h"
 
-private void 
-get_hdir (register char *user, register char *buf)
+private void
+get_hdir(char *user, char *buf)
 {
 	char	fbuf[LBSIZE],
 		pattern[100];
-	register int	u_len;
+	size_t	u_len;
 	File	*fp;
-
 	u_len = strlen(user);
 	fp = open_file("/etc/passwd", fbuf, F_READ, YES);
 	swritef(pattern, sizeof(pattern),
 		"%s:[^:]*:[^:]*:[^:]*:[^:]*:\\([^:]*\\):", user);
-	while (!f_gets(fp, genbuf, LBSIZE))
+
+	while (!f_gets(fp, genbuf, LBSIZE)) {
 		if ((strncmp(genbuf, user, u_len) == 0)
-		&& LookingAt(pattern, genbuf, 0)) {
+			&& LookingAt(pattern, genbuf, 0)) {
 			putmatch(1, buf, FILESIZE);
 			close_file(fp);
 			return;
 		}
+	}
+
 	close_file(fp);
 	add_mess(" [unknown user: %s]", user);
 	SitFor(7);
@@ -53,20 +846,16 @@ get_hdir (register char *user, register char *buf)
  * Arbitrarily, if pre is empty, the result is the same as if it were root (/).
  */
 void
-PathCat(buf, buflen, pre, post)
-char	*buf;
-size_t	buflen;
-const char	*pre, *post;
+PathCat(char *buf, size_t buflen, const char *pre, const char *post)
 {
 	size_t	prelen = strlen(pre);
-
 	swritef(buf, buflen,
 		prelen > 0
-			&& (pre[prelen-1] == '/'
+		&& (pre[prelen - 1] == '/'
 #ifdef	MSFILESYSTEM
-				|| pre[prelen-1] == '\\'
+			|| pre[prelen - 1] == '\\'
 #endif
-			   )? "%s%s" : "%s/%s",
+		) ? "%s%s" : "%s/%s",
 		pre, post);
 }
 
@@ -80,14 +869,15 @@ const char	*pre, *post;
  * ??? I suspect that there are places where in the code that presume
  * it is idempotent!  DHR
  */
-void 
-PathParse (const char *name, char *intobuf)
+void
+PathParse(const char *name, char *intobuf)
 {
 	char	localbuf[FILESIZE];
-
 	intobuf[0] = localbuf[0] = '\0';
-	if (*name == '\0')
+
+	if (*name == '\0') {
 		return;
+	}
 
 	/* Place pathname in localbuf, with any specified home directory */
 
@@ -96,22 +886,28 @@ PathParse (const char *name, char *intobuf)
 			strcpy(localbuf, HomeDir);
 			name += 1;
 		}
+
 #ifdef UNIX	/* may add for mac in future */
 		else {
 			const char	*uendp = strchr(name, '/');
 			char	unamebuf[30];
 
-			if (uendp == NULL)
+			if (uendp == NULL) {
 				uendp = name + strlen(name);
+			}
+
 			name += 1;
-			if ((size_t) (uendp - name) >= sizeof(unamebuf)) {
+
+			if ((size_t)(uendp - name) >= sizeof(unamebuf)) {
 				len_error(JMP_COMPLAIN);
 				/* NOTREACHED */
 			}
-			null_ncpy(unamebuf, name, (size_t) (uendp - name));
+
+			null_ncpy(unamebuf, name, (size_t)(uendp - name));
 			get_hdir(unamebuf, localbuf);
 			name = uendp;
 		}
+
 #endif
 #ifndef MSFILESYSTEM
 	} else if (name[0] == '\\' && name[1] == '~') {
@@ -119,13 +915,13 @@ PathParse (const char *name, char *intobuf)
 		name += 1;
 #endif /* MSFILESYSTEM */
 	}
-	(void) strcat(localbuf, name);
 
+	(void) strcat(localbuf, name);
 	/* Make path absolute, and prepare for processing each component
 	 * of the path by placing prefix in intobuf.
 	 */
 #ifndef MSFILESYSTEM
-	strcpy(intobuf, localbuf[0] == '/'? "/" : PWD);
+	strcpy(intobuf, localbuf[0] == '/' ? "/" : PWD);
 #else /* MSFILESYSTEM */
 	/* Convert to an absolute path, and then fudge thing so that the
 	 * generic code does not have to deal with drive specifications.
@@ -135,22 +931,23 @@ PathParse (const char *name, char *intobuf)
 	 * right after the drive specification).
 	 */
 	abspath(localbuf, intobuf);
+
 	if (localbuf[0] == '/' && localbuf[1] == '/') {
-		strcpy(localbuf, intobuf+1);
+		strcpy(localbuf, intobuf + 1);
 		intobuf += 1;
 		intobuf[1] = '\0';
 	} else {
-		strcpy(localbuf, intobuf+3);		/* copy back all but d:/ */
+		strcpy(localbuf, intobuf + 3);		/* copy back all but d:/ */
 		intobuf += 2;	/* "forget" drive spec: point to / */
 		intobuf[1] = '\0';	/* truncate after d:/ */
 	}
-#endif /* MSFILESYSTEM */
 
+#endif /* MSFILESYSTEM */
 	/* Process each path component, attempting to make the path canonical. */
 	{
 		char
-			*fp = localbuf,	/* start of current component */
-			*dp = intobuf;	/* current end of resulting path (but lazy) */
+		*fp = localbuf,	/* start of current component */
+		 *dp = intobuf;	/* current end of resulting path (but lazy) */
 #ifdef HAS_SYMLINKS
 		int	linkcnt = 0;	/* to detect symlink loops */
 #endif
@@ -159,9 +956,12 @@ PathParse (const char *name, char *intobuf)
 			/* for each path component: */
 			char	*sp = strchr(fp, '/');	/* end of current component */
 
-			if (sp != NULL)
+			if (sp != NULL) {
 				*sp = '\0';
+			}
+
 			dp += strlen(dp);	/* move to end of resulting path */
+
 			if (*fp == '\0' || strcmp(fp, ".") == 0) {
 				/* ignore this component */
 			} else if (strcmp(fp, "..") == 0) {
@@ -174,9 +974,10 @@ PathParse (const char *name, char *intobuf)
 				char	linkbuf[FILESIZE];
 				int	linklen;
 #endif
+				do {} while (dp > intobuf + 1 && *--dp != '/');
 
-				do {} while (dp > intobuf+1 && *--dp != '/');
 #ifdef HAS_SYMLINKS
+
 				/* If we find that the path up to the .. is a symlink,
 				 * and we don't appear to be in a symlink loop
 				 * and we have room to handle it,
@@ -184,34 +985,45 @@ PathParse (const char *name, char *intobuf)
 				 * and try again.
 				 * Note: this code will only work for UNIX-like pathnames.
 				 */
-				if (sp != NULL)
+				if (sp != NULL) {
 					*sp = '/';
-				linklen = readlink(intobuf, linkbuf, sizeof(linkbuf)-1);
+				}
+
+				linklen = readlink(intobuf, linkbuf, sizeof(linkbuf) - 1);
+
 				if (linklen >= 0  && ++linkcnt < 100
-				&& strlen(fp) + linklen + (linkbuf[0]=='/'? 0 : dp - intobuf) + 2 <= sizeof(linkbuf))
-				{
-					if (linklen <= 1 || linkbuf[linklen-1] != '/')
+					&& strlen(fp) + linklen + (linkbuf[0] == '/' ? 0 : dp - intobuf) + 2 <= sizeof(linkbuf)) {
+					if (linklen <= 1 || linkbuf[linklen - 1] != '/') {
 						linkbuf[linklen++] = '/';
+					}
+
 					strcpy(&linkbuf[linklen], fp);
 					strcpy(localbuf, linkbuf);
 					fp = localbuf;
+
 					if (linkbuf[0] == '/') {
 						fp += 1;
 						dp = &intobuf[0];
 						*dp++ = '/';
 					}
+
 					*dp = '\0';
 					continue;
 				}
+
 #endif
 				*dp = '\0';
 			} else {
-				if (dp!=intobuf && dp[-1]!='/')
+				if (dp != intobuf && dp[-1] != '/') {
 					*dp++ = '/';
+				}
+
 				strcpy(dp, fp);
 			}
-			if (sp == NULL)
+
+			if (sp == NULL) {
 				break;
+			}
 
 			fp = sp + 1;
 		}
@@ -222,13 +1034,12 @@ PathParse (const char *name, char *intobuf)
 int	CreatMode = DFLT_MODE;	/* VAR: default mode for creat'ing files */
 #endif
 
-private void 
-DoWriteReg (bool app)
+private void
+DoWriteReg(bool app)
 {
 	char	fnamebuf[FILESIZE];
 	Mark	*mp = CurMark();
 	File	*fp;
-
 	/* Won't get here if there isn't a Mark */
 	(void) ask_file((char *)NULL, (char *)NULL, fnamebuf);
 
@@ -236,47 +1047,51 @@ DoWriteReg (bool app)
 		filemunge(fnamebuf);
 		chk_divergence((Buffer *)NULL, fnamebuf, "write-region");
 #ifdef BACKUPFILES
-		if (BkupOnWrite)
+
+		if (BkupOnWrite) {
 			file_backup(fnamebuf);
+		}
+
 #endif
 	}
 
-	fp = open_file(fnamebuf, iobuff, app ? F_APPEND|F_TELLALL : F_WRITE|F_TELLALL, YES);
+	fp = open_file(fnamebuf, iobuff, app ? F_APPEND | F_TELLALL : F_WRITE | F_TELLALL, YES);
 	putreg(fp, mp->m_line, mp->m_char, curline, curchar, YES);
 	close_file(fp);
 }
 
-void 
-WrtReg (void)
+void
+WrtReg(void)
 {
 	DoWriteReg(NO);
 }
 
-void 
-AppReg (void)
+void
+AppReg(void)
 {
 	DoWriteReg(YES);
 }
 
 bool	OkayBadChars = NO;	/* VAR: allow bad characters in filenames created by JOVE */
 
-void 
-JWriteFile (void)
+void
+JWriteFile(void)
 {
 	char
-		fnamebuf[FILESIZE];
-
+	fnamebuf[FILESIZE];
 #ifdef MAC
+
 	if (Macmode) {
-		if (pfile(fnamebuf) == NULL)
+		if (pfile(fnamebuf) == NULL) {
 			return;
+		}
 	} else
 #endif /* MAC */
 		(void) ask_file((char *)NULL, curbuf->b_fname, fnamebuf);
+
 	/* Don't allow bad characters when creating new files. */
 	if (!OkayBadChars
-	&& (curbuf->b_fname==NULL || strcmp(curbuf->b_fname, fnamebuf) != 0))
-	{
+		&& (curbuf->b_fname == NULL || strcmp(curbuf->b_fname, fnamebuf) != 0)) {
 #ifdef UNIX
 		static const char	badchars[] = "!$^&*()~`{}\"'\\|<>? ";
 #endif
@@ -293,7 +1108,7 @@ JWriteFile (void)
 		register char	c;
 
 		while ((c = *cp++) != '\0') {
-			if (!jisprint(c) || strchr(badchars, c)!=NULL) {
+			if (!jisprint(c) || strchr(badchars, c) != NULL) {
 				complain("'%p': bad character in filename.", c);
 				/* NOTREACHED */
 			}
@@ -307,39 +1122,47 @@ JWriteFile (void)
 	file_write(fnamebuf, NO);
 }
 
-void 
-WtModBuf (void)
+void
+WtModBuf(void)
 {
-	if (!ModBufs(NO))
+	if (!ModBufs(NO)) {
 		message("[No buffers need saving]");
-	else
+	} else {
 		put_bufs(is_an_arg());
+	}
 }
 
-void 
-put_bufs (bool askp)
+void
+put_bufs(bool askp)
 {
 	register Buffer	*oldb = curbuf,
-			*b;
+			 *b;
 
 	for (b = world; b != NULL; b = b->b_next) {
-		if (!IsModified(b) || b->b_type != B_FILE)
+		if (!IsModified(b) || b->b_type != B_FILE) {
 			continue;
+		}
+
 		SetBuf(b);	/* Make this current Buffer */
+
 		if (curbuf->b_fname == NULL) {
 			const char	*newname;
-
 			newname = ask(NullStr, "Buffer \"%s\" needs a file name; type Return to skip: ", b->b_name);
-			if (*newname == '\0')
+
+			if (*newname == '\0') {
 				continue;
+			}
 
 			setfname(b, newname);
 		}
-		if (askp && !yes_or_no_p("Write %s? ", curbuf->b_fname))
+
+		if (askp && !yes_or_no_p("Write %s? ", curbuf->b_fname)) {
 			continue;
+		}
 
 		SaveFile();
 	}
+
 	SetBuf(oldb);
 }
 
@@ -358,33 +1181,36 @@ put_bufs (bool askp)
  *	  absolute pathname.  But this is a start.
  */
 File *
-open_file (register char *fname, char *buf, register int how, bool complainifbad)
+open_file(register char *fname, char *buf, register int how, bool complainifbad)
 {
 	register File	*fp;
-
 	io_chars = 0;
 	io_lines = 0;
-
 	fp = f_open(pr_name(fname, NO), how, buf, LBSIZE);
+
 	if (fp == NULL) {
 		if (complainifbad) {
 			message(IOerr((F_MODE(how) == F_READ) ? "open" : "create",
-			    fname));
+					fname));
 			complain((char *)NULL);
 			/* NOTREACHED */
 		}
 	} else {
 		const char	*rd_only = NullStr;
-
 #ifndef MAC
+
 		if (access(pr_name(fname, NO), W_OK) == -1 && errno != ENOENT) {
 			rd_only = " [Read only]";
 			fp->f_flags |= F_READONLY;
 		}
+
 #endif
-		if (how & F_TELLALL)
+
+		if (how & F_TELLALL) {
 			f_mess("\"%s\"%s", pr_name(fname, YES), rd_only);
+		}
 	}
+
 	return fp;
 }
 
@@ -393,8 +1219,8 @@ open_file (register char *fname, char *buf, register int how, bool complainifbad
  * Note: even if we are doing an append-region or write-region,
  * we assume that the current buffer's file is fair game.
  */
-private void 
-filemunge (char *newname)
+private void
+filemunge(char *newname)
 {
 	if (do_stat(newname, curbuf, DS_NONE) != curbuf && was_file) {
 		rbell();
@@ -414,8 +1240,8 @@ filemunge (char *newname)
  * it left  the user a window of opportunity for fiddling.
  */
 
-private void 
-chk_divergence (Buffer *thisbuf, const char *fname, const char *how)
+private void
+chk_divergence(Buffer *thisbuf, const char *fname, const char *how)
 {
 	static const char	mesg[] = "Shall I go ahead and %s anyway? ";
 	Buffer	*buf = do_stat(fname, thisbuf, DS_REUSE);
@@ -437,81 +1263,85 @@ chk_divergence (Buffer *thisbuf, const char *fname, const char *how)
 	}
 }
 
-void 
-file_write (char *fname, bool app)
+void
+file_write(char *fname, bool app)
 {
 	File	*fp;
-
 #ifdef BACKUPFILES
-	if (!app && BkupOnWrite)
-		file_backup(fname);
-#endif
 
-	fp = open_file(fname, iobuff, app ? F_APPEND|F_TELLALL : F_WRITE|F_TELLALL, YES);
+	if (!app && BkupOnWrite) {
+		file_backup(fname);
+	}
+
+#endif
+	fp = open_file(fname, iobuff, app ? F_APPEND | F_TELLALL : F_WRITE | F_TELLALL, YES);
 
 	if (EndWNewline) {	/* Make sure file ends with a newLine */
 		Bufpos	save;
-
 		DOTsave(&save);
 		ToLast();
-		if (length(curline))	/* Not a blank Line */
+
+		if (length(curline)) {	/* Not a blank Line */
 			LineInsert(1);
+		}
+
 		SetDot(&save);
 	}
+
 	putreg(fp, curbuf->b_first, 0, curbuf->b_last, length(curbuf->b_last), NO);
 	close_file(fp);
 	(void) do_stat(curbuf->b_fname, curbuf, DS_SET);
 	unmodify();
 }
 
-void 
-JReadFile (void)
+void
+JReadFile(void)
 {
 	char
-		fnamebuf[FILESIZE];
+	fnamebuf[FILESIZE];
 	bool
-		reloading;
+	reloading;
 	Window
-		*wp;
+	*wp;
 	long
-		curlineno;
-
+	curlineno;
 #ifdef MAC
+
 	if (Macmode) {
-		if (gfile(fnamebuf) == NULL)
+		if (gfile(fnamebuf) == NULL) {
 			return;
+		}
 	} else
 #endif /* MAC */
 		(void) ask_file((char *)NULL, curbuf->b_fname, fnamebuf);
 
 	if (IsModified(curbuf)
-	&& yes_or_no_p("Shall I make your changes to \"%s\" permanent? ", curbuf->b_name))
+		&& yes_or_no_p("Shall I make your changes to \"%s\" permanent? ", curbuf->b_name)) {
 		SaveFile();
+	}
 
 	(void) do_stat(fnamebuf, (Buffer *)NULL, DS_NONE);	/* prime stat cache */
 	chk_divergence(curbuf, fnamebuf, "read");
-
 	reloading = do_stat(fnamebuf, curbuf, DS_REUSE) == curbuf;
-
 	/* preserve w_line in each window into curbuf */
 	wp = fwind;
+
 	do {
 		if (wp->w_bufp == curbuf) {
 			/* hijack w_topnum -- nobody was using it anyway */
-			wp->w_topnum = reloading? LinesTo(curbuf->b_first, wp->w_line) : 0;
+			wp->w_topnum = reloading ? LinesTo(curbuf->b_first, wp->w_line) : 0;
 			wp->w_top = wp->w_line = NULL;
 			wp->w_flags |= W_TOPGONE;
 		}
 	} while ((wp = wp->w_next) != fwind);
 
-	curlineno = reloading? LinesTo(curbuf->b_first, curline) : 0;
-
+	curlineno = reloading ? LinesTo(curbuf->b_first, curline) : 0;
 	buf_clear(curbuf);
 	setfname(curbuf, fnamebuf);
 	read_file(fnamebuf, NO);
-
 	/* recover dot in each window into curbuf */
 	wp = fwind;
+
 	do {
 		if (wp->w_bufp == curbuf) {
 			wp->w_top = curbuf->b_first;
@@ -522,18 +1352,21 @@ JReadFile (void)
 	SetLine(next_line(curbuf->b_first, curlineno));
 }
 
-void 
-InsFile (void)
+void
+InsFile(void)
 {
 	char
-		fnamebuf[FILESIZE];
+	fnamebuf[FILESIZE];
 #ifdef MAC
+
 	if (Macmode) {
-		if (gfile(fnamebuf) == NULL)
+		if (gfile(fnamebuf) == NULL) {
 			return;
+		}
 	} else
 #endif /* MAC */
 		(void) ask_file((char *)NULL, curbuf->b_fname, fnamebuf);
+
 	read_file(fnamebuf, YES);
 }
 
@@ -550,18 +1383,17 @@ private int	nleft,	/* number of good characters left in current block */
 daddr	DFree = 1;	/* pointer to end of tmp file */
 private char	*tfname;	/* pathname of tempfile where buffer lines go */
 
-private void 
-tmpinit (void)
+private void
+tmpinit(void)
 {
 	char	buf[FILESIZE];
-
 	PathCat(buf, sizeof(buf), TmpDir,
 #ifdef MAC
 		".joveXXX"	/* must match string in mac.c:Ffilter() */
 #else
 		"jvXXXXXX"
 #endif
-		);
+	);
 	tfname = copystr(buf);
 	tmpfd = MakeTemp(tfname, "editing");
 #ifdef RECOVER
@@ -573,17 +1405,18 @@ tmpinit (void)
  * Since we might be vforking, we must not change any variables
  * (in particular tmpfd).
  */
-void 
-tmpclose (void)
+void
+tmpclose(void)
 {
-	if (tmpfd != -1)
+	if (tmpfd != -1) {
 		(void) close(tmpfd);
+	}
 }
 
 /* Close and remove tempfile before exiting. */
 
-void 
-tmpremove (void)
+void
+tmpremove(void)
 {
 	if (tmpfd != -1) {
 		tmpclose();
@@ -602,41 +1435,36 @@ tmpremove (void)
 int	Jr_Len;		/* length of Just Read Line */
 
 void
-#ifdef USE_PROTOTYPES
-jgetline proto((daddr addr, register char *buf))
-#else
-jgetline(addr, buf)
-daddr	addr;
-register char	*buf;
-#endif
+jgetline proto((daddr addr, char *buf))
 {
-	register char	*bp,
-			*lp;
-
+	char	*bp,
+		*lp;
 	lp = buf;
 	bp = getblock(addr, NO);
 	do {} while ((*lp++ = *bp++) != '\0');
-	Jr_Len = (lp - buf) - 1;
+
+	Jr_Len = (int)((lp - buf) - 1);
 }
 
 /* Put `buf' and return the disk address */
 
-daddr 
-jputline (char *buf)
+daddr
+jputline(char *buf)
 {
 	register char	*bp,
-			*lp;
+		   *lp;
 	register int	nl;
 	daddr	line_daddr;
-
 	lp = buf;
 	bp = getblock(DFree, YES);
 	nl = nleft;
+
 	while ((*bp = *lp++) != '\0') {
 		if (*bp++ == '\n') {
 			*--bp = '\0';
 			break;
 		}
+
 		if (--nl == 0) {
 			DFree = blk_chop(DFree) + BLK_CHNKS;
 			bp = getblock(DFree, YES);
@@ -644,6 +1472,7 @@ jputline (char *buf)
 			nl = nleft;
 		}
 	}
+
 	line_daddr = DFree;
 	DFree += REQ_CHNKS(lp - buf);	/* (lp - buf) includes the null */
 	return line_daddr;
@@ -657,22 +1486,24 @@ jputline (char *buf)
 #define lockblock(addr)
 #define unlockblock(addr)
 
-private bool 
-f_getputl (LinePtr line, register File *fp)
+private bool
+f_getputl(LinePtr line, File *fp)
 {
-	register char	*bp;
-	register ZXchar	c;
-	register int
-			nl,
-			room = LBSIZE-1;
-	char		*base;
-
+	char	*bp;
+	ZXchar	c;
+	int
+		nl,
+		room = LBSIZE - 1;
+	char	*base;
 	base = bp = getblock(DFree, YES);
 	nl = nleft;
+
 	for (;;) {
 		c = f_getc(fp);
-		if (c == EOF)
+
+		if (c == EOF) {
 			break;
+		}
 
 		/* We can't store NUL in our buffer, so ignore it.
 		 * Similarly, we can only store characters less than NCHARS.
@@ -681,13 +1512,15 @@ f_getputl (LinePtr line, register File *fp)
 		 */
 		if (c == '\0'
 #if NCHARS != UCHAR_ROOF
-		|| c >= NCHARS
+			|| c >= NCHARS
 #endif
-		)
+		) {
 			continue;
+		}
 
 		if (c == EOL) {
 #ifdef USE_CRLF
+
 			/* a CR followed by an EOL is treated as a NL.
 			 * Bug: the line-buffer is effectively shortened by one character.
 			 */
@@ -695,20 +1528,22 @@ f_getputl (LinePtr line, register File *fp)
 				bp -= 1;
 				room += 1;
 			}
+
 #endif /* USE_CRLF */
 			break;
 		}
-		if (--room < 0)
-			break;	/* no room for this character */
+
+		if (--room < 0) {
+			break;        /* no room for this character */
+		}
 
 		if (--nl == 0) {
 			char	*newbp;
 			size_t	nbytes;
-			daddr		old_free_block = blk_chop(DFree);
-
+			daddr	old_free_block = blk_chop(DFree);
 			lockblock(old_free_block);
 			DFree = old_free_block + BLK_CHNKS;
-			nbytes = bp - base;
+			nbytes = (size_t)(bp - base);
 			newbp = getblock(DFree, YES);
 			nl = nleft;
 			byte_copy(base, newbp, nbytes);
@@ -716,21 +1551,28 @@ f_getputl (LinePtr line, register File *fp)
 			base = newbp;
 			unlockblock(old_free_block);
 		}
-		*bp++ = c;
+
+		*bp++ = (char)c;
 	}
+
 	*bp++ = '\0';
 	line->l_dline = DFree;
 	DFree += REQ_CHNKS(bp - base);
+
 	if (room < 0) {
 		add_mess(" [Line too long]");
 		rbell();
 		return YES;
 	}
+
 	if (c == EOF) {
-		if (--bp != base)
+		if (--bp != base) {
 			add_mess(" [Incomplete last line]");
+		}
+
 		return YES;
 	}
+
 	io_lines += 1;
 	return NO;
 }
@@ -755,19 +1597,19 @@ private Block	b_cache[NBUF];
 #endif
 
 private Block
-	*bht[HASHSIZE],		/* Block hash table. Must be zero initially */
-	*f_block = NULL,
-	*l_block = NULL;
+*bht[HASHSIZE],		/* Block hash table. Must be zero initially */
+*f_block = NULL,
+ *l_block = NULL;
 
 private daddr	next_bno = 0;
 
 /* Needed to comfort MS Visual C */
-private void blkio proto((Block *, JSSIZE_T (*) ptrproto((int, UnivPtr, size_t))));
+private void blkio proto((Block *, JSSIZE_T(*) ptrproto((int, UnivPtr, size_t))));
 
 private void
 blkio(b, iofcn)
 register Block	*b;
-register JSSIZE_T	(*iofcn) ptrproto((int, UnivPtr, size_t));
+register JSSIZE_T(*iofcn) ptrproto((int, UnivPtr, size_t));
 {
 	off_t boff = bno_to_seek_off(b->b_bno);
 	JSSIZE_T nb;
@@ -777,57 +1619,64 @@ register JSSIZE_T	(*iofcn) ptrproto((int, UnivPtr, size_t));
 		tmpinit();
 		first_time = NO;
 	}
+
 	if (lseek(tmpfd, boff, 0) < 0) {
 		error("[Tmp file seek error to %D: %d %s; to continue editing would be dangerous]",
-		      (long)boff, errno, strerror(errno));
+			(long)boff, errno, strerror(errno));
 		/* NOTREACHED */
-	}
-	else if ((nb = (*iofcn)(tmpfd, (UnivPtr) b->b_buf, (size_t)JBUFSIZ)) != JBUFSIZ) {
+	} else if ((nb = (*iofcn)(tmpfd, (UnivPtr) b->b_buf, (size_t)JBUFSIZ)) != JBUFSIZ) {
 		error("[Tmp file %s error got %D: %d %s: to continue editing would be dangerous]",
 			(iofcn == read) ? "READ" : "WRITE", (long)nb,
-			nb < 0 ? errno : 0, nb < 0 ? strerror(errno): "");
+			nb < 0 ? errno : 0, nb < 0 ? strerror(errno) : "");
 		/* NOTREACHED */
 	}
 }
 
-void 
-d_cache_init (void)
+void
+d_cache_init(void)
 {
 	register Block	*bp,	/* Block pointer */
-			**hp;	/* Hash pointer */
+		  **hp;	/* Hash pointer */
 	register daddr	bno;
-
 	jdbg("MAX_BLOCKS=%D\n", (long)MAX_BLOCKS);
 	jdbg("CHNK_CHARS=%D\n", (long)CHNK_CHARS);
 	jdbg("BLK_CHNKS=%D\n", (long)BLK_CHNKS);
 #ifdef MALLOC_CACHE
+
 	if (b_cache == NULL) {
-		b_cache = (Block *) calloc((size_t)NBUF,sizeof(Block));
+		b_cache = (Block *) calloc((size_t)NBUF, sizeof(Block));
+
 		if (b_cache == NULL) {
 			error("cannot allocate buffer cache");
 			/* NOTREACHED */
 		}
 	}
+
 #endif /* MALLOC_CACHE */
 
 	for (bp = b_cache, bno = NBUF; bno-- > 0; bp++) {
 		bp->b_dirty = NO;
 		bp->b_bno = bno;
-		if (l_block == NULL)
+
+		if (l_block == NULL) {
 			l_block = bp;
+		}
+
 		bp->b_LRUprev = NULL;
 		bp->b_LRUnext = f_block;
-		if (f_block != NULL)
-			f_block->b_LRUprev = bp;
-		f_block = bp;
 
+		if (f_block != NULL) {
+			f_block->b_LRUprev = bp;
+		}
+
+		f_block = bp;
 		bp->b_HASHnext = *(hp = &bht[B_HASH(bno)]);
 		*hp = bp;
 	}
 }
 
-void 
-SyncTmp (void)
+void
+SyncTmp(void)
 {
 	register Block	*b;
 #ifdef MSDOS
@@ -838,16 +1687,20 @@ SyncTmp (void)
 	 */
 	for (bno = 0; bno < next_bno; bno++) {
 		if ((b = lookup_block(bno)) != NULL && b->b_dirty) {
-			blkio(b, (JSSIZE_T (*) ptrproto((int, UnivPtr, size_t)))write);
+			blkio(b, (JSSIZE_T(*) ptrproto((int, UnivPtr, size_t)))write);
 			b->b_dirty = NO;
 		}
 	}
+
 #else /* !MSDOS */
-	for (b = f_block; b != NULL; b = b->b_LRUnext)
+
+	for (b = f_block; b != NULL; b = b->b_LRUnext) {
 		if (b->b_dirty) {
-			blkio(b, (JSSIZE_T (*) ptrproto((int, UnivPtr, size_t)))write);
+			blkio(b, (JSSIZE_T(*) ptrproto((int, UnivPtr, size_t)))write);
 			b->b_dirty = NO;
 		}
+	}
+
 #endif /* !MSDOS */
 }
 
@@ -865,50 +1718,61 @@ register daddr	bno;
 {
 	register Block	*bp;
 
-	for (bp = bht[B_HASH(bno)]; bp != NULL; bp = bp->b_HASHnext)
-		if (bp->b_bno == bno)
+	for (bp = bht[B_HASH(bno)]; bp != NULL; bp = bp->b_HASHnext) {
+		if (bp->b_bno == bno) {
 			break;
+		}
+	}
+
 	return bp;
 }
 
-private void 
-LRUunlink (register Block *b)
+private void
+LRUunlink(register Block *b)
 {
-	if (b->b_LRUprev == NULL)
+	if (b->b_LRUprev == NULL) {
 		f_block = b->b_LRUnext;
-	else
+	} else {
 		b->b_LRUprev->b_LRUnext = b->b_LRUnext;
-	if (b->b_LRUnext == NULL)
+	}
+
+	if (b->b_LRUnext == NULL) {
 		l_block = b->b_LRUprev;
-	else
+	} else {
 		b->b_LRUnext->b_LRUprev = b->b_LRUprev;
+	}
 }
 
 private Block *
-b_unlink (register Block *bp)
+b_unlink(register Block *bp)
 {
 	register Block	*hp,
-			*prev = NULL;
-
+		  *prev = NULL;
 	LRUunlink(bp);
+
 	/* Now that we have the block, we remove it from its position
 	 * in the hash table, so we can THEN put it somewhere else with
 	 * it's new block assignment.
 	 */
-	for (hp = bht[B_HASH(bp->b_bno)]; hp != NULL; prev = hp, hp = hp->b_HASHnext)
-		if (hp == bp)
+	for (hp = bht[B_HASH(bp->b_bno)]; hp != NULL; prev = hp, hp = hp->b_HASHnext) {
+		if (hp == bp) {
 			break;
+		}
+	}
+
 	if (hp == NULL) {
 		writef("\rBlock %ld missing!", (long)bp->b_bno);
 		finish(0);
 	}
-	if (prev)
+
+	if (prev) {
 		prev->b_HASHnext = hp->b_HASHnext;
-	else
+	} else {
 		bht[B_HASH(bp->b_bno)] = hp->b_HASHnext;
+	}
 
 	if (bp->b_dirty) {	/* do, now, the delayed write */
-		blkio(bp, (JSSIZE_T (*) ptrproto((int, UnivPtr, size_t)))write);
+		blkio(bp, (JSSIZE_T(*) ptrproto((int, UnivPtr, size_t)))write);
 		bp->b_dirty = NO;
 	}
 
@@ -925,31 +1789,33 @@ b_unlink (register Block *bp)
  */
 
 private char *
-#ifdef USE_PROTOTYPES
 getblock proto((daddr atl, bool IsWrite))
-#else
-getblock(atl, IsWrite)
-daddr	atl;
-bool	IsWrite;
-#endif
 {
-	register daddr	bno,
-			off;
-	register Block	*bp;
+	daddr	bno,
+		off,
+		tmp_d;
+	Block	*bp;
 	static Block	*lastb = NULL;
-
 	bno = da_to_bno(atl);
 	off = da_to_off(atl);
+
 	/* We don't allow block number MAX_BLOCKS-1 to be used because
 	 * NOWHERE_DADDR and NOTYET_DADDR must not be valid disk references,
 	 * and we want to prevent space overflow from being undetected
 	 * through arithmetic overflow.
 	 */
-	if (bno >=  MAX_BLOCKS-1) {
-		error("Tmp file too large for line %D bno %D, max is %D.  Get help!", (long)atl, (long)bno, (long)(MAX_BLOCKS-1));
+	if (bno >=  MAX_BLOCKS - 1) {
+		error("Tmp file too large for line %D bno %D, max is %D.  Get help!", (long)atl, (long)bno, (long)(MAX_BLOCKS - 1));
 		/* NOTREACHED */
 	}
-	nleft = JBUFSIZ - off;
+
+	tmp_d = JBUFSIZ - off;
+	if (tmp_d > INT_MAX) {
+		fprintf(stderr, "fatal: %s:%d: tmp_d < 0 || tmp_d > INT_MAX\n", __FILE__, __LINE__);
+		exit(1);
+	}
+	nleft = (int)tmp_d;
+
 	if (lastb != NULL && lastb->b_bno == bno) {
 		bp = lastb;	/* same as last time */
 	} else if ((bp = lookup_block(bno)) != NULL) {
@@ -959,34 +1825,43 @@ bool	IsWrite;
 		 */
 		if (bp != l_block) {
 			LRUunlink(bp);
-			if (l_block == NULL)
+
+			if (l_block == NULL) {
 				f_block = bp;
-			else
+			} else {
 				l_block->b_LRUnext = bp;
+			}
+
 			bp->b_LRUprev = l_block;
 			l_block = bp;
 			bp->b_LRUnext = NULL;
 		}
-		if (bno >= next_bno)
+
+		if (bno >= next_bno) {
 			next_bno = bno + 1;
+		}
 	} else {
 		/* The block we want doesn't reside in memory so we take the
 		 * least recently used clean block (if there is one) and use
 		 * it.
 		 */
 		bp = f_block;
-		if (bp->b_dirty)	/* The best block is dirty ... */
+
+		if (bp->b_dirty) {	/* The best block is dirty ... */
 			SyncTmp();
+		}
 
 		bp = b_unlink(bp);
-		if (l_block == NULL)
+
+		if (l_block == NULL) {
 			f_block = bp;
-		else
-			l_block->b_LRUnext = bp;	/* Place it at the end ... */
+		} else {
+			l_block->b_LRUnext = bp;        /* Place it at the end ... */
+		}
+
 		bp->b_LRUprev = l_block;
 		l_block = bp;
 		bp->b_LRUnext = NULL;		/* so it's Most Recently Used */
-
 		bp->b_dirty = NO;
 		bp->b_bno = bno;
 		bp->b_HASHnext = bht[B_HASH(bno)];
@@ -997,68 +1872,68 @@ bool	IsWrite;
 		 * the end of the tmp file.
 		 */
 
-		if (bno < next_bno)
+		if (bno < next_bno) {
 			blkio(bp, read);
-		else
+		} else {
 			next_bno = bno + 1;
+		}
 	}
+
 	lastb = bp;
-	bp->b_dirty |= IsWrite;
+	bp->b_dirty |= (char)IsWrite;
 	return bp->b_buf + off;
 }
 
 char *
-lbptr (LinePtr line)
+lbptr(LinePtr line)
 {
 	return getblock(line->l_dline, NO);
 }
 
 /* save the current contents of linebuf, if it has changed */
 
-void 
-lsave (void)
+void
+lsave(void)
 {
-	if (curbuf == NULL || !DOLsave)	/* Nothing modified recently */
+	if (curbuf == NULL || !DOLsave) {	/* Nothing modified recently */
 		return;
+	}
 
-	if (strcmp(lbptr(curline), linebuf) != 0)
-		SavLine(curline, linebuf);	/* Put linebuf on the disk. */
+	if (strcmp(lbptr(curline), linebuf) != 0) {
+		SavLine(curline, linebuf);        /* Put linebuf on the disk. */
+	}
+
 	DOLsave = NO;
 }
 
 /* build backup file name, also used by SetBuf */
 void
-backup_name(fname, btype, bfname, bfnamesize)
-const char	*fname,
-		*btype;
-char		*bfname;
-size_t		bfnamesize;
+backup_name(const char *fname, const char *btype, char *bfname, size_t bfnamesize)
 {
 	char	*s = strrchr(fname, '/');
-	size_t	dirlen = (s == NULL)? 0 : s + 1 - fname;
-
+	size_t	dirlen = (s == NULL) ? 0 : (size_t)(s + 1 - fname);
 	jamstrsub(bfname, fname, bfnamesize);
-	swritef(bfname+dirlen, (size_t) (bfnamesize - dirlen), "#%s%s~",
-		fname+dirlen, btype);
+	swritef(bfname + dirlen, (size_t)(bfnamesize - dirlen), "#%s%s~",
+		fname + dirlen, btype);
 }
 
 #ifdef BACKUPFILES
-private void 
-file_backup (char *fname)
+private void
+file_backup(char *fname)
 {
 # ifndef MSFILESYSTEM
 	JSSIZE_T	rr;
 	int
-		ffd,
-		bffd = 0;	/* avoid uninitialized complaint from gcc -W */
+	ffd,
+	bffd = 0;	/* avoid uninitialized complaint from gcc -W */
 	char
-		buf[JBUFSIZ],
-		bfname[FILESIZE];
-
+	buf[JBUFSIZ],
+	    bfname[FILESIZE];
 	backup_name(fname, "", bfname, sizeof(bfname));
 
-	if ((ffd = open(fname, O_RDONLY | O_BINARY | O_CLOEXEC)) < 0)
-		return;	/* cannot open original file: nothing to backup, we assume */
+	if ((ffd = open(fname, O_RDONLY | O_BINARY | O_CLOEXEC)) < 0) {
+		return;        /* cannot open original file: nothing to backup, we assume */
+	}
 
 	/* create backup file with same mode as input file */
 	{
@@ -1066,7 +1941,7 @@ file_backup (char *fname)
 		jmode_t	mode = CreatMode;	/* dummy */
 #  else
 		struct stat statbuf;
-		jmode_t	mode = fstat(ffd, &statbuf) != 0?
+		jmode_t	mode = fstat(ffd, &statbuf) != 0 ?
 			(jmode_t)CreatMode : statbuf.st_mode;
 #  endif
 
@@ -1078,13 +1953,12 @@ file_backup (char *fname)
 		 */
 		if ((unlink(bfname) < 0 && errno != ENOENT)
 #  ifdef O_EXCL
-		|| (bffd = open(bfname, O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, mode)) < 0
+			|| (bffd = open(bfname, O_CREAT | O_EXCL | O_RDWR | O_CLOEXEC, mode)) < 0
 #  else
-		|| (bffd = creat(bfname, mode)) < 0
+			|| (bffd = creat(bfname, mode)) < 0
 #  endif
 		) {
 			int	e = errno;
-
 			(void) close(ffd);
 			complain("[cannot create backup \"%s\": %d %s]",
 				bfname, e, strerror(e));
@@ -1101,12 +1975,12 @@ file_backup (char *fname)
 
 			if (wr < 0) {
 				int e = errno;
-
 				close(bffd);
 				close(ffd);
 				complain("[error writing backup: %d %s]", e, strerror(e));
 				/* NOTREACHED */
 			}
+
 			p += wr;
 			rr -= wr;
 		}
@@ -1116,19 +1990,23 @@ file_backup (char *fname)
 		complain("[error reading \"%s\": %d %s]", fname, errno, strerror(errno));
 		/* NOTREACHED */
 	}
+
 #  ifdef USE_FSYNC
+
 	if (fsync(bffd) != 0) {
 		int	e = errno;
-
 		(void) close(bffd);
 		complain("[error fsyncing backup: %d %s]", e, strerror(e));
 		/* NOTREACHED */
 	}
+
 #  endif /* USE_FSYNC */
+
 	if (close(bffd) != 0) {
 		complain("[error closing backup: %d %s]", errno, strerror(errno));
 		/* NOTREACHED */
 	}
+
 # else /* MSFILESYSTEM */
 	/* This code is designed to fit withing the 8.3 limitation of
 	 * MSDOS ("FAT" -- huh!) file systems.  Even though newer versions
@@ -1136,25 +2014,32 @@ file_backup (char *fname)
 	 * be dealing with a FAT file system.
 	 */
 	char	*dot,
-			*slash,
-			tmp[FILESIZE];
+		*slash,
+		tmp[FILESIZE];
 
-	if (access(fname, 0) < 0)
-		return;	/* cannot open original file: nothing to backup, we assume */
+	if (access(fname, 0) < 0) {
+		return;        /* cannot open original file: nothing to backup, we assume */
+	}
 
 	strcpy(tmp, fname);
 	slash = (char *)jbasename(tmp);
+
 	if ((dot = strrchr(slash, '.')) != NULL) {
-		if (stricmp(dot,".bak") == 0)
-			return;	/* don't rename .bak to .bak */
+		if (stricmp(dot, ".bak") == 0) {
+			return;        /* don't rename .bak to .bak */
+		}
+
 		*dot = '\0';
 	}
+
 	strcat(tmp, ".bak");
 	unlink(tmp);
+
 	if (rename(fname, tmp) != 0) {
 		complain("[cannot rename to \"%s\": %s]", tmp, strerror(errno));
 		/* NOTREACHED */
 	}
+
 # endif /* MSFILESYSTEM */
 }
 #endif /* BACKUPFILES */

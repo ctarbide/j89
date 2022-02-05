@@ -15,72 +15,80 @@
 
 private int	line_pos;
 
-void 
-f_char (register long n)
+void
+f_char(register long n)
 {
 	if (n < 0) {
 		b_char(-n);
 		return;
 	}
+
 	while (--n >= 0) {
 		if (eolp()) {			/* Go to the next Line */
-			if (curline->l_next == NULL)
+			if (curline->l_next == NULL) {
 				break;
+			}
 
 			SetLine(curline->l_next);
-		} else
+		} else {
 			curchar += 1;
+		}
 	}
 }
 
-void 
-b_char (register long n)
+void
+b_char(long n)
 {
 	if (n < 0) {
 		f_char(-n);
 		return;
 	}
+
 	while (--n >= 0) {
 		if (bolp()) {
-			if (curline->l_prev == NULL)
+			if (curline->l_prev == NULL) {
 				break;
+			}
 
 			SetLine(curline->l_prev);
 			Eol();
-		} else
+		} else {
 			curchar -= 1;
+		}
 	}
 }
 
-void 
-ForChar (void)
+void
+ForChar(void)
 {
 	f_char(arg_value());
 }
 
-void 
-BackChar (void)
+void
+BackChar(void)
 {
 	b_char(arg_value());
 }
 
-void 
-NextLine (void)
+void
+NextLine(void)
 {
 	if ((curline == curbuf->b_last) && eolp()) {
 		complain(NullStr);
 		/* NOTREACHED */
 	}
+
 	line_move(FORWARD, arg_value(), YES);
 }
 
-void 
-PrevLine (void)
+void
+PrevLine(void)
 {
 	if ((curline == curbuf->b_first) && bolp()) {
 		complain(NullStr);
 		/* NOTREACHED */
 	}
+
 	line_move(BACKWARD, arg_value(), YES);
 }
 
@@ -88,30 +96,37 @@ PrevLine (void)
  * being called from NextLine() or PrevLine(), in which case it tries
  * to line up the column with the column of the current line
  */
-void 
-line_move (int dir, long n, bool line_cmd)
+void
+line_move(int dir, long n, bool line_cmd)
 {
-	LinePtr	(*proc) ptrproto((LinePtr, long)) =
+	LinePtr(*proc) ptrproto((LinePtr, long)) =
 		(dir == FORWARD) ? next_line : prev_line;
 	LinePtr	line;
-
 	line = (*proc)(curline, n);
+
 	if (line == curline) {
-		if (dir == FORWARD)
+		if (dir == FORWARD) {
 			Eol();
-		else
+		} else {
 			Bol();
+		}
+
 		return;
 	}
 
 	if (line_cmd) {
 		this_cmd = LINECMD;
-		if (last_cmd != LINECMD)
+
+		if (last_cmd != LINECMD) {
 			line_pos = calc_pos(linebuf, curchar);
+		}
 	}
+
 	SetLine(line);		/* curline is in linebuf now */
-	if (line_cmd)
+
+	if (line_cmd) {
 		curchar = how_far(curline, line_pos);
+	}
 }
 
 /* how_far returns what cur_char should be to be at or beyond col
@@ -125,14 +140,14 @@ line_move (int dir, long n, bool line_cmd)
  * each thinks it knows how characters are displayed.
  */
 
-int 
-how_far (LinePtr line, int col)
+int
+how_far(LinePtr line, int col)
 {
-	register char	*lp;
-	register int	pos;
-	register ZXchar	c;
+	char	*lp;
+	int	pos;
+	ZXchar	c;
 	char	*base;
-
+	INTPTR_T	diff;
 	base = lp = lcontents(line);
 	pos = 0;
 
@@ -142,38 +157,47 @@ how_far (LinePtr line, int col)
 		} else if (jisprint(c)) {
 			pos += 1;
 		} else {
-			if (c <= DEL)
+			if (c <= DEL) {
 				pos += 2;
-			else
+			} else {
 				pos += 4;
+			}
 		}
+
 		lp += 1;
 	} while (pos <= col && c != '\0');
 
-	return lp - base - 1;
+	diff = lp - base - 1;
+
+	if ((UINTPTR_T)diff > INT_MAX) {
+		fprintf(stderr, "fatal: %s:%d: diff > INT_MAX\n", __FILE__, __LINE__);
+		exit(1);
+	}
+
+	return (int)diff;
 }
 
-void 
-Bol (void)
+void
+Bol(void)
 {
 	curchar = 0;
 }
 
-void 
-Eol (void)
+void
+Eol(void)
 {
 	curchar = length(curline);
 }
 
-void 
-Eof (void)
+void
+Eof(void)
 {
 	PushPntp(curbuf->b_last);
 	ToLast();
 }
 
-void 
-Bof (void)
+void
+Bof(void)
 {
 	PushPntp(curbuf->b_first);
 	ToFirst();
@@ -183,57 +207,67 @@ Bof (void)
  * with all the kludgery involved with paragraphs, and moving backwards
  * is particularly yucky.
  */
-private void 
-to_sent (int dir)
+private void
+to_sent(int dir)
 {
 	for (;;) {
 		Bufpos
-			old,	/* where we started */
-			*new;	/* where dosearch stopped */
-
+		old,	/* where we started */
+		*new;	/* where dosearch stopped */
 		DOTsave(&old);
-
 		new = dosearch(
-			"^[ \t]*$\\|[?.!]\\{''\\|[\"')\\]]\\|\\}\\{$\\|[ \t]\\}",
-			dir, YES);
+				"^[ \t]*$\\|[?.!]\\{''\\|[\"')\\]]\\|\\}\\{$\\|[ \t]\\}",
+				dir, YES);
+
 		if (new == NULL) {
-			if (dir == BACKWARD)
+			if (dir == BACKWARD) {
 				ToFirst();
-			else
+			} else {
 				ToLast();
+			}
+
 			break;
 		}
+
 		SetDot(new);
+
 		if (dir < 0) {
 			to_word(FORWARD);
+
 			if ((old.p_line != curline || old.p_char > curchar)
-			&& (!inorder(new->p_line, new->p_char, old.p_line, old.p_char)
-			  || !inorder(old.p_line, old.p_char, curline, curchar)))
+				&& (!inorder(new->p_line, new->p_char, old.p_line, old.p_char)
+					|| !inorder(old.p_line, old.p_char, curline, curchar))) {
 				break;
+			}
 
 			SetDot(new);
 		} else {
 			if (blnkp(linebuf)) {
 				Bol();
 				b_char(1);
-				if (old.p_line != curline || old.p_char < curchar)
+
+				if (old.p_line != curline || old.p_char < curchar) {
 					break;
+				}
 
 				to_word(FORWARD);	/* Oh brother this is painful */
 			} else {
 				curchar = REbom + 1;	/* Just after the [?.!] */
-				if (LookingAt("''\\|[\"')\\]]", linebuf, curchar))
+
+				if (LookingAt("''\\|[\"')\\]]", linebuf, curchar)) {
 					curchar = REeom;
+				}
+
 				break;
 			}
 		}
 	}
 }
 
-void 
-Bos (void)
+void
+Bos(void)
 {
-	register int	num = arg_value();
+	int	num = arg_value_as_int();
 
 	if (num < 0) {
 		negate_arg();
@@ -241,16 +275,18 @@ Bos (void)
 	} else {
 		while (--num >= 0) {
 			to_sent(BACKWARD);
-			if (bobp())
+
+			if (bobp()) {
 				break;
+			}
 		}
 	}
 }
 
-void 
-Eos (void)
+void
+Eos(void)
 {
-	register int	num = arg_value();
+	int	num = arg_value_as_int();
 
 	if (num < 0) {
 		negate_arg();
@@ -258,46 +294,56 @@ Eos (void)
 	} else {
 		while (--num >= 0) {
 			to_sent(FORWARD);
-			if (eobp())
+
+			if (eobp()) {
 				break;
+			}
 		}
 	}
 }
 
-void 
-f_word (register long num)
+void
+f_word(register long num)
 {
 	if (num < 0) {
 		while (++num <= 0) {
 			to_word(BACKWARD);
-			while (!bolp() && jisword(linebuf[curchar - 1]))
+
+			while (!bolp() && jisword(linebuf[curchar - 1])) {
 				curchar -= 1;
-			if (bobp())
+			}
+
+			if (bobp()) {
 				break;
+			}
 		}
 	} else {
 		while (--num >= 0) {
 			register char	c;
-
 			to_word(FORWARD);
-			while ((c = linebuf[curchar]) != '\0' && jisword(c))
+
+			while ((c = linebuf[curchar]) != '\0' && jisword(c)) {
 				curchar += 1;
-			if (eobp())
+			}
+
+			if (eobp()) {
 				break;
+			}
 		}
 	}
+
 	/* ??? why is the following necessary? -- DHR */
 	this_cmd = OTHER_CMD;	/* Semi kludge to stop some unfavorable behavior */
 }
 
-void 
-ForWord (void)
+void
+ForWord(void)
 {
 	f_word(arg_value());
 }
 
-void 
-BackWord (void)
+void
+BackWord(void)
 {
 	f_word(-arg_value());
 }

@@ -126,7 +126,7 @@ private bool findtext proto((void));
 /***************************************************/
 
 private void
-	putcurs proto((unsigned row, unsigned col, bool vis)),
+putcurs proto((unsigned row, unsigned col, bool vis)),
 	curset proto((bool desired)),
 	dellines proto((int n, int bot)),
 	inslines proto((int n, int bot));
@@ -143,19 +143,19 @@ struct wind_config {
 private WindowPtr theScreen;
 
 bool
-	Windchange,
-	EventCmd,
-	Keyonly,
-	Bufchange,
-	Modechange;
+Windchange,
+EventCmd,
+Keyonly,
+Bufchange,
+Modechange;
 
 bool
-	Macmode = NO;	/* VAR: use Mac file selector */
+Macmode = NO;	/* VAR: use Mac file selector */
 
 /* Initialization Routines. */
 
-void 
-getTERM (void)
+void
+getTERM(void)
 {
 }
 
@@ -168,24 +168,24 @@ getTERM (void)
  * - it is MAC-only
  */
 
-private void 
-InitMapBinds (data_obj **km, int kmc)
+private void
+InitMapBinds(data_obj **km, int kmc)
 {
 	ZXchar i;
 
 	for (i = 0; i < NCHARS; i++) {
 		if (*km != NULL && obj_type(*km) == COMMAND) {
 			struct cmd	*c = (struct cmd *) *km;
-
 			c->c_map = kmc;
 			c->c_key = i;
 		}
+
 		km += 1;
 	}
 }
 
-private void 
-InitBinds (void)
+private void
+InitBinds(void)
 {
 	InitMapBinds(MainKeys, F_MAINMAP);
 	InitMapBinds(EscKeys, F_PREF1MAP);
@@ -198,8 +198,8 @@ private CursHandle cross;
 
 private void InitSysMenu proto((void));
 
-void 
-InitEvents (void)
+void
+InitEvents(void)
 {
 	window = theScreen;
 	InitSysMenu();
@@ -213,8 +213,8 @@ InitEvents (void)
 private void	tn_init proto((void));
 private int	getdir proto((void));
 
-void 
-MacInit (void)
+void
+MacInit(void)
 {
 	tn_init();
 	getdir();
@@ -223,9 +223,9 @@ MacInit (void)
 	InitBinds();
 }
 
-void 
-ttysetattr (
-    bool n	/* also used as subscript! */
+void
+ttysetattr(
+	bool n	/* also used as subscript! */
 )
 {
 }
@@ -267,19 +267,21 @@ IOParam *p;
 
 /* Kludge to convert Macintosh error codes to something like Unix. */
 
-private int 
-cvt_err (	/* some of these don't make sense... */
-    int err
+private int
+cvt_err(  /* some of these don't make sense... */
+	int err
 )
 {
-	switch(err) {
+	switch (err) {
 	case noErr:
 		errno = 0;
 		return 0;
+
 	case dirFulErr:
 	case dskFulErr:
 		errno = ENOSPC;
 		break;
+
 	/* case nsvErr: */
 	/* case mFulErr: */
 	/* case tmfoErr: */
@@ -287,51 +289,63 @@ cvt_err (	/* some of these don't make sense... */
 	default:
 		errno = ENOENT;
 		break;
+
 	case ioErr:
 		errno = EIO;
 		break;
+
 	case bdNamErr:
 	case opWrErr:
 	case paramErr:
 		errno = EINVAL;
 		break;
+
 	case fnOpnErr:				/* dubious... */
 	case rfNumErr:
 		errno = EBADF;
 		break;
+
 	case eofErr:				/* ditto */
 	case posErr:
 		errno = /* no longer defined: ESPIPE */ EIO;
 		break;
+
 	case wPrErr:
 		errno = EROFS;
 		break;
+
 	case fLckdErr:
 	case permErr:
 		errno = EACCES;
 		break;
+
 	case fBsyErr:
 		errno = EBUSY;
 		break;
+
 	case dupFNErr:
 		errno = EEXIST;
 		break;
+
 	case gfpErr:
 	case volOffLinErr:
 	case volOnLinErr:
 	case nsDrvErr:
 		errno = ENODEV;
 		break;
+
 	case noMacDskErr:
 	case extFSErr:
 		errno = EIO;
 		break;
+
 	case fsRnErr:
 	case badMDBErr:
 	case wrPermErr:
 		errno = /* no longer defined: EPERM */ EACCES;
 		break;
 	}
+
 	return -1;
 }
 
@@ -345,14 +359,19 @@ const char *file;
 	if (*file == '/') {
 		strcpy(nm, file + 1);	/* full path */
 	} else {
-		if (strchr(file + 1, '/') != NULL)
-			strcpy(nm, "/");	/* make a partial pathname */
-		else
+		if (strchr(file + 1, '/') != NULL) {
+			strcpy(nm, "/");        /* make a partial pathname */
+		} else {
 			nm[0] = '\0';
+		}
+
 		strcat(nm, file);
 	}
-	for (t = nm; (t = strchr(t, '/')) != NULL; )
+
+	for (t = nm; (t = strchr(t, '/')) != NULL;) {
 		*t++ = ':';
+	}
+
 	return CtoPstr(nm);
 }
 
@@ -366,21 +385,25 @@ jmode_t	perm;	/* perm is irrelevant on a Mac */
 	int fd, err;
 	StringPtr nm;
 	HParamBlockRec p;
-
 	nm = cvt_fnm(name);	/* convert filename to Mac type name */
+
 	for (fd = 0; ft[fd].inuse; fd++) {
-		if (fd == NFILES-1) {
+		if (fd == NFILES - 1) {
 			errno = EMFILE;
 			return -1;
 		}
 	}
+
 	fsetup(&p);	/* try to delete it, whether it is there or not. */
 	p.fileParam.ioNamePtr = nm;
-	if ((err = PBHDelete(&p, 0)) != noErr && err != fnfErr)
-		return cvt_err(err);
 
-	if (do_creat(&p, nm) != 0)
+	if ((err = PBHDelete(&p, 0)) != noErr && err != fnfErr) {
+		return cvt_err(err);
+	}
+
+	if (do_creat(&p, nm) != 0) {
 		return -1;
+	}
 
 	ft[fd].inuse = YES;
 	ft[fd].refnum = p.ioParam.ioRefNum;
@@ -400,36 +423,45 @@ int	flags;
 	int fd, err;
 	StringPtr nm;
 	HParamBlockRec p;
-
 	nm = cvt_fnm(path);	/* convert filename to Mac type name */
+
 	for (fd = 0; ft[fd].inuse; fd++) {
-		if (fd == NFILES-1) {
+		if (fd == NFILES - 1) {
 			errno = EMFILE;
 			return -1;
 		}
 	}
+
 	fsetup(&p);
+
 	switch (flags & 03) {
 	case O_RDONLY:
 		p.ioParam.ioPermssn = fsRdPerm;
 		break;
+
 	case O_WRONLY:
 		p.ioParam.ioPermssn = fsWrPerm;
 		break;
+
 	case O_RDWR:
 		p.ioParam.ioPermssn = fsRdWrPerm;
 		break;
 	}
+
 	p.ioParam.ioNamePtr = nm;
 	p.ioParam.ioMisc = 0;
-	if ((err = PBHOpen(&p, 0)) != noErr)
+
+	if ((err = PBHOpen(&p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	ft[fd].refnum = p.ioParam.ioRefNum;
 	p.ioParam.ioPosMode = fsFromStart;
 	p.ioParam.ioPosOffset = 0;
-	if ((err = PBSetFPos((ParamBlockRec *) &p, 0)) != noErr)
+
+	if ((err = PBSetFPos((ParamBlockRec *) &p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	ft[fd].inuse = YES;
 	errno = 0;
@@ -442,39 +474,46 @@ HParmBlkPtr p;
 StringPtr nm;
 {
 	int err;
-
 	fsetup(p);
 	p->fileParam.ioNamePtr = nm;
-	if ((err = PBHCreate(p, 0)) != noErr)
+
+	if ((err = PBHCreate(p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	fsetup(p);
 	p->fileParam.ioNamePtr = nm;
 	p->fileParam.ioFDirIndex = 0;
-	if ((err = PBHGetFInfo(p, 0)) != noErr)
+
+	if ((err = PBHGetFInfo(p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	p->fileParam.ioDirID = cur_dir;
 	p->fileParam.ioFlFndrInfo.fdType = 'TEXT';
 	p->fileParam.ioFlFndrInfo.fdCreator = 'JV01';
 	p->fileParam.ioFlFndrInfo.fdFlags = 0;
 	p->fileParam.ioFVersNum = 0;
-	if ((err = PBHSetFInfo(p, 0)) != noErr)
+
+	if ((err = PBHSetFInfo(p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	fsetup(p);
 	p->ioParam.ioNamePtr = nm;
 	p->ioParam.ioPermssn = fsRdWrPerm;
 	p->ioParam.ioMisc = 0;
-	if (cvt_err(PBHOpen(p, 0)))
+
+	if (cvt_err(PBHOpen(p, 0))) {
 		return -1;
+	}
 
 	return 0;
 }
 
 
-int 
-close (int fd)
+int
+close(int fd)
 {
 	int err;
 	HParamBlockRec p;
@@ -487,13 +526,17 @@ close (int fd)
 	fsetup(&p);
 	p.ioParam.ioRefNum = ft[fd].refnum;
 	ft[fd].inuse = NO;
-	if (cvt_err(PBClose((ParamBlockRec *) &p, 0)) < 0)
+
+	if (cvt_err(PBClose((ParamBlockRec *) &p, 0)) < 0) {
 		return -1;
+	}
 
 	fsetup(&p);
 	p.ioParam.ioNamePtr = NULL;
-	if (cvt_err(PBFlushVol((ParamBlockRec *) &p, 0)) < 0)
+
+	if (cvt_err(PBFlushVol((ParamBlockRec *) &p, 0)) < 0) {
 		return -1;
+	}
 
 	return 0;
 }
@@ -519,14 +562,17 @@ size_t	n;
 			errno = EBADF;
 			return -1;
 		}
+
 		isetup(&p);
 		p.ioRefNum = ft[fd].refnum;
 		p.ioBuffer = buf;
 		p.ioReqCount = n;
 		p.ioPosMode = fsFromMark;
 		p.ioPosOffset = 0;
-		if ((err = PBRead((ParamBlockRec *)&p, 0)) != noErr && err != eofErr)
+
+		if ((err = PBRead((ParamBlockRec *)&p, 0)) != noErr && err != eofErr) {
 			return cvt_err(err);
+		}
 
 		errno = 0;
 		return p.ioActCount;
@@ -555,14 +601,17 @@ size_t	n;
 			errno = EBADF;
 			return -1;
 		}
+
 		isetup(&p);
 		p.ioRefNum = ft[fd].refnum;
 		p.ioPosMode = fsFromMark;
 		p.ioReqCount = n;
 		p.ioBuffer = (Ptr)buf;
 		p.ioPosOffset = 0L;	/* bidirectional */
-		if ((err = PBWrite((ParamBlockRec *)&p, 0)) != noErr)
+
+		if ((err = PBWrite((ParamBlockRec *)&p, 0)) != noErr) {
 			return cvt_err(err);
+		}
 
 		return p.ioActCount;
 	}
@@ -585,44 +634,58 @@ int	whence;
 
 	isetup(&p);
 	p.ioRefNum = ft[fd].refnum;
-	if ((err = PBGetFPos((ParamBlockRec *)&p, 0)) != noErr)
+
+	if ((err = PBGetFPos((ParamBlockRec *)&p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	cur_mark = p.ioPosOffset;
 	isetup(&p);
 	p.ioRefNum = ft[fd].refnum;
-	if ((err = PBGetEOF((ParamBlockRec *)&p, 0)) != noErr)
+
+	if ((err = PBGetEOF((ParamBlockRec *)&p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	leof = (long) p.ioMisc;
-	switch(whence) {
+
+	switch (whence) {
 	case 0:
 		new_mark = offset;
 		break;
+
 	case 1:
 		new_mark = offset + cur_mark;
 		break;
+
 	case 2:
 		new_mark = offset + leof;
 		break;
+
 	default:
 		errno = EINVAL;
 		return -1;
 	}
+
 	if (new_mark > leof) {
 		/* need more space in file -- grow it */
 		isetup(&p);
 		p.ioRefNum = ft[fd].refnum;
 		p.ioMisc = (Ptr) new_mark;
-		if ((err = PBSetEOF((ParamBlockRec *)&p, 0)) != noErr)
+
+		if ((err = PBSetEOF((ParamBlockRec *)&p, 0)) != noErr) {
 			return cvt_err(err);
+		}
 	}
+
 	isetup(&p);
 	p.ioRefNum = ft[fd].refnum;
 	p.ioPosOffset = new_mark;
 	p.ioPosMode = fsFromStart;
-	if ((err = PBSetFPos((ParamBlockRec *)&p, 0)) != noErr)
+
+	if ((err = PBSetFPos((ParamBlockRec *)&p, 0)) != noErr) {
 		return cvt_err(err);
+	}
 
 	errno = 0;
 	return p.ioPosOffset;
@@ -630,16 +693,17 @@ int	whence;
 
 /* delete file, if it exists */
 
-int 
-unlink (const char *name)
+int
+unlink(const char *name)
 {
 	int fd, err;
 	HParamBlockRec p;
-
 	fsetup(&p);
 	p.fileParam.ioNamePtr = cvt_fnm(name);
-	if ((err = PBHDelete(&p, 0)) != noErr && err != fnfErr)
+
+	if ((err = PBHDelete(&p, 0)) != noErr && err != fnfErr) {
 		return cvt_err(err);
+	}
 
 	return 0;
 }
@@ -655,35 +719,36 @@ size_t size;
 {
 	size_t n;
 	ZXchar p;
-
-
 	n = 0;
+
 	do {
 		p = rawgetc();
 		*buf++ = p;
 		n++;
 	} while (rawchkc() && n <= size);
+
 	return n;
 }
 
-void 
-dobell (	/* declared in term.h */
-    int n
+void
+dobell(  /* declared in term.h */
+	int n
 )
 {
-	while (--n >= 0)
+	while (--n >= 0) {
 		SysBeep(5);
+	}
+
 	flushscreen();
 }
 
 /* Simplified stat() routine emulates what is needed most. */
 
-int 
-stat (const char *fname, struct stat *buf)
+int
+stat(const char *fname, struct stat *buf)
 {
 	CInfoPBRec p;
 	StringPtr nm;
-
 	nm = cvt_fnm(fname);
 	byte_zero(&p, sizeof(CInfoPBRec));
 	p.hFileInfo.ioCompletion = 0;
@@ -702,19 +767,23 @@ stat (const char *fname, struct stat *buf)
 		buf->st_mtime = p.hFileInfo.ioFlMdDat;
 		buf->st_mode = (p.hFileInfo.ioFlAttrib & 0x10) ? S_IFDIR : S_IFREG;
 		return 0;
+
 	case nsvErr:
 	case paramErr:
 	case bdNamErr:
 	case fnfErr:
 		errno = ENOENT;
 		break;
+
 	case ioErr:
 		errno = EIO;
 		break;
+
 	default:
 		errno = ENOENT;
 		break;
 	}
+
 	return -1;
 }
 
@@ -722,15 +791,16 @@ stat (const char *fname, struct stat *buf)
  * number and directory number, and avoids "Working Directory Reference
  * Numbers", which are confusing.
  */
-private int 
-getdir (void)	/* call this only once, during startup. */
+private int
+getdir(void)	/* call this only once, during startup. */
 {
 	WDPBRec p;
-
 	p.ioCompletion = 0;
 	p.ioNamePtr = NULL;
-	if (PBHGetVol(&p, 0) != noErr)
-		return -1;	/* BIG trouble (but caller never checks returned value!) */
+
+	if (PBHGetVol(&p, 0) != noErr) {
+		return -1;        /* BIG trouble (but caller never checks returned value!) */
+	}
 
 	cur_vol = p.ioWDVRefNum;
 	cur_dir = p.ioWDDirID;
@@ -739,17 +809,18 @@ getdir (void)	/* call this only once, during startup. */
 	return 0;
 }
 
-private int 
-setdir (int vol, long dir)
+private int
+setdir(int vol, long dir)
 {
 	WDPBRec p;
-
 	p.ioCompletion = 0;
 	p.ioNamePtr = NULL;
 	p.ioVRefNum = vol;
 	p.ioWDDirID = dir;
-	if (PBHSetVol(&p, 0) != noErr)
+
+	if (PBHSetVol(&p, 0) != noErr) {
 		return -1;
+	}
 
 	cur_vol = vol;
 	cur_dir = dir;
@@ -764,23 +835,26 @@ const char	*dir;	/* UNIX-like pathname for directory */
 CInfoPBPtr	d;	/* info from directory */
 {
 	char
-		nm[FILESIZE + 1],
-		*t;
+	nm[FILESIZE + 1],
+	*t;
 
-	if (strcmp(dir, ".") == 0)
+	if (strcmp(dir, ".") == 0) {
 		getcwd(nm, sizeof(nm) - 1);
-	else
+	} else {
 		strcpy(nm, dir);
+	}
 
-	for (t = nm; (t = strchr(t, '/')) != NULL; )
+	for (t = nm; (t = strchr(t, '/')) != NULL;) {
 		*t++ = ':';
+	}
 
 	t = nm;	/* get rid of initial slashes */
-	while (*t == ':')
+
+	while (*t == ':') {
 		t++;
+	}
 
 	strcat(t, ":");	/* force trailing ':', signifying directory */
-
 	byte_zero(d, sizeof(*d));
 	/* d->dirInfo.ioCompletion = 0; */
 	d->dirInfo.ioNamePtr = CtoPstr(t);
@@ -792,15 +866,16 @@ CInfoPBPtr	d;	/* info from directory */
 		&& (d->dirInfo.ioFlAttrib & 0x10) != 0;
 }
 
-int 
-chdir (const char *dir)
+int
+chdir(const char *dir)
 {
 	CInfoPBRec d;
 
 	if (strcmp(dir, "/") == 0	/* There is no root... */
-	|| !lookupdir(dir, &d)
-	|| setdir(d.dirInfo.ioVRefNum, d.dirInfo.ioDrDirID) < 0)
+		|| !lookupdir(dir, &d)
+		|| setdir(d.dirInfo.ioVRefNum, d.dirInfo.ioDrDirID) < 0) {
 		return -1;
+	}
 
 	return 0;
 }
@@ -830,67 +905,79 @@ int	(*sorter) ptrproto((UnivConstPtr, UnivConstPtr));
 		/* we are enumerating the contents of a volume or directory */
 		CInfoPBRec	d;
 
-		if (!lookupdir(dir, &d))
+		if (!lookupdir(dir, &d)) {
 			return -1;
+		}
 
 		DirID = d.dirInfo.ioDrDirID;
 	}
 
-	ourarray = (char **) emalloc(nalloc * sizeof (char *));
+	ourarray = (char **) emalloc(nalloc * sizeof(char *));
+
 	for (;;) {
 		Str32 name;	/* 31 is limit, but we might add a '/' */
 
 		if (DirID == 0) {
 			/* we are enumerating volumes */
 			ParamBlockRec	d;
-
 			byte_zero(&d, sizeof(d));
 			d.volumeParam.ioCompletion = 0;
 			d.volumeParam.ioNamePtr = name;
 			d.volumeParam.ioVRefNum = 0;
 			d.volumeParam.ioVolIndex = index++;
-			if (PBGetVInfo(&d, 0) != noErr)
-				break;	/* we are done, then */
+
+			if (PBGetVInfo(&d, 0) != noErr) {
+				break;        /* we are done, then */
+			}
 
 			PtoCstr(name);
 #ifdef DIRECTORY_ADD_SLASH
 			/* I *think* this has got to be a volume */
 			strcat((char *)name, "/");
 #endif
-
 		} else {
 			/* we are enumerating the contents of a volume or directory */
 			CInfoPBRec	d;
-
 			byte_zero(&d, sizeof(d));
 			d.dirInfo.ioCompletion = 0;
 			d.dirInfo.ioNamePtr = name;
 			d.dirInfo.ioVRefNum = cur_vol;
 			d.dirInfo.ioFDirIndex = index++;
 			d.dirInfo.ioDrDirID = DirID;	/* .ioDirID == .ioDrDirID */
-			if (PBGetCatInfo(&d, 0) != noErr)
-				break;	/* we are done, then */
+
+			if (PBGetCatInfo(&d, 0) != noErr) {
+				break;        /* we are done, then */
+			}
 
 			PtoCstr(name);
 #ifdef DIRECTORY_ADD_SLASH
-			if (d.dirInfo.ioFlAttrib & 0x10)	/* see Inside Mac IV-122 */
+
+			if (d.dirInfo.ioFlAttrib & 0x10) {	/* see Inside Mac IV-122 */
 				strcat((char *)name, "/");
+			}
+
 #endif
 		}
-		if (qualify != NULL && !(*qualify)((char *) name))
+
+		if (qualify != NULL && !(*qualify)((char *) name)) {
 			continue;
+		}
 
 		/* note: test ensures one space left in ourarray for NULL */
-		if (nentries+1 == nalloc)
-			ourarray = (char **) erealloc((char *) ourarray, (nalloc += 10) * sizeof (char *));
+		if (nentries + 1 == nalloc) {
+			ourarray = (char **) erealloc((char *) ourarray, (nalloc += 10) * sizeof(char *));
+		}
+
 		ourarray[nentries++] = copystr((char *)name);
 	}
+
 	ourarray[nentries] = NULL;
 
-	if (sorter != NULL)
-		qsort((char *) ourarray, nentries, sizeof (char **), sorter);
-	*nmptr = ourarray;
+	if (sorter != NULL) {
+		qsort((char *) ourarray, nentries, sizeof(char **), sorter);
+	}
 
+	*nmptr = ourarray;
 	return nentries;
 }
 
@@ -904,8 +991,9 @@ size_t	size;
 	Str31 nm;
 	char	*p = buf + size;	/* build from right */
 
-	if (p == buf)
-		return NULL;	/* not even room for NUL */
+	if (p == buf) {
+		return NULL;        /* not even room for NUL */
+	}
 
 	*--p = '\0';
 
@@ -915,32 +1003,39 @@ size_t	size;
 		d.dirInfo.ioVRefNum = cur_vol;
 		d.dirInfo.ioFDirIndex = -1;
 		PBGetCatInfo(&d, 0);
-		if (d.dirInfo.ioResult != noErr)
-			return NULL;
 
-		if (p - buf <= Length(nm))
-			return NULL;	/* insufficient room for / and name */
+		if (d.dirInfo.ioResult != noErr) {
+			return NULL;
+		}
+
+		if (p - buf <= Length(nm)) {
+			return NULL;        /* insufficient room for / and name */
+		}
 
 		p -= Length(nm);
-		memcpy((UnivPtr)p, (UnivPtr) (nm+1), Length(nm));
+		memcpy((UnivPtr)p, (UnivPtr)(nm + 1), Length(nm));
 		*--p = '/';
 
-		if (d.dirInfo.ioDrDirID == 2)
-			break;	/* home directory */
+		if (d.dirInfo.ioDrDirID == 2) {
+			break;        /* home directory */
+		}
 	}
+
 	/* strcpy(buf, p) won't do because the destination overlaps the source */
 	memmove((UnivPtr)buf, (UnivPtr)p, buf + size - p);	/* left justify */
 	return buf;
 }
 
 char *
-gethome (void)		/* this will be startup directory */
+gethome(void)		/* this will be startup directory */
 {
 	static char *ret = NULL;
 	char	space[FILESIZE];
 
-	if (ret == NULL)
+	if (ret == NULL) {
 		ret = copystr(getcwd(space, sizeof(space)));
+	}
+
 	return ret;
 }
 
@@ -973,32 +1068,34 @@ private EventRecord theEvent;
 
 
 private void
-	do_list proto((void)),
+do_list proto((void)),
 	do_events proto((void));
 
 private WindowPtr
-	makedisplay proto((void));
+makedisplay proto((void));
 
 private ListHandle
-	makelist proto((void));
+makelist proto((void));
 
-private void 
-about_j (void)
+private void
+about_j(void)
 {
 	WindowPtr OldWindow;
-
 	GetPort(&OldWindow);
 
-	if ((theWindow = makedisplay()) == 0)
+	if ((theWindow = makedisplay()) == 0) {
 		return;
+	}
 
 	SetPort(theWindow);
+
 	if (theList = makelist()) {
 		LActivate(1, theList);
 		do_list();
 		ShowWindow(theWindow);
 		do_events();
 	}
+
 	SetPort(OldWindow);
 	LDispose(theList);
 	DisposDialog(theWindow);
@@ -1009,7 +1106,6 @@ private WindowPtr
 makedisplay()
 {
 	static short dlogid = 0;
-
 	DialogPtr theDialog;
 	Handle theHandle;
 	Handle theResource;
@@ -1021,49 +1117,43 @@ makedisplay()
 	Str255 nostring;
 
 	if (dlogid == 0) {
-		if ((theResource = GetNamedResource('DLOG', DLOGNAME)) == NULL)
+		if ((theResource = GetNamedResource('DLOG', DLOGNAME)) == NULL) {
 			return (WindowPtr)NULL;
+		}
 
 		itemType = 'DLOG';
 		GetResInfo(theResource, &dlogid, &resType, buf);
 	}
 
-	theDialog = GetNewDialog(dlogid, 0L, (WindowPtr) -1);
+	theDialog = GetNewDialog(dlogid, 0L, (WindowPtr) - 1);
 	nostring[0] = 0;	/* set length of Pascal String to 0 */
 	ParamText(
 		"\pMacJove - Copyright (C) 1986-1999 J. Payne, K. Gegenfurtner,",
 		"\pK. Mitchum. Portions (C) THINK Technologies, Inc.",
 		nostring, nostring);
-
 	dh = qd.screenBits.bounds.left + (qd.screenBits.bounds.right - DWIDTH) / 2;
 	dv = qd.screenBits.bounds.top  + (qd.screenBits.bounds.bottom - DHEIGHT) / 2;
 	MoveWindow((WindowPtr)theDialog, dh, dv, 0);
 	ShowWindow((WindowPtr)theDialog);
-
-
 	GetDItem(theDialog, LIST_ITEM, &itemType, &theHandle, &theRect);
 	theListRect = theRect;
 	theListRect.right -= 15;
 	((WindowPtr)theDialog)->txFont = FONT;
 	((WindowPtr)theDialog)->txSize = TEXTSIZE;
-
 	return (WindowPtr) theDialog;
 }
 
-private void 
-do_display (void)		/* draw necessary controls, lines */
+private void
+do_display(void)		/* draw necessary controls, lines */
 {
 	Rect rViewF;		/* framing rect for list */
 	int offset;
-
 	rViewF = theListRect;
-
 	rViewF.left--;
 	rViewF.top--;
 	rViewF.right++;
 	rViewF.bottom++;
 	FrameRect(&rViewF);
-
 	DrawControls(theWindow);
 }
 
@@ -1072,14 +1162,13 @@ makelist()
 {
 	Point csize;
 	Rect dataBounds, rView;	/* list boundaries */
-
 	csize.h = csize.v = 0;
 	SetRect(&dataBounds, 0, 0, 1, 0);
 	return LNew(&theListRect, &dataBounds, csize, 0, theWindow, 0, 0, 0, 1);
 }
 
-private void 
-printbind (const struct cmd *f, char *buf)
+private void
+printbind(const struct cmd *f, char *buf)
 {
 	char c;
 
@@ -1087,7 +1176,8 @@ printbind (const struct cmd *f, char *buf)
 		strcpy(buf, "        ");
 		return;
 	}
-	switch(f->c_map) {
+
+	switch (f->c_map) {
 	case F_MAINMAP:
 		strcpy(buf, "     ");
 		break;
@@ -1100,33 +1190,35 @@ printbind (const struct cmd *f, char *buf)
 		strcpy(buf, "  ^X ");
 		break;
 	}
+
 	if (c < ' ') {
 		buf[5] = '^';		/* control char */
 		c |= 0x40;
 	} else {
 		buf[5] = ' ';
 	}
-	if ('a' <= c && c <= 'z')
+
+	if ('a' <= c && c <= 'z') {
 		c &= 0x5f;
+	}
+
 	buf[6] = c;
 	buf[7] = ' ';
 	buf[8] = '\0';
 }
 
-private void 
-do_list (void)
+private void
+do_list(void)
 {
 	int row, col;
 	const struct cmd *f;
 	char buf[255];
 	Point theCell;
-
 	theCell.h = 0;
 
 	for (f = commands, row = 0; f->Name; f++, row++) {
 		LAddRow(1, row, theList);
 		theCell.v = row;
-
 		printbind(f, buf);
 		strcat(buf, f->Name);
 		LSetCell(buf, strlen(buf), theCell, theList);
@@ -1142,14 +1234,17 @@ EventRecord *event;
 short *itemHit;
 {
 	theEvent = *event;
+
 	if (theEvent.what == keyDown && theEvent.message & charCodeMask == '\r') {
 		*itemHit = 1;
 		return YES;
 	}
+
 	if (theEvent.what == activateEvt && (WindowPtr) theEvent.message == theWindow) {
 		LDoDraw(1, theList);
 		LActivate(1, theList);
 	}
+
 	if (theEvent.what == updateEvt && (WindowPtr) theEvent.message == theWindow) {
 		BeginUpdate(theWindow);
 		do_display();
@@ -1162,8 +1257,8 @@ short *itemHit;
 }
 
 
-void 
-do_events (void)
+void
+do_events(void)
 {
 	short item;
 	bool done = NO;
@@ -1171,10 +1266,12 @@ do_events (void)
 
 	while (!done) {
 		ModalDialog(ProcFilter, &item);
-		switch(item) {
+
+		switch (item) {
 		case DONE_ITEM:
 			done = YES;
-			/* ??? fall through? -- DHR */
+
+		/* ??? fall through? -- DHR */
 		case LIST_ITEM:
 			p = theEvent.where;
 			GlobalToLocal(&p);
@@ -1199,61 +1296,68 @@ private Point p;
 private bool wc_adjust proto((int, int, struct wind_config *, int));
 
 private void
-	MakeScrollBar proto((Window *w)),
-	AdjustScrollBar proto((Window *w)),
-	drawfluff proto((void));
+MakeScrollBar proto((Window *w)),
+	      AdjustScrollBar proto((Window *w)),
+	      drawfluff proto((void));
 
-void 
-docontrols (void)	/* called from redisplay routines */
+void
+docontrols(void)	/* called from redisplay routines */
 {
 	Window *w;
 	int top;
-
 	w = fwind;
 	top = 0;
+
 	do {
-		if (w->w_control != NULL)
+		if (w->w_control != NULL) {
 			HideControl(w->w_control);
+		}
+
 		w = w->w_next;
 	} while (w != fwind);
+
 	w = fwind;
+
 	do {
 		w->w_topline = top;
-		if (w->w_control != NULL)
+
+		if (w->w_control != NULL) {
 			AdjustScrollBar(w);
-		else
+		} else {
 			MakeScrollBar(w);
+		}
+
 		ShowControl(w->w_control);
 		top += w->w_height;
 		w = w->w_next;
 	} while (w != fwind);
+
 	Windchange = NO;
 	drawfluff();
 }
 
 
-private void 
-MakeScrollBar (	/* set up control */
-    Window *w
+private void
+MakeScrollBar(  /* set up control */
+	Window *w
 )
 {
 	Rect BarRect;
 	int wheight, wtop;
 	WindowPtr window = theScreen;
-
 	wheight = w->w_height;
 	wtop = w->w_topline;
 	SetRect(&BarRect, window->portRect.right - SCROLLWIDTH + 1,
-		window->portRect.top -2 + wtop * HEIGHT,
-		window->portRect.right +1,
+		window->portRect.top - 2 + wtop * HEIGHT,
+		window->portRect.right + 1,
 		window->portRect.top + ((wheight + wtop) * HEIGHT + 1));
 	w->w_control = NewControl(window, &BarRect, "\psbar", 1, INITC,
-		MINC, MAXC, scrollBarProc, (long)w);
+			MINC, MAXC, scrollBarProc, (long)w);
 }
 
-private void 
-AdjustScrollBar (	/* redo existing control */
-    Window *w
+private void
+AdjustScrollBar(  /* redo existing control */
+	Window *w
 )
 {
 	ControlHandle handle = w->w_control;;
@@ -1262,9 +1366,7 @@ AdjustScrollBar (	/* redo existing control */
 		int	wtop = w->w_topline;
 		int	wheight = w->w_height;
 		WindowPtr	window = (*handle)->contrlOwner;
-
 		SizeControl(handle, SCROLLWIDTH, wheight * HEIGHT + 1);
-
 		MoveControl(handle, window->portRect.right - SCROLLWIDTH + 1,
 			window->portRect.top - 1 + wtop * HEIGHT);
 	}
@@ -1272,28 +1374,29 @@ AdjustScrollBar (	/* redo existing control */
 
 private int ltoc proto((void));	/* calculate ctlvalue for line position */
 
-void 
-SetScrollBar (	/* set value of the bar */
-    Window *w
+void
+SetScrollBar(  /* set value of the bar */
+	Window *w
 )
 {
 	SetCtlValue(w->w_control, ltoc());
 }
 
-private void 
-drawfluff (void)		/* draw controls and dividers */
+private void
+drawfluff(void)		/* draw controls and dividers */
 {
 	Window *w = fwind;
-
 	DrawControls(theScreen);
 	DrawGrowIcon(theScreen);
 }
 
-void 
-RemoveScrollBar (Window *w)
+void
+RemoveScrollBar(Window *w)
 {
-	if (w->w_control != NULL)
+	if (w->w_control != NULL) {
 		DisposeControl(w->w_control);
+	}
+
 	w->w_control = NULL;
 }
 
@@ -1319,7 +1422,8 @@ private pascal void
 NPage(control, part)
 ControlHandle control;
 int part;
-{	NextPage();
+{
+	NextPage();
 	redisplay();
 }
 
@@ -1327,27 +1431,27 @@ private pascal void
 PPage(control, part)
 ControlHandle control;
 int part;
-{	PrevPage();
+{
+	PrevPage();
 	redisplay();
 }
 
 private long npos;	/* number of lines in buffer */
 
-private int 
-ltoc (void)	/* calculate ctlvalue for line position */
+private int
+ltoc(void)	/* calculate ctlvalue for line position */
 {
 	long ipos = LinesTo(curbuf->b_first, curline) + 1;
-
 	npos = ipos + LinesTo(curline, (LinePtr)NULL) - 1;
-	return (int) ((ipos * MAXC) / npos);
+	return (int)((ipos * MAXC) / npos);
 }
 
-private LinePtr 
-ctol (	/* find buffer line for ctlvalue */
-    int ctlv
+private LinePtr
+ctol(  /* find buffer line for ctlvalue */
+	int ctlv
 )
 {
-	return next_line(curbuf->b_first, (long) ((npos * ctlv)/MAXC));
+	return next_line(curbuf->b_first, (long)((npos * ctlv) / MAXC));
 }
 
 private void
@@ -1361,53 +1465,64 @@ WindowPtr window;
 	if (event->what == mouseDown) {
 		ControlHandle whichControl;
 		Window
-			*jwind,
-			*cwind;
+		*jwind,
+		*cwind;
 		bool	notcurwind = NO;
 		int	cpart;	/* control part */
 
-		if ((cpart = FindControl(p, window, &whichControl)) == 0)
+		if ((cpart = FindControl(p, window, &whichControl)) == 0) {
 			return;
+		}
 
-		if ((jwind = (Window *) (*whichControl)->contrlRfCon) != curwind) {
+		if ((jwind = (Window *)(*whichControl)->contrlRfCon) != curwind) {
 			notcurwind = YES;
 			cwind = curwind;
 			SetWind(jwind);
 		}
+
 		switch (cpart) {
 		case inUpButton:
 			TrackControl(whichControl, p, (ProcPtr) DScroll);
 			break;
+
 		case inDownButton:
 			TrackControl(whichControl, p, (ProcPtr) UScroll);
 			break;
+
 		case inPageUp:
 			TrackControl(whichControl, p, (ProcPtr) PPage);
 			break;
+
 		case inPageDown:
 			TrackControl(whichControl, p, (ProcPtr) NPage);
 			break;
+
 		case inThumb:
 			if (TrackControl(whichControl, p, (ProcPtr)NULL)) {
 				int	newval = GetCtlValue(whichControl);
 
-				if (newval == MAXC)
+				if (newval == MAXC) {
 					Eof();
-				else if (newval == MINC)
+				} else if (newval == MINC) {
 					Bof();
-				else
+				} else {
 					SetLine(ctol(newval));
+				}
 			}
+
 			break;
 		}
+
 		if (notcurwind) {
 			SetWind(cwind);
 			redisplay();
 		}
+
 		redisplay();	/* again, to set the cursor */
 	} else {
-		if (findtext())
+		if (findtext()) {
 			redisplay();
+		}
 	}
 }
 
@@ -1420,8 +1535,8 @@ EventRecord *event;
 WindowPtr window;
 {
 	Rect old_std = std_state(window);
-
 	DragWindow(window, event->where, &LimitRect);
+
 	if (wc == &wc_std) {
 		wc_user = wc_std;
 		user_state(theScreen) = std_state(theScreen);
@@ -1447,6 +1562,7 @@ WindowPtr window;
 			wc = &wc_user;
 			Reset_std();
 		}
+
 		if (wc_adjust(LoWord(size), HiWord(size), wc, 0)) {
 			EraseRect(&window->portRect);
 			SizeWindow(window, wc->w_width, wc->w_height, YES);
@@ -1461,11 +1577,11 @@ EventRecord *event;
 WindowPtr window;
 {
 	if (TrackBox(window, event->where, 7)) {
-			EraseRect(&window->portRect);
-			ZoomWindow(window, 7, 1);
-			wc = &wc_user;
-			win_reshape(0);	/* we do our own toggle, not ZoomWindow() */
-		}
+		EraseRect(&window->portRect);
+		ZoomWindow(window, 7, 1);
+		wc = &wc_user;
+		win_reshape(0);	/* we do our own toggle, not ZoomWindow() */
+	}
 }
 
 private void
@@ -1474,11 +1590,11 @@ EventRecord *event;
 WindowPtr window;
 {
 	if (TrackBox(window, event->where, 8)) {
-			EraseRect(&window->portRect);
-			ZoomWindow(window, 8, 1);
-			wc = &wc_std;
-			win_reshape(0);	/* we do our own toggle, not ZoomWindow() */
-		}
+		EraseRect(&window->portRect);
+		ZoomWindow(window, 8, 1);
+		wc = &wc_std;
+		win_reshape(0);	/* we do our own toggle, not ZoomWindow() */
+	}
 }
 
 private void
@@ -1486,43 +1602,48 @@ doGoAway(event, window)
 EventRecord *event;
 WindowPtr window;
 {
-	if (TrackGoAway(window, event->where))
+	if (TrackGoAway(window, event->where)) {
 		Leave();
+	}
 }
 
 private Window *
-rtowind (	/* return jove window row is in */
-    int row
+rtowind(  /* return jove window row is in */
+	int row
 )
 {
 	Window *w = fwind;
 
 	do {
-		if ((w->w_topline <= row) && ((w->w_height + w->w_topline) > row))
+		if ((w->w_topline <= row) && ((w->w_height + w->w_topline) > row)) {
 			return w;
+		}
 
 		w = w->w_next;
 	} while (w != fwind);
+
 	return NULL;
 }
 
-private LinePtr 
-windtol (		/* return line for row in window */
-    Window *w,
-    int row
+private LinePtr
+windtol(   /* return line for row in window */
+	Window *w,
+	int row
 )
 {
 	LinePtr l = w->w_top;
 
-	while (row-- && l != NULL)
+	while (row-- && l != NULL) {
 		l = l->l_next;
+	}
+
 	return l;
 }
 
 private int	ptoxy proto((Point, int *, int *));	/* convert Point to terminal x, y coordinate */
 
-private bool 
-findtext (void)		/* locate and move the point to match the mouse */
+private bool
+findtext(void)		/* locate and move the point to match the mouse */
 {
 	int row, col;
 	int offset;
@@ -1530,38 +1651,50 @@ findtext (void)		/* locate and move the point to match the mouse */
 	EventRecord event;
 	Window *w;
 	LinePtr l;
-
 	ticks = Ticks;
 	ptoxy(p, &row, &col);
-	if ((w = rtowind(row)) == NULL)
-		return NO;
 
-	if (w != curwind)
+	if ((w = rtowind(row)) == NULL) {
+		return NO;
+	}
+
+	if (w != curwind) {
 		SetWind(w);
+	}
+
 	offset = PhysScreen[row].s_offset;	/* account for horizontal scrolling and */
 	offset += SIWIDTH(offset) + W_NUMWIDTH(w);	/* line number */
 	row -= w->w_topline;		/* now have row number in window */
-	if (row >= w->w_height -1)
-		return NO;
 
-	if ((l = windtol(w, row)) == NULL)
+	if (row >= w->w_height - 1) {
 		return NO;
+	}
 
-	if (l->l_dline == NULL_DADDR)
+	if ((l = windtol(w, row)) == NULL) {
 		return NO;
+	}
+
+	if (l->l_dline == NULL_DADDR) {
+		return NO;
+	}
 
 	this_cmd = LINECMD;
 	SetLine(l);		/* Curline is in linebuf now */
 	col -= offset;
-	if (col < 0)
+
+	if (col < 0) {
 		col = 0;
+	}
+
 	curchar = how_far(curline, col);
+
 	do {
 		if (GetNextEvent(mUpMask, &event) && (event.when < ticks + DoubleTime)) {
 			set_mark();
 			break;
 		}
 	} while ((Ticks - ticks) < DoubleTime);
+
 	return YES;
 }
 
@@ -1572,9 +1705,11 @@ Point p;
 int *row, *col;
 {
 	*row = (p.v / HEIGHT);
-	*col = (p.h / WIDTH );
-	if ((*row > MAXROW) || (*col > MAXCOL))
+	*col = (p.h / WIDTH);
+
+	if ((*row > MAXROW) || (*col > MAXCOL)) {
 		return JMP_ERROR;
+	}
 
 	return 0;
 }
@@ -1596,7 +1731,7 @@ int *row, *col;
 #define NEVENTS 16
 
 private void
-	doMouse proto((EventRecord *event)),
+doMouse proto((EventRecord *event)),
 	dokeyDown proto((EventRecord *event)),
 	doUpdate proto((EventRecord *event)),
 	doActivate proto((EventRecord *event));
@@ -1605,8 +1740,7 @@ private void p_refresh proto((void));
 
 private MenuHandle SysMenu;
 
-private void (*eventlist[]) ptrproto((EventRecord *event)) =
-{
+private void (*eventlist[]) ptrproto((EventRecord *event)) = {
 	NOFUNC,	/* nullEvent */
 	doMouse,	/* mouseDown */
 	doMouse,	/* mouseUp */
@@ -1627,41 +1761,49 @@ private void (*eventlist[]) ptrproto((EventRecord *event)) =
 
 
 private void
-	SetBufMenu proto((void)),
-	MarkModes proto((void));
+SetBufMenu proto((void)),
+	   MarkModes proto((void));
 
-private void 
-CheckEvents (void)
+private void
+CheckEvents(void)
 {
 	EventRecord theEvent;
 	static long time = 0;
-
-	static void (*fptr) ptrproto((EventRecord *event));
+	static void (*fptr) ptrproto((EventRecord * event));
 
 	if (FrontWindow() == window) {
 		Point Mousep;
-
 		GetMouse(&Mousep);
-		if (PtInRect(Mousep, &r))
+
+		if (PtInRect(Mousep, &r)) {
 			SetCursor(*cross);
-		else
+		} else {
 			SetCursor(&qd.arrow);
+		}
 	}
 
 	SystemTask();
-	if (EventCmd && !Keyonly)
-		return;
 
-	if (Bufchange)
+	if (EventCmd && !Keyonly) {
+		return;
+	}
+
+	if (Bufchange) {
 		SetBufMenu();
-	if (Modechange)
+	}
+
+	if (Modechange) {
 		MarkModes();
+	}
+
 	while (GetNextEvent(everyEvent, &theEvent)) {
 		if ((theEvent.what < NEVENTS) && (fptr = eventlist[theEvent.what])) {
 			(*fptr)(&theEvent);
 		}
+
 		SystemTask();
 	}
+
 	if (TimeDisplayed && (Ticks - time) > 3600) {
 		time = Ticks;
 		UpdModLine = YES;
@@ -1671,8 +1813,8 @@ CheckEvents (void)
 
 private void InitLocalMenus proto((void));
 
-private void 
-InitSysMenu (void)
+private void
+InitSysMenu(void)
 {
 	SysMenu = NewMenu(SYS_ID, "\p\24");
 	AppendMenu(SysMenu, "\pAbout Jove");
@@ -1683,20 +1825,19 @@ InitSysMenu (void)
 }
 
 private void
-	doWind proto((EventRecord *event, WindowPtr window)),
-	doGoAway proto((EventRecord *event, WindowPtr window)),
-	doSysMenu proto((EventRecord *event, WindowPtr window)),
-	doSysClick proto((EventRecord *event, WindowPtr window)),
-	doDrag proto((EventRecord *event, WindowPtr window)),
-	doGrow proto((EventRecord *event, WindowPtr window)),
-	doZoomIn proto((EventRecord *event, WindowPtr window)),
-	doZoomOut proto((EventRecord *event, WindowPtr window));
+doWind proto((EventRecord *event, WindowPtr window)),
+       doGoAway proto((EventRecord *event, WindowPtr window)),
+       doSysMenu proto((EventRecord *event, WindowPtr window)),
+       doSysClick proto((EventRecord *event, WindowPtr window)),
+       doDrag proto((EventRecord *event, WindowPtr window)),
+       doGrow proto((EventRecord *event, WindowPtr window)),
+       doZoomIn proto((EventRecord *event, WindowPtr window)),
+       doZoomOut proto((EventRecord *event, WindowPtr window));
 
 #define NMEVENTS 9
 
-private void (*mouselist[]) ptrproto((EventRecord *event, WindowPtr window)) =
-{
-	(void (*) ptrproto((EventRecord *event, WindowPtr window)))NULL,	/* inDesk */
+private void (*mouselist[]) ptrproto((EventRecord *event, WindowPtr window)) = {
+	(void (*) ptrproto((EventRecord * event, WindowPtr window)))NULL,	/* inDesk */
 	doSysMenu,	/* inMenuBar */
 	doSysClick,	/* inSysWindow */
 	doWind,	/* inContent */
@@ -1713,15 +1854,17 @@ doMouse(event)
 EventRecord *event;
 {
 	if (Keyonly) {
-		if (event->what == mouseDown)
+		if (event->what == mouseDown) {
 			SysBeep(2);
+		}
 	} else {
 		WindowPtr theWindow;
 		int wpart = FindWindow(event->where, &theWindow);
-		void (*fptr) ptrproto((EventRecord *event, WindowPtr window));
+		void (*fptr) ptrproto((EventRecord * event, WindowPtr window));
 
-		if (wpart < NMEVENTS && (fptr = mouselist[wpart]) != NULL)
+		if (wpart < NMEVENTS && (fptr = mouselist[wpart]) != NULL) {
 			(*fptr)(event, theWindow);
+		}
 	}
 }
 
@@ -1736,8 +1879,9 @@ WindowPtr window;
 	int	Menu = (result >> 16) & 0xffff;
 	int	Item = result & 0xffff;
 
-	if (Item == 0)
-		return;	/* no choice made */
+	if (Item == 0) {
+		return;        /* no choice made */
+	}
 
 	if (Menu == SYS_ID) {			/* apple menu */
 		Str255 Name;
@@ -1754,6 +1898,7 @@ WindowPtr window;
 	} else {
 		ProcMenu(Menu, Item);
 	}
+
 	HiliteMenu(0);
 	EventCmd = YES;
 	menus_on();
@@ -1773,9 +1918,8 @@ doUpdate(event)
 EventRecord *event;
 {
 	WindowPtr
-		theWindow = (WindowPtr) event->message,
-		oldPort;
-
+	theWindow = (WindowPtr) event->message,
+	oldPort;
 	GetPort(&oldPort);
 	SetPort(theWindow);
 	BeginUpdate(theWindow);
@@ -1792,13 +1936,12 @@ EventRecord *event;
 	WindowPtr theWindow = (WindowPtr) event->message;
 	ControlHandle control;
 	int hilite;
-
 	SetPort(theWindow);
-	hilite = (event->modifiers & activeFlag)? 0 : 255;
-	for (control = (ControlHandle) (((WindowPeek) theWindow)->controlList)
-	; (control != 0); control = (*control)->nextControl)
-	{
-			HiliteControl(control, hilite);
+	hilite = (event->modifiers & activeFlag) ? 0 : 255;
+
+	for (control = (ControlHandle)(((WindowPeek) theWindow)->controlList)
+			; (control != 0); control = (*control)->nextControl) {
+		HiliteControl(control, hilite);
 	}
 }
 
@@ -1820,31 +1963,31 @@ EventRecord *event;
 #define NOKEY '?'
 
 private char nsh_keycodes[] = {
-	'a','s','d','f','h',					/* 00 - 04 */
-	'g','z','x','c','v',					/* 05 - 09 */
-	NOKEY,'b','q','w','e',					/* 0A - 0E */
-	'r','y','t','1','2',					/* 0F - 13 */
-	'3','4','6','5','=',					/* 14 - 18 */
-	'9','7','-','8','0',					/* 19 - 1D */
-	']','O','u','[','i',					/* 1E - 22 */
-	'p',CR,'l','j','\'',					/* 23 - 27 */
-	'k',';','\\',',','/',					/* 28 - 2C */
-	'n','m','.','\t',NOKEY,					/* 2D - 31 */
-	'`',DEL									/* 32 - 33*/
+	'a', 's', 'd', 'f', 'h',					/* 00 - 04 */
+	'g', 'z', 'x', 'c', 'v',					/* 05 - 09 */
+	NOKEY, 'b', 'q', 'w', 'e',					/* 0A - 0E */
+	'r', 'y', 't', '1', '2',					/* 0F - 13 */
+	'3', '4', '6', '5', '=',					/* 14 - 18 */
+	'9', '7', '-', '8', '0',					/* 19 - 1D */
+	']', 'O', 'u', '[', 'i',					/* 1E - 22 */
+	'p', CR, 'l', 'j', '\'',					/* 23 - 27 */
+	'k', ';', '\\', ',', '/',					/* 28 - 2C */
+	'n', 'm', '.', '\t', NOKEY,					/* 2D - 31 */
+	'`', DEL									/* 32 - 33*/
 };
 
 private char sh_keycodes[] = {
-	'A','S','D','F','H',					/* 00 - 04 */
-	'G','Z','X','C','V',					/* 05 - 09 */
-	NOKEY,'B','Q','W','E',					/* 0A - 0E */
-	'R','Y','T','!','@',					/* 0F - 13 */
-	'#','$','^','%','+',					/* 14 - 18 */
-	'(','&','_','*',')',					/* 19 - 1D */
-	'}','O','U','{','I',					/* 1E - 22 */
-	'P',CR,'L','J','\'',					/* 23 - 27 */
-	'K',';','|','<','?',					/* 28 - 2C */
-	'N','M','>','\t',NOKEY,					/* 2D - 31 */
-	'~',DEL									/* 32 - 33 */
+	'A', 'S', 'D', 'F', 'H',					/* 00 - 04 */
+	'G', 'Z', 'X', 'C', 'V',					/* 05 - 09 */
+	NOKEY, 'B', 'Q', 'W', 'E',					/* 0A - 0E */
+	'R', 'Y', 'T', '!', '@',					/* 0F - 13 */
+	'#', '$', '^', '%', '+',					/* 14 - 18 */
+	'(', '&', '_', '*', ')',					/* 19 - 1D */
+	'}', 'O', 'U', '{', 'I',					/* 1E - 22 */
+	'P', CR, 'L', 'J', '\'',					/* 23 - 27 */
+	'K', ';', '|', '<', '?',					/* 28 - 2C */
+	'N', 'M', '>', '\t', NOKEY,					/* 2D - 31 */
+	'~', DEL									/* 32 - 33 */
 };
 
 /* (ORIGINALLY IN) tkey.c
@@ -1871,11 +2014,11 @@ EventRecord *event;
 	int c;
 	static int cptr = 0;
 
-	if (MCHARS - nchars < 2)
+	if (MCHARS - nchars < 2) {
 		return;
+	}
 
 	c  = event->message & charCodeMask;
-
 	mods = event->modifiers;
 
 	if (MetaKey && (mods & optionKey)) {
@@ -1889,8 +2032,9 @@ EventRecord *event;
 		 */
 		int	code = (event->message & keyCodeMask) >> 8;
 
-		if (c > DEL && code < elemsof(sh_keycodes))
-			c  = ((mods & shiftKey)? sh_keycodes : nsh_keycodes)[code];
+		if (c > DEL && code < elemsof(sh_keycodes)) {
+			c  = ((mods & shiftKey) ? sh_keycodes : nsh_keycodes)[code];
+		}
 
 		/* jam an ESC prefix */
 		charbuf[cptr++] = ESC;
@@ -1900,10 +2044,13 @@ EventRecord *event;
 
 	if (mods & (cmdKey | controlKey)) {
 		/* control key (command key is treated as a control key too) */
-		if (c == '@' || c == '2' || c == ' ')
-			c = '\0';	/* so we have a null char */
-		if (c != '`')
-			c = CTL(c);		/* make a control char */
+		if (c == '@' || c == '2' || c == ' ') {
+			c = '\0';        /* so we have a null char */
+		}
+
+		if (c != '`') {
+			c = CTL(c);        /* make a control char */
+		}
 	} else if (c == '`') {
 		c = ESC;	/* for those used to escapes */
 	}
@@ -1913,8 +2060,8 @@ EventRecord *event;
 	nchars++;
 }
 
-private ZXchar 
-rawgetc (void)
+private ZXchar
+rawgetc(void)
 {
 	static int cptr = 0;
 	ZXchar c;
@@ -1924,9 +2071,9 @@ rawgetc (void)
 		/* NOTREACHED */
 	}
 
-
 	while (nchars <= 0) {
 		nchars = 0;
+
 		if (EventCmd) {
 			longjmp(auxjmp, 1);
 			/* NOTREACHED */
@@ -1934,22 +2081,25 @@ rawgetc (void)
 
 		CheckEvents();	/* ugh! WAIT for a character */
 	}
+
 	nchars--;
 	c = ZXRC(charbuf[cptr++]);
 	cptr &= NCHMASK;		/* zero if necessary */
 	return c;
 }
 
-bool 
-rawchkc (void)
+bool
+rawchkc(void)
 {
 	if (EventCmd) {
 		longjmp(auxjmp, 1);
 		/* NOTREACHED */
 	}
 
-	if (nchars == 0)
-		CheckEvents();	/* this should NOT be necessary! */
+	if (nchars == 0) {
+		CheckEvents();        /* this should NOT be necessary! */
+	}
+
 	return nchars > 0;
 }
 
@@ -1977,8 +2127,9 @@ ParmBlkPtr p;
 	Boolean r;
 	char	*name;
 
-	if (p->fileParam.ioFlFndrInfo.fdType == 'APPL')
+	if (p->fileParam.ioFlFndrInfo.fdType == 'APPL') {
 		return YES;
+	}
 
 	/* Filter out our tempfiles.
 	 * ??? the test doesn't check to see if the directories match.
@@ -1996,12 +2147,11 @@ ParmBlkPtr p;
 	return r;
 }
 
-private void 
-check_dir (void)
+private void
+check_dir(void)
 {
 	if (cur_vol != 0 - SFSaveDisk || cur_dir != CurDirStore) {
 		char	space[FILESIZE];
-
 		setdir(0 - SFSaveDisk, CurDirStore);
 		UpdModLine = YES;	/* make sure jove knows the change */
 		Modechange = YES;
@@ -2010,64 +2160,77 @@ check_dir (void)
 }
 
 char *
-gfile (	/* return a filename to get */
-    char *namebuf
+gfile(  /* return a filename to get */
+	char *namebuf
 )
 {
 	SFReply frec;
 	char ans[FILESIZE];
-
 	SFSaveDisk = 0 - cur_vol;	/* in case a Desk Accessory changed them */
 	CurDirStore = cur_dir;
 	SFGetFile(px, 0L, Ffilter, TYPES, 0L, 0L, &frec);
 	check_dir();	/* see if any change, set if so */
+
 	if (frec.good) {
 		EventRecord theEvent;
 
-		do; while (GetNextEvent(updateMask, &theEvent) == 0);
+		do;
+
+		while (GetNextEvent(updateMask, &theEvent) == 0);
+
 		doUpdate(&theEvent);
 		strcpy(ans, PtoCstr(frec.fName));
 		CtoPstr((char *)frec.fName);
 		PathParse(ans, namebuf);
 		return namebuf;
 	}
+
 	return NULL;
 }
 
 char *
-pfile (char *namebuf)
+pfile(char *namebuf)
 {
 	SFReply frec;
 	StringPtr nm;
-
 	SFSaveDisk = 0 - cur_vol;	/* in case a Desk Accessory changed them */
 	CurDirStore = cur_dir;
-	strncpy(namebuf, filename(curbuf), FILESIZE-1);
+	strncpy(namebuf, filename(curbuf), FILESIZE - 1);
 	nm = cvt_fnm(namebuf);
 	SFPutFile(px, pmess, nm, 0L, &frec);
 	check_dir();	/* see if any change, set if so */
+
 	if (frec.good) {
 		EventRecord theEvent;
 		char *h, *p;
 
-		do; while (GetNextEvent(updateMask, &theEvent) == 0);
+		do;
+
+		while (GetNextEvent(updateMask, &theEvent) == 0);
+
 		doUpdate(&theEvent);
 		h = PtoCstr(frec.fName);
-		while (*h == ':')
-			h++;	/* convert to unix style */
-		for (p = h; (p = strchr(p, ':')) != NULL; )
+
+		while (*h == ':') {
+			h++;        /* convert to unix style */
+		}
+
+		for (p = h; (p = strchr(p, ':')) != NULL;) {
 			*p++ = '/';
+		}
+
 		PathParse(h, namebuf);
 		return namebuf;
 	}
+
 	return NULL;
 }
 
 
 /* getArgs() returns an argument list based on documents clicked on by the user. */
 
-int 
-getArgs (char ***avp)
+int
+getArgs(char ***avp)
 {
 	int argc, old_vol;
 	short nargs, type;
@@ -2076,18 +2239,18 @@ getArgs (char ***avp)
 	char *pathname;
 	AppFile p;
 	WDPBRec d;
-
 	old_vol = cur_vol;
 	old_dir = cur_dir;
-
 	CountAppFiles(&type, &nargs);
+
 	if (nargs > 0) {	/* files to open... */
 		argv = (char **) emalloc((nargs + 2) * sizeof(char *));
+
 		for (argc = 1; argc <= nargs; argc++) {
 			GetAppFiles(argc, &p);
+
 			if (type == 0) {
 				char	space[FILESIZE];
-
 				PtoCstr((StringPtr)p.fName);
 				d.ioCompletion = 0;
 				d.ioNamePtr = NULL;
@@ -2102,16 +2265,19 @@ getArgs (char ***avp)
 				strcat(argv[argc], "/");
 				strcat(argv[argc], (char *)p.fName);
 			}
+
 			ClrAppFiles(argc);
 		}
-		if (type != 0)
+
+		if (type != 0) {
 			argc = 1;
+		}
 	} else {
-		argv = (char **) emalloc(2 * sizeof(char*));
+		argv = (char **) emalloc(2 * sizeof(char *));
 		argc = 1;
 	}
-	argv[0] = "jove";
 
+	argv[0] = "jove";
 	argv[argc] = NULL;
 	*avp = argv;
 	cur_dir = old_dir;
@@ -2127,64 +2293,74 @@ getArgs (char ***avp)
  */
 
 private void
-	InitMenu proto((struct menu *M)),
-	make_edits proto((int menu));
+InitMenu proto((struct menu *M)),
+	 make_edits proto((int menu));
 
-private void 
-InitLocalMenus (void)
+private void
+InitLocalMenus(void)
 {
 	int i;
 
 	for (i = 0; i < NMENUS; i++) {
 		InitMenu(&Menus[i]);
-		if (i == 0)
+
+		if (i == 0) {
 			make_edits(Menus[i].menu_id + 1);
+		}
 	}
 }
 
-private void 
-InitMenu (struct menu *M)
+private void
+InitMenu(struct menu *M)
 {
 	int i;
 	StringPtr ps;
 
-	if (M->menu_id == 0)
+	if (M->menu_id == 0) {
 		return;
+	}
 
-	M->Mn = NewMenu(M->menu_id, ps=CtoPstr(M->Name));
+	M->Mn = NewMenu(M->menu_id, ps = CtoPstr(M->Name));
 	PtoCstr(ps);
 
 	for (i = 0; i < NMENUITEMS; i++) {
 		data_obj *d = M->m[i];
 
-		if (d == NULL)
-			break;	/* last item... */
+		if (d == NULL) {
+			break;        /* last item... */
+		}
 
 		switch (d->Type & TYPEMASK) {
 		case STRING:
-			AppendMenu(M->Mn, ps=CtoPstr(d->Name));
+			AppendMenu(M->Mn, ps = CtoPstr(d->Name));
 			PtoCstr(ps);
 			break;
+
 		case VARIABLE:
-			AppendMenu(M->Mn, ps=CtoPstr(d->Name));
+			AppendMenu(M->Mn, ps = CtoPstr(d->Name));
 			PtoCstr(ps);
+
 			if ((((struct variable *)d)->v_flags & V_TYPEMASK) == V_BOOL
-			&& *(bool *)(((struct variable *)d)->v_value))
+				&& *(bool *)(((struct variable *)d)->v_value)) {
 				CheckItem(M->Mn, i + 1, YES);
+			}
+
 			break;
+
 		case COMMAND:
-			AppendMenu(M->Mn, ps=CtoPstr(d->Name));
+			AppendMenu(M->Mn, ps = CtoPstr(d->Name));
 			PtoCstr(ps);
 			break;
 		}
 	}
+
 	InsertMenu(M->Mn, 0);
 }
 
 private void	MacSetVar proto((struct variable *vp, int mnu, int itm));
 
-private void 
-ProcMenu (int menuno, int itemno)
+private void
+ProcMenu(int menuno, int itemno)
 {
 	int i;
 	data_obj *d;
@@ -2193,34 +2369,37 @@ ProcMenu (int menuno, int itemno)
 		if (Menus[i].menu_id == menuno) {
 			itemno--;
 			d = Menus[i].m[itemno];
-			switch(d->Type & TYPEMASK) {
+
+			switch (d->Type & TYPEMASK) {
 			case COMMAND:
 				ExecCmd((data_obj *) d);
 				break;
+
 			case BUFFER:
 				SetABuf(curbuf);
 				tiewind(curwind, (Buffer *) d);
 				SetBuf((Buffer *) d);
 				break;
+
 			case VARIABLE:
 				MacSetVar((struct variable *) d, i, itemno);
 				break;
 			}
+
 			break;
 		}
 	}
 }
 
 
-private void 
-make_edits (	/* add dummy edit menu */
-    int menu
+private void
+make_edits(  /* add dummy edit menu */
+	int menu
 )
 {
 	MenuHandle M;
 	int item;
 	char *fname;
-
 	M = NewMenu((menu), "\pEdit");
 	AppendMenu(M,
 		"\pUndo/Z;(-;Cut/X;Copy/C;Paste/V;Clear;Select All;(-;Show Clipboard");
@@ -2228,44 +2407,54 @@ make_edits (	/* add dummy edit menu */
 	DisableItem(M, 0);
 }
 
-void 
-menus_off (void)
+void
+menus_off(void)
 {
 	int i;
 
-	if (Keyonly || EventCmd)
+	if (Keyonly || EventCmd) {
 		return;
+	}
 
 #ifdef MENU_DISABLE		/* NOBODY likes this, but it's here if you want it... */
 	DisableItem(SysMenu, 0);
-	for (i = 0; i < NMENUS; i++)
-		if (Menus[i].Mn)
+
+	for (i = 0; i < NMENUS; i++) {
+		if (Menus[i].Mn) {
 			DisableItem(Menus[i].Mn, 0);
+		}
+	}
+
 	DrawMenuBar();
 #endif
 	Keyonly = YES;
 }
 
-void 
-menus_on (void)
+void
+menus_on(void)
 {
 	int i;
 
-	if (!Keyonly)
+	if (!Keyonly) {
 		return;
+	}
 
 #ifdef MENU_DISABLE
 	EnableItem(SysMenu, 0);
-	for (i = 0; i < NMENUS; i++)
-		if (Menus[i].Mn)
+
+	for (i = 0; i < NMENUS; i++) {
+		if (Menus[i].Mn) {
 			EnableItem(Menus[i].Mn, 0);
+		}
+	}
+
 	DrawMenuBar();
 #endif
 	Keyonly = NO;
 }
 
 private char *
-BufMPrint (Buffer *b, int i)
+BufMPrint(Buffer *b, int i)
 {
 	char *p;
 	char *nm = filename(b);
@@ -2277,12 +2466,15 @@ BufMPrint (Buffer *b, int i)
 	} else {
 		strcpy(t, nm);
 	}
+
 	nm = t;
+
 	while (*nm) {
-		switch(*nm) {	/* ugh... these are metacharacter for Menus */
+		switch (*nm) {	/* ugh... these are metacharacter for Menus */
 		case '/':
 			*nm = ':';
 			break;
+
 		case '^':
 		case '!':
 		case '<':
@@ -2291,57 +2483,66 @@ BufMPrint (Buffer *b, int i)
 			*nm = '.';
 			break;	/* that will confuse everybody */
 		}
+
 		nm++;
 	}
+
 	p = sprint("%-2d %-11s \"%-s\"", i, b->b_name, t);
 	return p;
 }
 
-private void 
-SetBufMenu (void)
+private void
+SetBufMenu(void)
 {
 	Buffer *b;
 	int i, j, stop;
 	struct menu *M;
-
 	Bufchange = NO;
+
 	for (i = 0; i < NMENUS; i++) {
 		if (strcmp(Menus[i].Name, "Buffer") == 0) {
 			M = &Menus[i];
+
 			for (j = 0; j < NMENUITEMS; j++) {
 				data_obj *d = Menus[i].m[j];
 
-				if (d == NULL)
+				if (d == NULL) {
 					break;
+				}
 
 				if ((d->Type & TYPEMASK) == BUFFER) {
 					for (i = j, b = world; i < NMENUITEMS && b != NULL; i++, b = b->b_next) {
+						if (M->m[i] == NULL) {
+							AppendMenu(M->Mn, CtoPstr(BufMPrint(b, i - j + 1)));        /* add the item */
+						} else {
+							SetItem(M->Mn, i + 1, CtoPstr(BufMPrint(b, i - j + 1)));        /* or change it */
+						}
 
-						if (M->m[i] == NULL)
-							AppendMenu(M->Mn, CtoPstr(BufMPrint(b, i-j+1)));	/* add the item */
-						else
-							SetItem(M->Mn, i + 1, CtoPstr(BufMPrint(b, i-j+1)));	/* or change it */
 						M->m[i] = (data_obj *) b;
 					}
+
 					stop = i;
+
 					/* out of buffers? */
 					for (; i < NMENUITEMS && M->m[i]; i++) {
 						DelMenuItem(M->Mn, stop + 1);	/* take off last item */
 						M->m[i] = NULL;
 					}
+
 					break;
 				}
 			}
+
 			break;
 		}
 	}
 }
 
-private void 
-MacSetVar (	/* Set a variable from the menu */
-    struct variable *vp,
-    int mnu,
-    int itm
+private void
+MacSetVar(  /* Set a variable from the menu */
+	struct variable *vp,
+	int mnu,
+	int itm
 )
 {
 	if ((vp->v_flags & V_TYPEMASK) == V_BOOL) {
@@ -2350,61 +2551,67 @@ MacSetVar (	/* Set a variable from the menu */
 		MarkVar(vp, mnu, itm);
 	} else {
 		char	prompt[128];
-
 		swritef(prompt, sizeof(prompt), "Set %s: ", vp->Name);
 		vset_aux(vp, prompt);
 	}
 }
 
-private void 
-MarkModes (void)
+private void
+MarkModes(void)
 {
 	int mnu, itm;
 	data_obj *d;
-
 	Modechange = NO;
+
 	for (mnu = 0; mnu < NMENUS; mnu++) {
 		for (itm = 0; itm < NMENUITEMS; itm++) {
-			if ((d = Menus[mnu].m[itm]) == NULL)
+			if ((d = Menus[mnu].m[itm]) == NULL) {
 				break;
+			}
 
 			if ((d->Type & (MAJOR_MODE | MINOR_MODE))
-			|| ((d->Type & TYPEMASK) == BUFFER))
-			{
+				|| ((d->Type & TYPEMASK) == BUFFER)) {
 				bool	checked;
 
-				if (d->Type & (MAJOR_MODE))
+				if (d->Type & (MAJOR_MODE)) {
 					checked = curbuf->b_major == (d->Type >> 8);
-				else if (d->Type & (MINOR_MODE))
+				} else if (d->Type & (MINOR_MODE)) {
 					checked = (curbuf->b_minor & (d->Type >> 8)) != 0;
-				else
+				} else {
 					checked = d == (data_obj *) curbuf;
+				}
+
 				CheckItem(Menus[mnu].Mn, itm + 1, checked);
 			}
 		}
 	}
 }
 
-void 
-MarkVar (	/* mark a boolean menu item */
-    const struct variable *vp,
-    int mnu,
-    int itm
+void
+MarkVar(  /* mark a boolean menu item */
+	const struct variable *vp,
+	int mnu,
+	int itm
 )
 {
 	if (mnu == -1) {		/* we don't know the item... slow */
 		for (mnu = 0; ; mnu++) {
-			if (mnu >= NMENUS)
-				return;	/* not found */
+			if (mnu >= NMENUS) {
+				return;        /* not found */
+			}
 
 			for (itm = 0; (itm < NMENUITEMS); itm++) {
-				if ((struct variable *) (Menus[mnu].m[itm]) == vp)
+				if ((struct variable *)(Menus[mnu].m[itm]) == vp) {
 					break;
+				}
 			}
-			if (itm < NMENUITEMS)
+
+			if (itm < NMENUITEMS) {
 				break;
+			}
 		}
 	}
+
 	CheckItem(Menus[mnu].Mn, itm + 1, *(bool *)vp->v_value);
 }
 
@@ -2415,24 +2622,24 @@ MarkVar (	/* mark a boolean menu item */
  * a pascal-style string as an argument. See do_sputc() in screen.c.
  */
 
-void 
-Placur (int line, int col)
+void
+Placur(int line, int col)
 {
 	CapCol = col;
 	CapLine = line;
 	putcurs(line, col, YES);
 }
 
-void 
-NPlacur (int line, int col)
+void
+NPlacur(int line, int col)
 {
 	CapCol = col;
 	CapLine = line;
 	putcurs(line, col, NO);
 }
 
-void 
-i_lines (int top, int bottom, int num)
+void
+i_lines(int top, int bottom, int num)
 {
 	Placur(bottom - num + 1, 0);
 	dellines(num, bottom);
@@ -2440,8 +2647,8 @@ i_lines (int top, int bottom, int num)
 	inslines(num, bottom);
 }
 
-void 
-d_lines (int top, int bottom, int num)
+void
+d_lines(int top, int bottom, int num)
 {
 	Placur(top, 0);
 	dellines(num, bottom);
@@ -2481,29 +2688,29 @@ private WindowRecord myWindowRec;
 #define maxadjust(r) OffsetRect((r), 0, 2)
 
 private char *
-conv_p_curs (int row, int col)
+conv_p_curs(int row, int col)
 {
 	return p_scr + (row * (CO)) + col;
 }
 
 #ifdef NEVER
-private void 
-INSmode (bool new)
+private void
+INSmode(bool new)
 {
 	insert = new;
 }
 #endif
 
-void 
-SO_effect (bool new)
+void
+SO_effect(bool new)
 {
-	theScreen->txMode = new? notSrcCopy : srcCopy;
+	theScreen->txMode = new ? notSrcCopy : srcCopy;
 }
 
 private void	init_slate proto((void));
 
-private void 
-tn_init (void)
+private void
+tn_init(void)
 {
 #ifdef NEVER
 	INSmode(NO);
@@ -2513,11 +2720,10 @@ tn_init (void)
 	ShowPen();
 }
 
-void 
-clr_page (void)	/* clear and home function */
+void
+clr_page(void)	/* clear and home function */
 {
 	Rect r;
-
 	memset(p_scr, ' ', p_size);
 	active();
 	SetRect(&r, 0, 0, WINDWIDTH, WINDHEIGHT);
@@ -2526,8 +2732,8 @@ clr_page (void)	/* clear and home function */
 	drawfluff();
 }
 
-private void 
-putcurs (unsigned row, unsigned col, bool vis)
+private void
+putcurs(unsigned row, unsigned col, bool vis)
 {
 	active();
 	curset(NO);
@@ -2536,69 +2742,76 @@ putcurs (unsigned row, unsigned col, bool vis)
 	curset(vis);
 }
 
-private void 
-curset (bool invert)
+private void
+curset(bool invert)
 {
 	int
-		colpix = tcol * width,
-		rowpix = trow * height;
+	colpix = tcol * width,
+	rowpix = trow * height;
 
-	if (trow == MAXROW)
-		rowpix += 2;	/* leave space for 2 pixel rule */
+	if (trow == MAXROW) {
+		rowpix += 2;        /* leave space for 2 pixel rule */
+	}
+
 	p_curs = conv_p_curs(trow, tcol);
 	MoveTo(colpix, rowpix + height - descent);
 	DrawChar(*p_curs);
 	cursvis = invert;
+
 	if (invert) {
 		SetRect(&cursor_rect, colpix, rowpix,
 			colpix + width - 1, rowpix + height - 1);
 		InvertRect(&cursor_rect);
 	}
+
 	MoveTo(colpix, rowpix + height - descent);
 }
 
-void 
-clr_eoln (void)
+void
+clr_eoln(void)
 {
-		Rect r;
+	Rect r;
+	active();
+	SetRect(&r, tcol * width, trow * height, WINDWIDTH, (trow + 1) * height);
 
-		active();
-		SetRect(&r, tcol * width, trow * height, WINDWIDTH, (trow +1) * height);
-		if (trow == MAXROW)
-			maxadjust(&r);
-		EraseRect(&r);
-		memset(p_curs, ' ', CO - tcol);
-		curset(YES);
+	if (trow == MAXROW) {
+		maxadjust(&r);
+	}
+
+	EraseRect(&r);
+	memset(p_curs, ' ', CO - tcol);
+	curset(YES);
 }
 
 #ifdef NEVER
-private void 
-delchars (void)
+private void
+delchars(void)
 {
 	Rect r;
 	RgnHandle updateRgn;
-
 	active();
 	curset(NO);
 	updateRgn = NewRgn();
-	SetRect(&r, tcol * width, trow * height, twidth - width, (trow+1) * height);
-	if (trow == MAXROW)
+	SetRect(&r, tcol * width, trow * height, twidth - width, (trow + 1) * height);
+
+	if (trow == MAXROW) {
 		maxadjust(&r);
+	}
+
 	ScrollRect(&r, -width, 0, updateRgn);
 	DisposeRgn(updateRgn);
-	BlockMove(p_curs + 1, p_curs, (long) (MAXCOL - tcol));
+	BlockMove(p_curs + 1, p_curs, (long)(MAXCOL - tcol));
 	*conv_p_curs(trow, MAXCOL) = ' ';
 	curset(YES);
 }
 #endif /* NEVER */
 
-private void 
-dellines (int n, int bot)
+private void
+dellines(int n, int bot)
 {
 	RgnHandle updateRgn = NewRgn();
 	Rect r;
 	long len;
-
 	active();
 	curset(NO);
 	SetRect(&r, 0, ((trow) * height), WINDWIDTH, ((bot + 1) * height));
@@ -2610,19 +2823,18 @@ dellines (int n, int bot)
 	putcurs(trow, 0, YES);	/* ??? "YES" guess by DHR */
 }
 
-private void 
-inslines (int n, int bot)
+private void
+inslines(int n, int bot)
 {
 	RgnHandle updateRgn = NewRgn();
 	Rect r;
 	long len;
-
 	active();
 	curset(NO);
-	SetRect(&r, 0, trow * height, WINDWIDTH, (bot +1) * height);
+	SetRect(&r, 0, trow * height, WINDWIDTH, (bot + 1) * height);
 	ScrollRect(&r, 0, (n * height), updateRgn);
 	DisposeRgn(updateRgn);
-	len = ((bot - trow - n +1) * CO);
+	len = ((bot - trow - n + 1) * CO);
 	BlockMove(conv_p_curs(trow, 0), conv_p_curs(trow + n, 0), len);
 	memset(conv_p_curs(trow, 0), ' ', (n * CO));
 	putcurs(trow, 0, YES);	/* ??? "YES" guess by DHR */
@@ -2636,93 +2848,89 @@ size_t	len;
 	active();
 	curset(NO);
 #ifdef NEVER
+
 	if (insert) {
 		RgnHandle updateRgn = NewRgn();
 		Rect r;
+		SetRect(&r, tcol * width, trow * height, twidth - width * len, (trow + 1) * height - 1);
 
-		SetRect(&r, tcol * width, trow * height, twidth - width * len, (trow +1) * height -1);
-		if (trow == MAXROW)
+		if (trow == MAXROW) {
 			maxadjust(&r);
+		}
+
 		ScrollRect(&r, width * len, 0, updateRgn);
 		DisposeRgn(updateRgn);
 	}
+
 #endif
 	DrawText(str, (short)0, (short)len);
 #ifdef NEVER
-	if (insert)
-		BlockMove(p_curs, p_curs + len, (long) (CO - tcol - len));
+
+	if (insert) {
+		BlockMove(p_curs, p_curs + len, (long)(CO - tcol - len));
+	}
+
 #endif
 	memcpy((UnivPtr)p_curs, (UnivPtr)str, len);
-	putcurs(trow, tcol+len <= MAXCOL? tcol+len : MAXCOL, YES);	/* ??? "YES" guess by DHR */
+	putcurs(trow, tcol + len <= MAXCOL ? tcol + len : MAXCOL, YES);	/* ??? "YES" guess by DHR */
 }
 
 private Rect myBoundsRect;
 
-private void 
-init_slate (void)
+private void
+init_slate(void)
 {
 	FontInfo f;
-
 	char *Name = "Jove ";
 	char *Title;
-
 	InitGraf(&qd.thePort);
 	InitWindows();
 	InitCursor();
 	InitFonts();
 	InitMenus();
 	InitDialogs((ProcPtr)NULL);		/* no restart proc */
-
 	/* figure limiting rectangle for window moves */
 	SetRect(&LimitRect,
 		qd.screenBits.bounds.left + 3,
 		qd.screenBits.bounds.top + 20,
 		qd.screenBits.bounds.right - 3,
-		qd.screenBits.bounds.bottom -3);
-
+		qd.screenBits.bounds.bottom - 3);
 	Set_std();
 	SetBounds();
-
 	/* initialize char array for updates */
 	p_scr = emalloc(p_size = wc_std.w_cols * wc_std.w_rows);	/* only once */
 	p_curs = p_scr;
-
 	Title = sprint("%s%s", Name, jversion);
 	theScreen = NewWindow(&myWindowRec, &myBoundsRect, CtoPstr(Title),
-		1, 8, (WindowPtr) -1, 1, 0L);
-
+			1, 8, (WindowPtr) - 1, 1, 0L);
 	/* figure an initial window configuration and adjust it */
 	wc = &wc_std;
 	wc_user = wc_std;	/* initially, only one configuration to toggle */
 	user_state(theScreen) = std_state(theScreen);
 	SetPort(theScreen);
-
 	theScreen->txFont = FONT;
 	theScreen->txSize = TEXTSIZE;
-
 #ifdef VARFONT
 	GetFontInfo(&f);
-	height = f.ascent+f.descent+f.leading;
+	height = f.ascent + f.descent + f.leading;
 	width = f.widMax;
 	twidth = width * wc->w_cols;
 	theight = height * wc->w_rows;
 	descent = f.descent;
 #endif
-
 	theScreen->txMode = srcCopy;
 	theScreen->pnMode = patCopy;
 	PenNormal();
 }
 
-private void 
-p_refresh (void)
+private void
+p_refresh(void)
 {
 	int lineno;
 
 	for (lineno = 0; lineno < LI; lineno++) {
 		char *curs = conv_p_curs(lineno, 0);
-
-		MoveTo(0, (lineno+1) * height - descent + (lineno == MAXROW? 2 : 0));
+		MoveTo(0, (lineno + 1) * height - descent + (lineno == MAXROW ? 2 : 0));
 		/* The following kludgy line is to get SO right.  It depends on:
 		 * - !defined(HIGHLIGHTING)
 		 * - this routine not being called at an inauspicious time
@@ -2733,16 +2941,17 @@ p_refresh (void)
 		SO_effect(Screen[lineno].s_effects);
 		DrawText(curs, (short)0, (short)CO);
 	}
+
 	curset(cursvis);
 }
 
 
-private bool 
-wc_adjust (		/* adjust window config to look nice */
-    int w,
-    int h,
-    struct wind_config *wcf,
-    int init
+private bool
+wc_adjust(   /* adjust window config to look nice */
+	int w,
+	int h,
+	struct wind_config *wcf,
+	int init
 )
 {
 	static int LIMIT_R, LIMIT_C;
@@ -2752,10 +2961,12 @@ wc_adjust (		/* adjust window config to look nice */
 		LIMIT_R = (h - 4) / HEIGHT;
 		LIMIT_C = (w - SCROLLWIDTH - 1) / WIDTH + 1;
 	}
-	if ((w < WIDTH * 40) ||(h < HEIGHT * 10)	/* too small */
-	|| ((rows = (h - 4) / HEIGHT) > LIMIT_R)	/* too big */
-	|| ((cols = (w - SCROLLWIDTH - 1) / WIDTH + 1) > LIMIT_C))
+
+	if ((w < WIDTH * 40) || (h < HEIGHT * 10)	/* too small */
+		|| ((rows = (h - 4) / HEIGHT) > LIMIT_R)	/* too big */
+		|| ((cols = (w - SCROLLWIDTH - 1) / WIDTH + 1) > LIMIT_C)) {
 		return NO;
+	}
 
 	wcf->w_rows = rows;
 	wcf->w_cols = cols;
@@ -2764,20 +2975,20 @@ wc_adjust (		/* adjust window config to look nice */
 	return YES;
 }
 
-private int 
-getCO (void)	/* so that jove knows params */
+private int
+getCO(void)	/* so that jove knows params */
 {
 	return wc->w_cols;
 }
 
-private int 
-getLI (void)
+private int
+getLI(void)
 {
 	return wc->w_rows;
 }
 
-void 
-ttsize (void)
+void
+ttsize(void)
 {
 	/* ??? We really ought to wait until the screen is big enough:
 	 * at least three lines high (one line each for buffer, mode,
@@ -2787,16 +2998,19 @@ ttsize (void)
 	 */
 	/* ??? This should be made more like UNIX version */
 	CO = getCO();
-	if (CO > MAXCOLS)
+
+	if (CO > MAXCOLS) {
 		CO = MAXCOLS;
+	}
+
 	LI = getLI();
 	Windchange = YES;
 	clr_page();
 	ILI = LI - 1;
 }
 
-private void 
-SetBounds (void)
+private void
+SetBounds(void)
 {
 	SetRect(&myBoundsRect,
 		qd.screenBits.bounds.left + 3,
@@ -2805,16 +3019,16 @@ SetBounds (void)
 		qd.screenBits.bounds.top + 40 + wc_std.w_height);
 }
 
-private void 
-Set_std (void)
+private void
+Set_std(void)
 {
 	(void) wc_adjust(qd.screenBits.bounds.right - qd.screenBits.bounds.left - 6,
 		qd.screenBits.bounds.bottom - qd.screenBits.bounds.top - 42,
 		&wc_std, 1);
 }
 
-private void 
-Reset_std (void)
+private void
+Reset_std(void)
 {
 	Set_std();
 	std_state(theScreen) = myBoundsRect;

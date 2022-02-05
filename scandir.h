@@ -6,12 +6,12 @@
  **************************************************************************/
 
 extern int
-	jscandir proto((const char *dir, char ***nmptr,
+jscandir proto((const char *dir, char ***nmptr,
 		bool (*qualify) ptrproto((char *)),
 		int (*sorter) ptrproto((UnivConstPtr, UnivConstPtr))));
 
 extern void
-	freedir proto((char ***nmptr,int nentries));
+freedir proto((char ***nmptr, size_t nentries));
 
 #ifdef MSFILESYSTEM
 /* NOTE: MatchDir affects any call to jscandir */

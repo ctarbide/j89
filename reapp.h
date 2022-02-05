@@ -6,12 +6,12 @@
  **************************************************************************/
 
 extern void
-	find_tag proto((char *tag,bool localp));
+find_tag proto((char *tag, bool localp));
 
 /* Commands: */
 
 extern void
-	FDotTag proto((void)),
+FDotTag proto((void)),
 	FindTag proto((void)),
 	IncFSearch proto((void)),
 	IncRSearch proto((void)),

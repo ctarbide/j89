@@ -46,16 +46,16 @@ extern void	MarkVar proto((const struct variable *vp, int mnu, int itm));
 extern jmp_buf auxjmp;
 
 extern char
-	*gethome proto((void)),
-	*pfile proto((char *)),
-	*gfile proto((char *));
+*gethome proto((void)),
+*pfile proto((char *)),
+*gfile proto((char *));
 
 extern int	getArgs proto((char ***));
 
 extern bool	rawchkc proto((void));
 
 extern void
-	MacInit proto((void)),
+MacInit proto((void)),
 	writetext proto((const unsigned char *, size_t)),
 	NPlacur proto((int, int)),
 	docontrols proto((void)),
@@ -65,15 +65,15 @@ extern void
 	menus_on proto((void));
 
 extern bool
-	Keyonly,
-	Bufchange,
-	Modechange,
-	EventCmd,
-	Windchange;
+Keyonly,
+Bufchange,
+Modechange,
+EventCmd,
+Windchange;
 
 /* Variables: */
 
 extern bool
-	Macmode;	/* VAR: use Mac file selector */
+Macmode;	/* VAR: use Mac file selector */
 
 #endif /* MAC */

@@ -27,33 +27,32 @@ private File	*rec_out;
 
 private struct rec_head	Header;
 
-void 
-rectmpname (char *tfname)
+void
+rectmpname(char *tfname)
 {
 	if (strlen(tfname) >= sizeof(Header.TmpFileName)) {
 		complain("temporary filename too long; recovery disabled.");
 		/* NOTREACHED */
 	}
+
 	strcpy(Header.TmpFileName, tfname);
 }
 
-private void 
-recinit (void)
+private void
+recinit(void)
 {
 	char	buf[FILESIZE];
-
 	PathCat(buf, sizeof(buf), TmpDir,
 #ifdef MAC
 		".jrecXXX"	/* must match string in mac.c:Ffilter() */
 #else
 		"jrXXXXXX"
 #endif
-		);
+	);
 	recfname = copystr(buf);
 	rec_fd = MakeTemp(recfname, "recovery (disabling it)");
 	/* initialize the recovery file */
-	rec_out = fd_open(recfname, F_WRITE|F_LOCKED, rec_fd, iobuff, LBSIZE);
-
+	rec_out = fd_open(recfname, F_WRITE | F_LOCKED, rec_fd, iobuff, LBSIZE);
 	/* Initialize the record header (TmpFileName initialized by rectmpname). */
 	Header.RecMagic = RECMAGIC;
 	Header.Uid = getuid();
@@ -64,18 +63,19 @@ recinit (void)
  * Since we might be vforking, we must not change any variables
  * (in particular rec_fd).
  */
-void 
-recclose (void)
+void
+recclose(void)
 {
-	if (rec_fd != -1)
+	if (rec_fd != -1) {
 		(void) close(rec_fd);
+	}
 }
 
 /* Close and remove recfile before exiting. */
 
 
-void 
-recremove (void)
+void
+recremove(void)
 {
 	if (rec_fd != -1) {
 		recclose();
@@ -85,22 +85,22 @@ recremove (void)
 
 /* Write out the line pointers for buffer B. */
 
-private void 
-dmppntrs (register Buffer *b)
+private void
+dmppntrs(register Buffer *b)
 {
 	register LinePtr	lp;
 
-	for (lp = b->b_first; lp != NULL; lp = lp->l_next)
+	for (lp = b->b_first; lp != NULL; lp = lp->l_next) {
 		dmpobj(lp->l_dline);
+	}
 }
 
 /* dump the buffer info and then the actual line pointers. */
 
-private void 
-dmp_buf_header (register Buffer *b)
+private void
+dmp_buf_header(register Buffer *b)
 {
 	struct rec_entry	record;
-
 	byte_zero(&record, sizeof(struct rec_entry));	/* clean out holes for purify */
 	record.r_dotline = LinesTo(b->b_first, b->b_dot);
 	record.r_dotchar = b->b_char;
@@ -116,20 +116,24 @@ int	ModCount = 0;	/* number of buffer mods since last sync */
 
 int	SyncFreq = 50;	/* VAR: how often to sync the file pointers */
 
-void 
-SyncRec (void)
+void
+SyncRec(void)
 {
 	register Buffer	*b;
 	static bool	beenhere = NO;
 	time_t		tupd;
-
 	/* Count number of interesting buffers.  If none, don't bother syncing. */
 	Header.Nbuffers = 0;
-	for (b = world; b != NULL; b = b->b_next)
-		if (b->b_type != B_SCRATCH && IsModified(b))
+
+	for (b = world; b != NULL; b = b->b_next) {
+		if (b->b_type != B_SCRATCH && IsModified(b)) {
 			Header.Nbuffers += 1;
-	if (Header.Nbuffers == 0)
+		}
+	}
+
+	if (Header.Nbuffers == 0) {
 		return;
+	}
 
 	lsave();	/* this makes things really right */
 	SyncTmp();	/* note: this will force rectmpname() */
@@ -138,24 +142,33 @@ SyncRec (void)
 		beenhere = YES;
 		recinit();	/* Init recover file. */
 	}
+
 	/* Note: once writing to the recover file fails, we permanently
 	 * stop trying.  This is to avoid useless thrashing.  Perhaps
 	 * there should be a way to turn this back on.
 	 */
-	if (rec_fd == -1 || (rec_out->f_flags & F_ERR))
+	if (rec_fd == -1 || (rec_out->f_flags & F_ERR)) {
 		return;
+	}
 
 	f_seek(rec_out, (off_t)0);
 	(void) time(&tupd);
 	Header.UpdTime = tupd;
 	Header.FreePtr = DFree;
 	dmpobj(Header);
-	for (b = world; b != NULL; b = b->b_next)
-		if (b->b_type != B_SCRATCH && IsModified(b))
+
+	for (b = world; b != NULL; b = b->b_next) {
+		if (b->b_type != B_SCRATCH && IsModified(b)) {
 			dmp_buf_header(b);
-	for (b = world; b != NULL; b = b->b_next)
-		if (b->b_type != B_SCRATCH && IsModified(b))
+		}
+	}
+
+	for (b = world; b != NULL; b = b->b_next) {
+		if (b->b_type != B_SCRATCH && IsModified(b)) {
 			dmppntrs(b);
+		}
+	}
+
 	flushout(rec_out);
 }
 

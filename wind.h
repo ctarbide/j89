@@ -39,47 +39,47 @@ struct window {
 #define SIWIDTH(off)	((off) != 0? 1 : 0)	/* width of shift indicator, if any */
 
 extern Window
-	*fwind,		/* first window in list */
-	*curwind;	/* current window */
+*fwind,		/* first window in list */
+*curwind;	/* current window */
 
 #define one_windp()	(fwind->w_next == fwind)
 #define WSIZE(wp)	((wp)->w_height - 1)	/* window lines, without modeline */
 
 extern int
-	in_window proto((Window *windes,LinePtr line));
+in_window proto((Window *windes, LinePtr line));
 
 extern Window
-	*div_wind proto((Window *wp,int n)),
-	*windbp proto((Buffer *bp));
+*div_wind proto((Window *wp, int n)),
+*windbp proto((Buffer *bp));
 
 extern void
-	CalcWind proto((Window *w)),
-	CentWind proto((Window *w)),
-	SetTop proto((Window *w,LinePtr line)),
-	SetWind proto((Window *new)),
-	WindSize proto((Window *w,int inc)),
-	del_wind proto((Window *wp)),
-	pop_wind proto((const char *name, bool clobber, int btype)),
-	tiewind proto((Window *w, Buffer *bp)),	/* util.c!! */
-	winit proto((void));
+CalcWind proto((Window *w)),
+	 CentWind proto((Window *w)),
+	 SetTop proto((Window *w, LinePtr line)),
+	 SetWind proto((Window *new)),
+	 WindSize proto((Window *w, int inc)),
+	 del_wind proto((Window *wp)),
+	 pop_wind proto((const char *name, bool clobber, int btype)),
+	 tiewind proto((Window *w, Buffer *bp)),	/* util.c!! */
+	 winit proto((void));
 
 /* Commands: */
 
 extern void
-	DelCurWindow proto((void)),
-	GotoWind proto((void)),
-	GrowWindowCmd proto((void)),
-	NextWindow proto((void)),
-	OneWindow proto((void)),
-	PageNWind proto((void)),
-	PrevWindow proto((void)),
-	ScrollLeft proto((void)),
-	ScrollRight proto((void)),
-	ShrWindow proto((void)),
-	SplitWind proto((void)),
-	WNumLines proto((void)),
-	WVisSpace proto((void)),
-	WindFind proto((void));
+DelCurWindow proto((void)),
+	     GotoWind proto((void)),
+	     GrowWindowCmd proto((void)),
+	     NextWindow proto((void)),
+	     OneWindow proto((void)),
+	     PageNWind proto((void)),
+	     PrevWindow proto((void)),
+	     ScrollLeft proto((void)),
+	     ScrollRight proto((void)),
+	     ShrWindow proto((void)),
+	     SplitWind proto((void)),
+	     WNumLines proto((void)),
+	     WVisSpace proto((void)),
+	     WindFind proto((void));
 
 /* Variables: */
 

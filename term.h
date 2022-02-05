@@ -12,14 +12,14 @@
  */
 
 extern void
-	ttysetattr proto((bool n)),
-	ttsize proto((void)),
-	getTERM proto((void)),
-	settout proto((void)),
-	dobell proto((int x)),
-	clr_page proto((void)),
-	i_lines proto((int, int, int)),
-	d_lines proto((int, int, int));
+ttysetattr proto((bool n)),
+	   ttsize proto((void)),
+	   getTERM proto((void)),
+	   settout proto((void)),
+	   dobell proto((int x)),
+	   clr_page proto((void)),
+	   i_lines proto((int, int, int)),
+	   d_lines proto((int, int, int));
 
 /* MSDOS keyboard routines */
 
@@ -27,8 +27,8 @@ extern void
 
 # ifdef IBMPCDOS
 extern void
-	pcSetTerm proto((void)),
-	pcUnsetTerm proto((void));
+pcSetTerm proto((void)),
+	  pcUnsetTerm proto((void));
 
 extern bool enhanced_keybrd;	/* VAR: exploit "enhanced" keyboard? */
 # endif /* IBMPCDOS */
@@ -44,111 +44,115 @@ extern bool	rawkey_ready proto((void));
 
 int getInputEvents proto((char *bp, int size));
 int inputEventWaiting proto((int nsecs));
-int FatalErrorMessage proto((char* str));
+int FatalErrorMessage proto((char *str));
 
 #endif /* WIN32 */
 
 #ifdef PCSCRATTR
 extern int
-	Txattr,	/* VAR: text-attribute (white on black) */
-	Mlattr,	/* VAR: mode-line-attribute (black on white) */
-	Hlattr;	/* VAR: highlight-attribute */
+Txattr,	/* VAR: text-attribute (white on black) */
+Mlattr,	/* VAR: mode-line-attribute (black on white) */
+Hlattr;	/* VAR: highlight-attribute */
 #endif /* PCSCRATTR */
 
 #ifndef TERMCAP
 
 extern void
-	clr_eoln proto((void));
+clr_eoln proto((void));
 
 #else /* TERMCAP */	/* the body is the rest of this file */
 
 /* termcap declarations */
 
 extern const char
-	*CS,	/* change scrolling region */
-	*SO,	/* Start standout */
-	*SE,	/* End standout */
-	*US,	/* Start underlining */
-	*UE,	/* End underlining */
-	*CM,	/* The cursor motion string */
-	*CL,	/* Clear screen */
-	*CE,	/* Clear to end of line */
-	*HO,	/* Home cursor */
-	*AL,	/* Addline (insert line) */
-	*DL,	/* Delete line */
-	*VS,	/* Visual start */
-	*VE,	/* Visual end */
-	*KS,	/* Keypad mode start */
-	*KE,	/* Keypad mode end */
-	*TI,	/* Cursor addressing start */
-	*TE,	/* Cursor addressing end */
-	*LL,	/* Last line, first column */
-	*SF,	/* Scroll forward (defaults to \n) */
-	*SR,	/* Scroll reverse */
-	*VB,	/* visible bell */
-	*BL,	/* audible bell (defaults to BEL) */
-	*lPC,	/* pad character (as a string!) */
-	*NL,	/* newline character (defaults to \n) */
-	*DO,	/* down one line (defaults to \n capability) */
-	*M_AL,	/* Insert line with arg */
-	*M_DL,	/* Delete line with arg */
-	*M_SF,	/* Scroll forward with arg */
-	*M_SR;	/* Scroll back with arg */
+*CS,	/* change scrolling region */
+*SO,	/* Start standout */
+*SE,	/* End standout */
+*US,	/* Start underlining */
+*UE,	/* End underlining */
+*CM,	/* The cursor motion string */
+*CL,	/* Clear screen */
+*CE,	/* Clear to end of line */
+*HO,	/* Home cursor */
+*AL,	/* Addline (insert line) */
+*DL,	/* Delete line */
+*VS,	/* Visual start */
+*VE,	/* Visual end */
+*KS,	/* Keypad mode start */
+*KE,	/* Keypad mode end */
+*TI,	/* Cursor addressing start */
+*TE,	/* Cursor addressing end */
+*LL,	/* Last line, first column */
+*SF,	/* Scroll forward (defaults to \n) */
+*SR,	/* Scroll reverse */
+*VB,	/* visible bell */
+*BL,	/* audible bell (defaults to BEL) */
+*lPC,	/* pad character (as a string!) */
+*NL,	/* newline character (defaults to \n) */
+*DO,	/* down one line (defaults to \n capability) */
+*M_AL,	/* Insert line with arg */
+*M_DL,	/* Delete line with arg */
+*M_SF,	/* Scroll forward with arg */
+*M_SR;	/* Scroll back with arg */
 
 # define	INFINITY	10000	/* cost too high to afford */
 
 extern int
-	UPlen,		/* length of the UP string */
-	HOlen,		/* length of Home string */
-	LLlen,		/* length of last line string */
+UPlen,		/* length of the UP string */
+HOlen,		/* length of Home string */
+LLlen,		/* length of last line string */
 
-	phystab,	/* ("it") terminal's tabstop settings */
-	UG;		/* number of magic cookies left by US and UE */
+phystab,	/* ("it") terminal's tabstop settings */
+UG;		/* number of magic cookies left by US and UE */
 
 extern bool
-	Hazeltine,		/* Hazeltine tilde kludge */
-	UL,		/* underscores don't replace chars already on screen */
-	NP;		/* there is No Pad character */
+Hazeltine,		/* Hazeltine tilde kludge */
+UL,		/* underscores don't replace chars already on screen */
+NP;		/* there is No Pad character */
 
 extern char
-	PC;		/* pad character, as a char (set from lPC; defaults to NUL) */
+PC;		/* pad character, as a char (set from lPC; defaults to NUL) */
 
 extern const char
-	*BC,	/* back space (defaults to BS) */
-	*UP;	/* Scroll reverse, or up */
+*BC,	/* back space (defaults to BS) */
+*UP;	/* Scroll reverse, or up */
 
+#ifdef HAVE_SPEED_T
+extern speed_t	ospeed;
+#else
 extern short	ospeed;
+#endif
 
 extern bool	CanScroll;	/* can this terminal scroll? */
 
 # ifdef ID_CHAR
 
 extern const char
-	*IC,	/* Insert char */
-	*DC,	/* Delete char */
-	*IM,	/* Insert mode */
-	*EI,	/* End insert mode */
-	*IP,	/* insert pad after character inserted */
-	*M_IC,	/* Insert char with arg */
-	*M_DC;	/* Delete char with arg */
+*IC,	/* Insert char */
+*DC,	/* Delete char */
+*IM,	/* Insert mode */
+*EI,	/* End insert mode */
+*IP,	/* insert pad after character inserted */
+*M_IC,	/* Insert char with arg */
+*M_DC;	/* Delete char with arg */
 
 extern bool	UseIC;	/* VAR: whether or not to use i/d char processesing */
 
 extern int
-	IMEIlen,	/* length of insert mode + end insert mode strings */
-	IClen,	/* length of insert char */
-	MIClen,	/* length of insert char with arg */
-	DClen,	/* length of delete char */
-	MDClen,	/* length of delete char with arg */
-	CElen;	/* length of clear to end of line */
+IMEIlen,	/* length of insert mode + end insert mode strings */
+IClen,	/* length of insert char */
+MIClen,	/* length of insert char with arg */
+DClen,	/* length of delete char */
+MDClen,	/* length of delete char with arg */
+CElen;	/* length of clear to end of line */
 
 extern bool
-	MI;		/* okay to move while in insert mode */
+MI;		/* okay to move while in insert mode */
 
 # endif /* ID_CHAR */
 
 extern void
-	putpad proto((const char *str, int lines)),
-	putmulti proto((const char *ss, const char *ms, int num, int lines));
+putpad proto((const char *str, int lines)),
+       putmulti proto((const char *ss, const char *ms, int num, int lines));
 
 #endif /* TERMCAP */

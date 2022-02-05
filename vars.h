@@ -7,7 +7,7 @@
 
 struct variable {
 	/* Type and Name must match data_obj */
-	int	Type;		/* in this case a variable */
+	unsigned	Type;		/* in this case a variable */
 	const char	*Name;		/* name is always second */
 	UnivPtr	v_value;
 	size_t	v_size;

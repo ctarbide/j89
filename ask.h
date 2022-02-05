@@ -6,32 +6,32 @@
  **************************************************************************/
 
 extern bool
-	Asking,		/* are we on read a string from the terminal? */
-	InRealAsk;	/* are we currently executing real_ask()? */
+Asking,		/* are we on read a string from the terminal? */
+InRealAsk;	/* are we currently executing real_ask()? */
 
 extern int
-	AskingWidth;	/* width of question being asked */
+AskingWidth;	/* width of question being asked */
 
 extern char
-	Minibuf[LBSIZE];
+Minibuf[LBSIZE];
 
 #define NULL_ASK_EXT	((bool (*) ptrproto((ZXchar))) NULL)
 
 /* ask for file or directory (only different under MSFILESYSTEM) */
 #ifdef MSFILESYSTEM
 extern char
-	*ask_file proto((const char *prmt, char *def, char *buf)),
-	*ask_dir proto((const char *prmt, char *def, char *buf));
+*ask_file proto((const char *prmt, char *def, char *buf)),
+*ask_dir proto((const char *prmt, char *def, char *buf));
 #else
 extern char
-	*ask_ford proto((const char *prmt, char *def, char *buf));
+*ask_ford proto((const char *prmt, char *def, char *buf));
 # define ask_file(prmt, def, buf)	ask_ford(prmt, def, buf)
 # define ask_dir(prmt, def, buf)	ask_ford(prmt, def, buf)
 #endif
 
 extern const char
-	*ask proto((const char *, const char *, ...)),
-	*do_ask proto((const char *, bool (*) ptrproto((ZXchar)), const char *, const char *, ...));
+*ask proto((const char *, const char *, ...)),
+*do_ask proto((const char *, bool (*) ptrproto((ZXchar)), const char *, const char *, ...));
 
 extern bool	yes_or_no_p proto((const char *, ...));
 
