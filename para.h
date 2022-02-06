@@ -6,7 +6,7 @@
  **************************************************************************/
 
 extern void
-DoJustify proto((LinePtr l1, INTPTR_T c1,
+	DoJustify proto((LinePtr l1, INTPTR_T c1,
 		LinePtr l2, INTPTR_T c2,
 		bool scrunch, int indent)),
 	do_rfill proto((bool ulm));
@@ -14,10 +14,10 @@ DoJustify proto((LinePtr l1, INTPTR_T c1,
 /* Commands: */
 
 extern void
-BackPara proto((void)),
-	 ForPara proto((void)),
-	 FillParagraph proto((void)),
-	 FillRegion proto((void));
+	BackPara proto((void)),
+	ForPara proto((void)),
+	FillParagraph proto((void)),
+	FillRegion proto((void));
 
 /* Variables: */
 

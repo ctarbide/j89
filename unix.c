@@ -174,7 +174,7 @@ ttysetattr(
 	}
 	sg[YES].c_lflag &= (unsigned short)~(ICANON | ECHO);
 	sg[YES].c_oflag &= (unsigned short)~(OPOST);
-	
+
 	/* Set all those c_cc elements that we must.
 	 * For peculiar systems, one might wish to predefine JVDISABLE
 	 * in the configuration.  For example, on some unnamed
@@ -325,7 +325,7 @@ ttysetattr(
 		static struct stat	tt_stat;
 # if !defined(USE_FSTAT) || !defined(USE_FCHMOD)
 		static char	*tt_name = NULL;	/* name of the control tty */
-		extern char	*ttyname proto((int));	/* for systems w/o fstat */
+extern char	*ttyname proto((int));	/* for systems w/o fstat */
 # endif
 
 		if (n && DisBiff) {

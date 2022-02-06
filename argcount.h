@@ -30,19 +30,19 @@ extern void	negate_arg proto((void));
 /* Commands: */
 
 extern void
-Digit proto((void)),
-      DigitMinus proto((void)),
-      Digit0 proto((void)),
-      Digit1 proto((void)),
-      Digit2 proto((void)),
-      Digit3 proto((void)),
-      Digit4 proto((void)),
-      Digit5 proto((void)),
-      Digit6 proto((void)),
-      Digit7 proto((void)),
-      Digit8 proto((void)),
-      Digit9 proto((void)),
-      TimesFour proto((void));
+	Digit proto((void)),
+	DigitMinus proto((void)),
+	Digit0 proto((void)),
+	Digit1 proto((void)),
+	Digit2 proto((void)),
+	Digit3 proto((void)),
+	Digit4 proto((void)),
+	Digit5 proto((void)),
+	Digit6 proto((void)),
+	Digit7 proto((void)),
+	Digit8 proto((void)),
+	Digit9 proto((void)),
+	TimesFour proto((void));
 
 extern unsigned
 	arg_count_as_unsigned proto((char *file, int line));

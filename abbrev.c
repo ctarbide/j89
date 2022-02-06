@@ -32,7 +32,7 @@ struct abbrev {
 };
 
 private	void
-define proto((struct abbrev **, char *, char *));
+	define proto((struct abbrev **, char *, char *));
 
 #define GLOBAL	NMAJORS
 private struct abbrev	*A_tables[NMAJORS + 1][HASHSIZE];	/* Must be zeroed! */
@@ -205,9 +205,9 @@ rest_abbrevs(char *file)
 	char	buf[LBSIZE];
 	fp = open_file(file, buf, F_READ, YES);
 
-	while (mode <= GLOBAL && !f_gets(fp, genbuf, (size_t) LBSIZE)
-		&& genbuf[0] != '\0') {
-		static const char	sep[] = "------";
+	while (mode <= GLOBAL && !f_gets(fp, genbuf, (size_t) LBSIZE) && genbuf[0] != '\0') {
+		static const char
+			sep[] = "------";
 		lnum += 1;
 
 		if (strncmp(genbuf, sep, sizeof(sep) - 1) == 0) {

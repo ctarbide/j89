@@ -31,23 +31,23 @@ extern struct scrimage
 extern bool	UpdMesg;	/* update the message line */
 
 extern bool
-chkmail proto((bool force));
+	chkmail proto((bool force));
 
 extern int
-calc_pos proto((char *lp, INTPTR_T c_char));
+	calc_pos proto((char *lp, INTPTR_T c_char));
 
 #define MAX_TYPEOUT	MAXCOLS	/* maximum width of typout (in chars) */
 
 extern void
-ChkWindows proto((LinePtr line1, LinePtr line2)),
-	   ChkWinLines proto((void)),
-	   DrawMesg proto((bool abortable)),
-	   message proto((const char *)),
-	   TOstart proto((const char *name)),
-	   TOstop proto((void)),
-	   Typeout proto((const char *, ...)),
-	   rbell proto((void)),
-	   redisplay proto((void));
+	ChkWindows proto((LinePtr line1, LinePtr line2)),
+	ChkWinLines proto((void)),
+	DrawMesg proto((bool abortable)),
+	message proto((const char *)),
+	TOstart proto((const char *name)),
+	TOstop proto((void)),
+	Typeout proto((const char *, ...)),
+	rbell proto((void)),
+	redisplay proto((void));
 
 
 #ifdef WINRESIZE
@@ -66,7 +66,7 @@ extern bool
 IN_INSmode;
 
 extern void
-INSmode proto((bool));
+	INSmode proto((bool));
 #endif /* ID_CHAR */
 
 
@@ -89,11 +89,11 @@ extern bool	MarkHighlighting;	/* VAR: highlight mark when visible */
 
 /* Commands: */
 extern void
-Bow proto((void)),
-    ClAndRedraw proto((void)),
-    DownScroll proto((void)),
-    Eow proto((void)),
-    NextPage proto((void)),
-    PrevPage proto((void)),
-    RedrawDisplay proto((void)),
-    UpScroll proto((void));
+	Bow proto((void)),
+	ClAndRedraw proto((void)),
+	DownScroll proto((void)),
+	Eow proto((void)),
+	NextPage proto((void)),
+	PrevPage proto((void)),
+	RedrawDisplay proto((void)),
+	UpScroll proto((void));

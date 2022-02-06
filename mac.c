@@ -126,7 +126,7 @@ private bool findtext proto((void));
 /***************************************************/
 
 private void
-putcurs proto((unsigned row, unsigned col, bool vis)),
+	putcurs proto((unsigned row, unsigned col, bool vis)),
 	curset proto((bool desired)),
 	dellines proto((int n, int bot)),
 	inslines proto((int n, int bot));
@@ -1068,14 +1068,14 @@ private EventRecord theEvent;
 
 
 private void
-do_list proto((void)),
+	do_list proto((void)),
 	do_events proto((void));
 
 private WindowPtr
-makedisplay proto((void));
+	makedisplay proto((void));
 
 private ListHandle
-makelist proto((void));
+	makelist proto((void));
 
 private void
 about_j(void)
@@ -1296,9 +1296,9 @@ private Point p;
 private bool wc_adjust proto((int, int, struct wind_config *, int));
 
 private void
-MakeScrollBar proto((Window *w)),
-	      AdjustScrollBar proto((Window *w)),
-	      drawfluff proto((void));
+	MakeScrollBar proto((Window *w)),
+	AdjustScrollBar proto((Window *w)),
+	drawfluff proto((void));
 
 void
 docontrols(void)	/* called from redisplay routines */
@@ -1731,7 +1731,7 @@ int *row, *col;
 #define NEVENTS 16
 
 private void
-doMouse proto((EventRecord *event)),
+	doMouse proto((EventRecord *event)),
 	dokeyDown proto((EventRecord *event)),
 	doUpdate proto((EventRecord *event)),
 	doActivate proto((EventRecord *event));
@@ -1761,8 +1761,8 @@ private void (*eventlist[]) ptrproto((EventRecord *event)) = {
 
 
 private void
-SetBufMenu proto((void)),
-	   MarkModes proto((void));
+	SetBufMenu proto((void)),
+	MarkModes proto((void));
 
 private void
 CheckEvents(void)
@@ -1825,14 +1825,14 @@ InitSysMenu(void)
 }
 
 private void
-doWind proto((EventRecord *event, WindowPtr window)),
-       doGoAway proto((EventRecord *event, WindowPtr window)),
-       doSysMenu proto((EventRecord *event, WindowPtr window)),
-       doSysClick proto((EventRecord *event, WindowPtr window)),
-       doDrag proto((EventRecord *event, WindowPtr window)),
-       doGrow proto((EventRecord *event, WindowPtr window)),
-       doZoomIn proto((EventRecord *event, WindowPtr window)),
-       doZoomOut proto((EventRecord *event, WindowPtr window));
+	doWind proto((EventRecord *event, WindowPtr window)),
+	doGoAway proto((EventRecord *event, WindowPtr window)),
+	doSysMenu proto((EventRecord *event, WindowPtr window)),
+	doSysClick proto((EventRecord *event, WindowPtr window)),
+	doDrag proto((EventRecord *event, WindowPtr window)),
+	doGrow proto((EventRecord *event, WindowPtr window)),
+	doZoomIn proto((EventRecord *event, WindowPtr window)),
+	doZoomOut proto((EventRecord *event, WindowPtr window));
 
 #define NMEVENTS 9
 
@@ -2174,9 +2174,7 @@ gfile(  /* return a filename to get */
 	if (frec.good) {
 		EventRecord theEvent;
 
-		do;
-
-		while (GetNextEvent(updateMask, &theEvent) == 0);
+		do {} while (GetNextEvent(updateMask, &theEvent) == 0);
 
 		doUpdate(&theEvent);
 		strcpy(ans, PtoCstr(frec.fName));
@@ -2204,9 +2202,7 @@ pfile(char *namebuf)
 		EventRecord theEvent;
 		char *h, *p;
 
-		do;
-
-		while (GetNextEvent(updateMask, &theEvent) == 0);
+		do {} while (GetNextEvent(updateMask, &theEvent) == 0);
 
 		doUpdate(&theEvent);
 		h = PtoCstr(frec.fName);
@@ -2293,8 +2289,8 @@ getArgs(char ***avp)
  */
 
 private void
-InitMenu proto((struct menu *M)),
-	 make_edits proto((int menu));
+	InitMenu proto((struct menu *M)),
+	make_edits proto((int menu));
 
 private void
 InitLocalMenus(void)

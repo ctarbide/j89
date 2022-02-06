@@ -8,7 +8,7 @@
 #ifdef RECOVER	/* the body is the rest of this file */
 
 extern void
-SyncRec proto((void)),
+	SyncRec proto((void)),
 	rectmpname proto((char *)),
 	recclose proto((void)),
 	recremove proto((void));

@@ -6,12 +6,12 @@
  **************************************************************************/
 
 extern void
-del_char proto((int dir, int num, bool OK_kill)),
-	 reg_kill proto((LinePtr line2, INTPTR_T char2, bool dot_moved));
+	del_char proto((int dir, int num, bool OK_kill)),
+	reg_kill proto((LinePtr line2, INTPTR_T char2, bool dot_moved));
 
 extern LinePtr
-reg_delete proto((LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)),
-	   new_kill proto((void));
+	reg_delete proto((LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)),
+	new_kill proto((void));
 
 /* kill buffer */
 
@@ -24,11 +24,11 @@ extern void DelKillRing proto((void));	/* delete newest entry */
 /* Commands: */
 
 extern void
-CopyRegion proto((void)),
-	   DelBlnkLines proto((void)),
-	   DelNChar proto((void)),
-	   DelNWord proto((void)),
-	   DelPChar proto((void)),
-	   DelPWord proto((void)),
-	   DelReg proto((void)),
-	   DelWtSpace proto((void));
+	CopyRegion proto((void)),
+	DelBlnkLines proto((void)),
+	DelNChar proto((void)),
+	DelNWord proto((void)),
+	DelPChar proto((void)),
+	DelPWord proto((void)),
+	DelReg proto((void)),
+	DelWtSpace proto((void));

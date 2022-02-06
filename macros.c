@@ -18,10 +18,10 @@
 /* #include "util.h" */
 
 private void
-pop_macro_stack proto((void));
+	pop_macro_stack proto((void));
 
 private struct macro
-*ask_macname proto((const char *, int));
+	*ask_macname proto((const char *, int));
 
 private bool	UnsavedMacros = NO;	/* are there any macros that need saving to a file? */
 

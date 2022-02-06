@@ -44,7 +44,7 @@ char	iobuff[LBSIZE],
 #endif
 
 private void
-setbname proto((Buffer *, const char *));
+	setbname proto((Buffer *, const char *));
 
 private const char
 	Mainbuf[] = "Main",

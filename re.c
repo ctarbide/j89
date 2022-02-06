@@ -16,7 +16,7 @@
 #include "marks.h"
 
 private bool
-do_comp proto((struct RE_block *, int));
+	do_comp proto((struct RE_block *, int));
 
 char	rep_search[128],	/* replace search string */
 	rep_str[128];		/* contains replacement string */
@@ -545,10 +545,11 @@ backref(int n,  char *linep)
 	backsp = pstrtlst[n];
 	backep = pendlst[n];
 
-	while (*backsp++ == *linep++)
+	while (*backsp++ == *linep++) {
 		if (backsp >= backep) {
 			return YES;
 		}
+	}
 
 	return NO;
 }
@@ -569,20 +570,22 @@ REmatch(char *linep, char *a_comp_ptr)
 		case NORMC:
 			n = *a_comp_ptr++;
 
-			while (--n >= 0)
+			while (--n >= 0) {
 				if (*linep++ != *a_comp_ptr++) {
 					return NO;
 				}
+			}
 
 			continue;
 
 		case CINDC:	/* case independent comparison */
 			n = *a_comp_ptr++;
 
-			while (--n >= 0)
+			while (--n >= 0) {
 				if (!cind_eq(*linep++, *a_comp_ptr++)) {
 					return NO;
 				}
+			}
 
 			continue;
 
@@ -812,24 +815,27 @@ re_lindex(
 		char	*first_alt = *alts;
 
 		if (dir == FORWARD) {
-			while (CharUpcase(*p) != firstc || !REmatch(p, first_alt))
+			while (CharUpcase(*p) != firstc || !REmatch(p, first_alt)) {
 				if (*p++ == '\0') {
 					return NO;
 				}
+			}
 		} else {
-			while (CharUpcase(*p) != firstc || !REmatch(p, first_alt))
+			while (CharUpcase(*p) != firstc || !REmatch(p, first_alt)) {
 				if (--p < REbolp) {
 					return NO;
 				}
+			}
 		}
 	} else {
 		for (;;) {
 			char	**altp = alts;
 
-			while (*altp != NULL)
+			while (*altp != NULL) {
 				if (REmatch(p, *altp++)) {
 					goto success;
 				}
+			}
 
 			if (anchored
 				|| (dir == FORWARD ? *p++ == '\0' : --p < REbolp)) {

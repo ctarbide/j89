@@ -21,7 +21,7 @@ struct cmd {
 extern const struct cmd	commands[];
 
 extern const struct cmd
-*FindCmd proto((cmdproc_t));
+	*FindCmd proto((cmdproc_t));
 
 extern void
-ExecCmd proto((const data_obj *cp));
+	ExecCmd proto((const data_obj *cp));

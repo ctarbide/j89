@@ -25,53 +25,53 @@ io_lines;
 extern int	MakeTemp proto((char *, const char *));
 
 extern char
-*lbptr proto((LinePtr line)),
-*pr_name proto((const char *fname, bool okay_home)),
-*pwd proto((void));
+	*lbptr proto((LinePtr line)),
+	*pr_name proto((const char *fname, bool okay_home)),
+	*pwd proto((void));
 
 extern File
-*open_file proto((char *fname, char *buf, int how, bool complainifbad));
+	*open_file proto((char *fname, char *buf, int how, bool complainifbad));
 
 extern void
-setCWD proto((char *d)),
-       getCWD proto((void)),
-       PathCat proto((char *buf, size_t, const char *pre, const char *post)),
-       PathParse proto((const char *name, char *intobuf)),
-       SyncTmp proto((void)),
-       close_file proto((File *fp)),
-       d_cache_init proto((void)),
-       file_write proto((char *fname, bool app)),
-       jgetline proto((daddr addr, char *buf)),
-       lsave proto((void)),
-       putreg proto((File *fp, LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, bool makesure)),
-       read_file proto((char *file, bool is_insert)),
-       put_bufs proto((bool askp)),
-       tmpclose proto((void)),
-       tmpremove proto((void));
+	setCWD proto((char *d)),
+	getCWD proto((void)),
+	PathCat proto((char *buf, size_t, const char *pre, const char *post)),
+	PathParse proto((const char *name, char *intobuf)),
+	SyncTmp proto((void)),
+	close_file proto((File *fp)),
+	d_cache_init proto((void)),
+	file_write proto((char *fname, bool app)),
+	jgetline proto((daddr addr, char *buf)),
+	lsave proto((void)),
+	putreg proto((File *fp, LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, bool makesure)),
+	read_file proto((char *file, bool is_insert)),
+	put_bufs proto((bool askp)),
+	tmpclose proto((void)),
+	tmpremove proto((void));
 
 extern bool
-chkCWD proto((char *dn));
+	chkCWD proto((char *dn));
 
 extern daddr
-jputline proto((char *buf));
+	jputline proto((char *buf));
 
 /* Commands: */
 
 extern void
-AppReg proto((void)),
-       Chdir proto((void)),
-       InsFile proto((void)),
-       Popd proto((void)),
-       Pushd proto((void)),
-       Pushlibd proto((void)),
-       JReadFile proto((void)), /* ReadFile conflicts with Win32 library */
-       SaveFile proto((void)),
-       JWriteFile proto((void)), /* WriteFile conflicts with Win32 library */
-       WtModBuf proto((void)),
-       WrtReg proto((void)),
-       prCWD proto((void)),
-       prDIRS proto((void)),
-       backup_name proto((const char *fname, const char *btype, char *bfname, size_t bfnamesize));
+	AppReg proto((void)),
+	Chdir proto((void)),
+	InsFile proto((void)),
+	Popd proto((void)),
+	Pushd proto((void)),
+	Pushlibd proto((void)),
+	JReadFile proto((void)), /* ReadFile conflicts with Win32 library */
+	SaveFile proto((void)),
+	JWriteFile proto((void)), /* WriteFile conflicts with Win32 library */
+	WtModBuf proto((void)),
+	WrtReg proto((void)),
+	prCWD proto((void)),
+	prDIRS proto((void)),
+	backup_name proto((const char *fname, const char *btype, char *bfname, size_t bfnamesize));
 
 /* Variables: */
 

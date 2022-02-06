@@ -21,7 +21,7 @@
 #include "para.h"
 
 private void
-FindMatch proto((int));
+	FindMatch proto((int));
 
 private bool
 backslashed(char *lp, INTPTR_T cpos)

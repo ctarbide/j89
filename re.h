@@ -33,20 +33,20 @@ extern bool	okay_wrap;	/* Do a wrap search ... not when we're
 				   parsing errors ... */
 
 extern bool
-re_lindex proto((LinePtr line, INTPTR_T offset, int dir,
+	re_lindex proto((LinePtr line, INTPTR_T offset, int dir,
 		struct RE_block *re_blk, bool lbuf_okay, INTPTR_T crater)),
 	LookingAt proto((const char *pattern, char *buf, INTPTR_T offset)),
 	look_at proto((char *expr));
 
 extern Bufpos
-*docompiled proto((int dir, struct RE_block *re_blk)),
-*dosearch proto((const char *pattern, int dir, bool re));
+	*docompiled proto((int dir, struct RE_block *re_blk)),
+	*dosearch proto((const char *pattern, int dir, bool re));
 
 extern void
-REcompile proto((const char *pattern, bool re, struct RE_block *re_blk)),
-	  putmatch proto((int which, char *buf, size_t size)),
-	  re_dosub proto((struct RE_block *re_blk, char *tobuf, bool delp)),
-	  RErecur proto((void));
+	REcompile proto((const char *pattern, bool re, struct RE_block *re_blk)),
+	putmatch proto((int which, char *buf, size_t size)),
+	re_dosub proto((struct RE_block *re_blk, char *tobuf, bool delp)),
+	RErecur proto((void));
 
 /* Variables: */
 

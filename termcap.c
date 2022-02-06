@@ -27,57 +27,57 @@ extern void	UNMACRO(tputs) proto((const char *, int, void (*) proto((int))));
 /* Termcap definitions */
 
 const char
-*CS,	/* change scrolling region */
-*SO,	/* Start standout */
-*SE,	/* End standout */
-*US,	/* Start underlining */
-*UE,	/* End underlining */
-*CM,	/* The cursor motion string */
-*CL,	/* Clear screen */
-*CE,	/* Clear to end of line */
-*HO,	/* Home cursor */
-*AL,	/* Addline (insert line) */
-*DL,	/* Delete line */
-*VS,	/* Visual start */
-*VE,	/* Visual end */
-*KS,	/* Keypad mode start */
-*KE,	/* Keypad mode end */
-*TI,	/* Cursor addressing start */
-*TE,	/* Cursor addressing end */
-*LL,	/* Last line, first column */
-*SF = "\n",	/* Scroll forward (defaults to \n) */
- *SR,	/* Scroll reverse */
- *VB,	/* visible bell */
- *BL = "\007",	/* audible bell (defaults to BEL) */
-  *lPC,	/* pad character (as a string!) */
-  *NL = "\n",	/* newline character (defaults to \n) */
-   *DO = "\n",	/* down one line (defaults to \n capability) */
-    *M_AL,	/* Insert line with arg */
-    *M_DL,	/* Delete line with arg */
-    *M_SF,	/* Scroll forward with arg */
-    *M_SR;	/* Scroll back with arg */
+	*CS,	/* change scrolling region */
+	*SO,	/* Start standout */
+	*SE,	/* End standout */
+	*US,	/* Start underlining */
+	*UE,	/* End underlining */
+	*CM,	/* The cursor motion string */
+	*CL,	/* Clear screen */
+	*CE,	/* Clear to end of line */
+	*HO,	/* Home cursor */
+	*AL,	/* Addline (insert line) */
+	*DL,	/* Delete line */
+	*VS,	/* Visual start */
+	*VE,	/* Visual end */
+	*KS,	/* Keypad mode start */
+	*KE,	/* Keypad mode end */
+	*TI,	/* Cursor addressing start */
+	*TE,	/* Cursor addressing end */
+	*LL,	/* Last line, first column */
+	*SF = "\n",	/* Scroll forward (defaults to \n) */
+	*SR,	/* Scroll reverse */
+	*VB,	/* visible bell */
+	*BL = "\007",	/* audible bell (defaults to BEL) */
+	*lPC,	/* pad character (as a string!) */
+	*NL = "\n",	/* newline character (defaults to \n) */
+	*DO = "\n",	/* down one line (defaults to \n capability) */
+	*M_AL,	/* Insert line with arg */
+	*M_DL,	/* Delete line with arg */
+	*M_SF,	/* Scroll forward with arg */
+	*M_SR;	/* Scroll back with arg */
 
 int
-UPlen = INFINITY,		/* length of the UP string */
-HOlen = INFINITY,		/* length of Home string */
-LLlen = INFINITY,		/* length of last line string */
+	UPlen = INFINITY,	/* length of the UP string */
+	HOlen = INFINITY,	/* length of Home string */
+	LLlen = INFINITY,	/* length of last line string */
 
-phystab = 8,	/* ("it") terminal's tabstop settings */
-UG;		/* number of magic cookies left by US and UE */
+	phystab = 8,	/* ("it") terminal's tabstop settings */
+	UG;		/* number of magic cookies left by US and UE */
 
 bool
-Hazeltine,	/* Hazeltine tilde kludge */
-UL,		/* underscores don't replace chars already on screen */
-NP;		/* there is No Pad character */
+	Hazeltine,	/* Hazeltine tilde kludge */
+	UL,		/* underscores don't replace chars already on screen */
+	NP;		/* there is No Pad character */
 
 #  ifdef DEFINE_PC_BC_UP_OSPEED
 /* This is needed for HP-UX, possibly for other SYSVR2 systems */
 char
-PC;		/* pad character, as a char (set from lPC; defaults to NUL) */
+	PC;	/* pad character, as a char (set from lPC; defaults to NUL) */
 
 const char
-*BC,	/* back space (defaults to BS) */
-*UP;	/* Scroll reverse, or up */
+	*BC,	/* back space (defaults to BS) */
+	*UP;	/* Scroll reverse, or up */
 
 short	ospeed;
 #  endif /* DEFINE_PC_BC_UP_OSPEED */
@@ -87,31 +87,31 @@ bool	CanScroll;	/* can this terminal scroll? */
 #  ifdef ID_CHAR
 
 const char
-*IC,	/* Insert char */
-*DC,	/* Delete char */
-*IM,	/* Insert mode */
-*EI,	/* End insert mode */
-*IP,	/* insert pad after character inserted */
-*M_IC,	/* Insert char with arg */
-*M_DC;	/* Delete char with arg */
+	*IC,	/* Insert char */
+	*DC,	/* Delete char */
+	*IM,	/* Insert mode */
+	*EI,	/* End insert mode */
+	*IP,	/* insert pad after character inserted */
+	*M_IC,	/* Insert char with arg */
+	*M_DC;	/* Delete char with arg */
 
 bool	UseIC = NO;	/* VAR: whether or not to use i/d char processesing */
 
 int
 #   ifdef NCURSES_BUG
-IMEIlen = INFINITY,	/* length of insert mode + end insert mode strings */
+	IMEIlen = INFINITY,	/* length of insert mode + end insert mode strings */
 #   else
-IMEIlen = 0,	/* length of insert mode + end insert mode strings */
+	IMEIlen = 0,	/* length of insert mode + end insert mode strings */
 #   endif
 
-IClen = INFINITY,	/* length of insert char */
-MIClen = INFINITY,	/* length of insert char with arg */
-DClen = INFINITY,	/* length of delete char */
-MDClen = INFINITY,	/* length of delete char with arg */
-CElen = INFINITY;	/* length of clear to end of line */
+	IClen = INFINITY,	/* length of insert char */
+	MIClen = INFINITY,	/* length of insert char with arg */
+	DClen = INFINITY,	/* length of delete char */
+	MDClen = INFINITY,	/* length of delete char with arg */
+	CElen = INFINITY;	/* length of clear to end of line */
 
 bool
-MI;		/* okay to move while in insert mode */
+	MI;		/* okay to move while in insert mode */
 
 #  endif /* ID_CHAR */
 

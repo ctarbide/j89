@@ -469,8 +469,9 @@ options(void)
 
 /* Returns a legitimate buffer # */
 
-private void	tellme proto((const char *, char *, size_t)),
-	   list proto((void));
+private void
+	tellme proto((const char *, char *, size_t)),
+	list proto((void));
 
 private long
 getsrc(void)

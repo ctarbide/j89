@@ -36,6 +36,6 @@ extern const data_obj	*LastCmd;	/* last command invoked */
 extern const char	*ProcFmt;	/* ": %f " -- name of LastCmd */
 
 extern const data_obj
-*findcom proto((const char *prompt)),
-*findmac proto((const char *prompt)),
-*findvar proto((const char *prompt));
+	*findcom proto((const char *prompt)),
+	*findmac proto((const char *prompt)),
+	*findvar proto((const char *prompt));

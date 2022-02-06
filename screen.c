@@ -754,13 +754,13 @@ private struct cursaddr	*HorMin,
 		*DirectMin;
 
 private void
-ForTab proto((int, int)),
-       RetTab proto((int, int)),
-       DownMotion proto((int, int)),
-       UpMotion proto((int, int)),
-       GoDirect proto((int, int)),
-       HomeGo proto((int, int)),
-       BottomUp proto((int, int));
+	ForTab proto((int, int)),
+	RetTab proto((int, int)),
+	DownMotion proto((int, int)),
+	UpMotion proto((int, int)),
+	GoDirect proto((int, int)),
+	HomeGo proto((int, int)),
+	BottomUp proto((int, int));
 
 
 private struct cursaddr	WarpHor[] = {

@@ -27,10 +27,10 @@
 #endif
 
 private void
-IncSearch proto((int));
+	IncSearch proto((int));
 
 private int
-isearch proto((int, Bufpos *));
+	isearch proto((int, Bufpos *));
 
 private char
 searchstr[128];		/* global search string */

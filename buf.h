@@ -133,13 +133,13 @@ struct position {
 };
 
 extern bool
-valid_bp proto((Buffer	*bp));
+	valid_bp proto((Buffer	*bp));
 
 extern Buffer
-*buf_exists proto((const char *name)),
-*do_find proto((Window *w, char *fname, bool force, bool do_macros)),
-*do_select proto((Window *w, const char *name)),
-*do_stat proto((const char *name, Buffer *target, int flags));
+	*buf_exists proto((const char *name)),
+	*do_find proto((Window *w, char *fname, bool force, bool do_macros)),
+	*do_select proto((Window *w, const char *name)),
+	*do_stat proto((const char *name, Buffer *target, int flags));
 
 /* flags to do_stat */
 #define DS_NONE	0
@@ -152,45 +152,45 @@ was_dir,	/* do_stat found a directory */
 was_file;	/* do_stat found a (plain) file */
 
 extern const char
-*ask_buf proto((Buffer *def, int flags));
+	*ask_buf proto((Buffer *def, int flags));
 
 #ifdef USE_PROTOTYPES
 struct macro;	/* forward declaration preventing prototype scoping */
 #endif /* USE_PROTOTYPES */
 
 extern void
-TogMinor proto((unsigned bit)),
-	 buf_clear proto((Buffer *b)),
-	 setfname proto((Buffer *b, const char *name)),
-	 SetABuf proto((Buffer *b)),
-	 SetBuf proto((Buffer *newbuf)),
-	 buf_init proto((void));
+	TogMinor proto((unsigned bit)),
+	buf_clear proto((Buffer *b)),
+	setfname proto((Buffer *b, const char *name)),
+	SetABuf proto((Buffer *b)),
+	SetBuf proto((Buffer *newbuf)),
+	buf_init proto((void));
 
 extern LinePtr
-lastline proto((LinePtr lp)),
-	 listput proto((Buffer *buf, LinePtr after)),
-	 next_line proto((LinePtr line, long num)),
-	 prev_line proto((LinePtr line, long num));
+	lastline proto((LinePtr lp)),
+	listput proto((Buffer *buf, LinePtr after)),
+	next_line proto((LinePtr line, long num)),
+	prev_line proto((LinePtr line, long num));
 
 /* Commands: */
 
 extern void
-BufErase proto((void)),
-	 BufKill proto((void)),
-	 BufList proto((void)),
-	 BufSelect proto((void)),
-	 FindFile proto((void)),
-	 KillSome proto((void)),
-	 ReNamBuf proto((void));
+	BufErase proto((void)),
+	BufKill proto((void)),
+	BufList proto((void)),
+	BufSelect proto((void)),
+	FindFile proto((void)),
+	KillSome proto((void)),
+	ReNamBuf proto((void));
 
 extern void
-Buf1Select proto((void)),
-	   Buf2Select proto((void)),
-	   Buf3Select proto((void)),
-	   Buf4Select proto((void)),
-	   Buf5Select proto((void)),
-	   Buf6Select proto((void)),
-	   Buf7Select proto((void)),
-	   Buf8Select proto((void)),
-	   Buf9Select proto((void)),
-	   Buf10Select proto((void));
+	Buf1Select proto((void)),
+	Buf2Select proto((void)),
+	Buf3Select proto((void)),
+	Buf4Select proto((void)),
+	Buf5Select proto((void)),
+	Buf6Select proto((void)),
+	Buf7Select proto((void)),
+	Buf8Select proto((void)),
+	Buf9Select proto((void)),
+	Buf10Select proto((void));

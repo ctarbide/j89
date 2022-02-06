@@ -22,11 +22,11 @@
  */
 
 private	bool
-lower proto((char *)),
-      upper proto((char *));
+	lower proto((char *)),
+	upper proto((char *));
 
 private void
-CaseReg proto((bool up)),
+	CaseReg proto((bool up)),
 	case_reg proto((LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, bool up));
 
 void

@@ -246,23 +246,25 @@ strt:
 
 	if (i_blank(this)) {		/* rule 1 */
 		if (how == BACKWARD) {
-			while (i_blank(curline))
+			while (i_blank(curline)) {
 				if (firstp(curline)) {
 					complain((char *)NULL);
 					/* NOTREACHED */
 				} else {
 					line_move(BACKWARD, 1, NO);
 				}
+			}
 
 			goto strt;
 		} else {
-			while (i_blank(curline))
+			while (i_blank(curline)) {
 				if (lastp(curline)) {
 					complain((char *)NULL);
 					/* NOTREACHED */
 				} else {
 					line_move(FORWARD, 1, NO);
 				}
+			}
 
 			head = curline;
 			next = curline->l_next;

@@ -380,7 +380,7 @@ bool	WtOnMk = YES;		/* VAR: write files on compile-it command */
 bool	WrapProcessLines = NO;	/* VAR: wrap process lines at CO-1 chars */
 
 private void
-DoShell proto((char *, char *)),
+	DoShell proto((char *, char *)),
 	com_finish proto((wait_status_t, char *));
 
 private char	make_cmd[LBSIZE] = "make";

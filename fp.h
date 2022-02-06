@@ -57,15 +57,15 @@ struct FileStruct {
 extern int	ScrBufSize;
 
 extern File
-*f_open proto((const char *name, int flags, char *buffer, int buf_size)),
-*fd_open proto((const char *name, int flags, int fd, char *buffer, int bsize));
+	*f_open proto((const char *name, int flags, char *buffer, int buf_size)),
+	*fd_open proto((const char *name, int flags, int fd, char *buffer, int bsize));
 
 extern int
-f_filbuf proto((File *fp));
+	f_filbuf proto((File *fp));
 
 #ifdef PIPEPROCS
 extern size_t
-f_readn proto((File *fp, char *addr, size_t n));
+	f_readn proto((File *fp, char *addr, size_t n));
 #endif
 
 #if defined(ZTCDOS) || defined(__BORLANDC__)
@@ -76,7 +76,7 @@ typedef long	off_t;
 #endif
 
 extern void
-f_close proto((File *fp)),
+	f_close proto((File *fp)),
 	f_seek proto((File *fp, off_t offset)),
 	f_toNL proto((File *fp)),
 	flushout proto((File *fp)),
@@ -85,4 +85,4 @@ f_close proto((File *fp)),
 	putstr proto((const char *s));
 
 extern bool
-f_gets proto((File *fp, char *buf, size_t max));
+	f_gets proto((File *fp, char *buf, size_t max));

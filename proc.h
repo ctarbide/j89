@@ -12,13 +12,13 @@ extern char	ShcomBuf[LBSIZE];
 extern char	*MakeName proto((char *command));
 
 extern void
-isprocbuf proto((const char *bufname)),
-	  get_FL_info proto((char *, char *)),
-	  ChkErrorLines proto((void)),
-	  ErrFree proto((void));
+	isprocbuf proto((const char *bufname)),
+	get_FL_info proto((char *, char *)),
+	ChkErrorLines proto((void)),
+	ErrFree proto((void));
 
 extern wait_status_t
-UnixToBuf proto((int, const char *, const char *, const char *));
+	UnixToBuf proto((int, const char *, const char *, const char *));
 
 /* flags for UnixToBuf: */
 #define UTB_DISP	1	/* Display output? */
@@ -36,30 +36,30 @@ extern void	dowait proto((wait_status_t *status));
 
 #ifdef SUBSHELL
 extern void
-MakeErrors proto((void)),
-	   FilterRegion proto((void)),
-	   ShNoBuf proto((void)),
-	   ShToBuf proto((void)),
-	   ShellCom proto((void)),
-	   Shtypeout proto((void)),
-	   ProcEnvExport proto((void)),
-	   ProcEnvShow proto((void)),
-	   ProcEnvUnset proto((void));
+	MakeErrors proto((void)),
+	FilterRegion proto((void)),
+	ShNoBuf proto((void)),
+	ShToBuf proto((void)),
+	ShellCom proto((void)),
+	Shtypeout proto((void)),
+	ProcEnvExport proto((void)),
+	ProcEnvShow proto((void)),
+	ProcEnvUnset proto((void));
 #endif
 /*
  * Even if we don't have MakeErrors, the following are useful because we can
  * load an error file and parse it with these.
  */
 extern void
-ErrParse proto((void)),
-	 ShowErr proto((void)),
-	 NextError proto((void)),
-	 PrevError proto((void));
+	ErrParse proto((void)),
+	ShowErr proto((void)),
+	NextError proto((void)),
+	PrevError proto((void));
 
 #ifdef SPELL
 extern void
-SpelBuffer proto((void)),
-	   SpelWords proto((void));
+	SpelBuffer proto((void)),
+	SpelWords proto((void));
 #endif
 
 /* Variables: */

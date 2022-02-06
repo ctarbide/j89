@@ -27,7 +27,7 @@
 #endif
 
 private void
-DefAutoExec proto((const data_obj * (*proc) ptrproto((const char *))));
+	DefAutoExec proto((const data_obj * (*proc) ptrproto((const char *))));
 
 int	InJoverc = 0;
 

@@ -15,11 +15,11 @@ extern bool	AutoCaseAbbrev;		/* VAR: automatically do case on abbreviations */
 
 /* Commands: */
 extern void
-BindMtoW proto((void)),
-	 DefMAbbrev proto((void)),
-	 DefGAbbrev proto((void)),
-	 SaveAbbrevs proto((void)),
-	 RestAbbrevs proto((void)),
-	 EditAbbrevs proto((void));
+	BindMtoW proto((void)),
+	DefMAbbrev proto((void)),
+	DefGAbbrev proto((void)),
+	SaveAbbrevs proto((void)),
+	RestAbbrevs proto((void)),
+	EditAbbrevs proto((void));
 
 #endif /* ABBREV */

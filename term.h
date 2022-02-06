@@ -12,14 +12,14 @@
  */
 
 extern void
-ttysetattr proto((bool n)),
-	   ttsize proto((void)),
-	   getTERM proto((void)),
-	   settout proto((void)),
-	   dobell proto((int x)),
-	   clr_page proto((void)),
-	   i_lines proto((int, int, int)),
-	   d_lines proto((int, int, int));
+	ttysetattr proto((bool n)),
+	ttsize proto((void)),
+	getTERM proto((void)),
+	settout proto((void)),
+	dobell proto((int x)),
+	clr_page proto((void)),
+	i_lines proto((int, int, int)),
+	d_lines proto((int, int, int));
 
 /* MSDOS keyboard routines */
 
@@ -27,8 +27,8 @@ ttysetattr proto((bool n)),
 
 # ifdef IBMPCDOS
 extern void
-pcSetTerm proto((void)),
-	  pcUnsetTerm proto((void));
+	pcSetTerm proto((void)),
+	pcUnsetTerm proto((void));
 
 extern bool enhanced_keybrd;	/* VAR: exploit "enhanced" keyboard? */
 # endif /* IBMPCDOS */
@@ -58,7 +58,7 @@ Hlattr;	/* VAR: highlight-attribute */
 #ifndef TERMCAP
 
 extern void
-clr_eoln proto((void));
+	clr_eoln proto((void));
 
 #else /* TERMCAP */	/* the body is the rest of this file */
 
@@ -152,7 +152,7 @@ MI;		/* okay to move while in insert mode */
 # endif /* ID_CHAR */
 
 extern void
-putpad proto((const char *str, int lines)),
-       putmulti proto((const char *ss, const char *ms, int num, int lines));
+	putpad proto((const char *str, int lines)),
+	putmulti proto((const char *ss, const char *ms, int num, int lines));
 
 #endif /* TERMCAP */

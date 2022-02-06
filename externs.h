@@ -9,22 +9,22 @@
 /* UNIX Library/System Routine Emulations for old Macintosh (mac.c) */
 
 extern int
-creat proto((const char *, jmode_t)),
+	creat proto((const char *, jmode_t)),
       /* open may have an optional third argument, promo(jmode_t) mode */
-      open proto((const char */*path*/, int /*flags*/, ...)),
-      close proto((int)),
-      unlink proto((const char *)),
-      chdir proto((const char *));
+	open proto((const char */*path*/, int /*flags*/, ...)),
+	close proto((int)),
+	unlink proto((const char *)),
+	chdir proto((const char *));
 
 extern JSSIZE_T
-read proto((int /*fd*/, UnivPtr /*buf*/, size_t /*nbytes*/)),
-     write proto((int /*fd*/, UnivConstPtr /*buf*/, size_t /*nbytes*/));
+	read proto((int /*fd*/, UnivPtr /*buf*/, size_t /*nbytes*/)),
+	write proto((int /*fd*/, UnivConstPtr /*buf*/, size_t /*nbytes*/));
 
 extern off_t	lseek proto((int /*fd*/, off_t /*offset*/, int /*whence*/));
 extern time_t	time proto((time_t *));
 
 extern void
-menus_off proto((void));	/* called by real_ask, findcom, waitchar */
+	menus_off proto((void));	/* called by real_ask, findcom, waitchar */
 
 #endif /* MAC */
 
@@ -58,12 +58,12 @@ extern char	*getenv proto((const char *));
 extern int	system proto((const char *));
 
 extern void
-free proto((UnivPtr));
+	free proto((UnivPtr));
 
 extern UnivPtr
-calloc proto((size_t, size_t)),
-       malloc proto((size_t)),
-       realloc proto((UnivPtr, size_t));
+	calloc proto((size_t, size_t)),
+	malloc proto((size_t)),
+	realloc proto((UnivPtr, size_t));
 
 /* Date and Time <time.h> */
 

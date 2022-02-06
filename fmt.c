@@ -18,8 +18,8 @@
 #endif
 
 private void
-doformat proto((File *, const char *, va_list)),
-	 pad proto((DAPchar, int));
+	doformat proto((File *, const char *, va_list)),
+	pad proto((DAPchar, int));
 
 char	mesgbuf[MESG_SIZE];
 

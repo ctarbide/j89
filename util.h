@@ -8,7 +8,7 @@
 /* some utility functions, as macros, to be included by jove.h */
 
 extern int
-fnamecomp proto((UnivConstPtr, UnivConstPtr));	/* order file names */
+	fnamecomp proto((UnivConstPtr, UnivConstPtr));	/* order file names */
 
 #define IsModified(b)	((b)->b_modified)
 #define SavLine(a, b)	((a)->l_dline = jputline((b)))
@@ -22,22 +22,22 @@ fnamecomp proto((UnivConstPtr, UnivConstPtr));	/* order file names */
 #define lastp(line)	((line) == curbuf->b_last)
 
 extern UnivPtr
-emalloc proto((size_t size)),
+	emalloc proto((size_t size)),
 	erealloc proto((UnivPtr ptr, size_t size));
 
 extern char
-*IOerr proto((const char *err, const char *file)),
-*copystr proto((const char *str)),
-*get_time proto((time_t *timep, char *buf, int from, int to)),
-*lcontents proto((LinePtr line)),
-*ltobuf proto((LinePtr line, char *buf));
+	*IOerr proto((const char *err, const char *file)),
+	*copystr proto((const char *str)),
+	*get_time proto((time_t *timep, char *buf, int from, int to)),
+	*lcontents proto((LinePtr line)),
+	*ltobuf proto((LinePtr line, char *buf));
 
 extern const char
-*jbasename proto((const char *f)),
-*filename proto((const Buffer *b));
+	*jbasename proto((const char *f)),
+	*filename proto((const Buffer *b));
 
 extern long
-inorder proto((LinePtr nextp, INTPTR_T char1, LinePtr endp, INTPTR_T char2)),
+	inorder proto((LinePtr nextp, INTPTR_T char1, LinePtr endp, INTPTR_T char2)),
 	LineDist proto((LinePtr nextp, LinePtr endp)),
 	LinesTo proto((LinePtr from, LinePtr to));
 
@@ -56,14 +56,14 @@ extern INTPTR_T
 	jminptr proto((INTPTR_T a, INTPTR_T b));
 
 extern size_t
-zumax proto((size_t a, size_t b)),
+	zumax proto((size_t a, size_t b)),
 	zumin proto((size_t a, size_t b));
 
 extern ZXchar
-DecodePair proto((ZXchar first, ZXchar second));
+	DecodePair proto((ZXchar first, ZXchar second));
 
 extern bool
-caseeqn proto((const char *s1, const char *s2, size_t n)),
+	caseeqn proto((const char *s1, const char *s2, size_t n)),
 	TwoBlank proto((void)),
 	blnkp proto((char *buf)),
 	within_indent proto((void)),
@@ -73,7 +73,7 @@ caseeqn proto((const char *s1, const char *s2, size_t n)),
 	ModBufs proto((bool allp));
 
 extern void
-DOTsave proto((Bufpos *buf)),
+	DOTsave proto((Bufpos *buf)),
 	DotTo proto((LinePtr line, INTPTR_T col)),
 	PushPntp proto((LinePtr line)),
 	SetDot proto((Bufpos *bp)),
@@ -95,7 +95,7 @@ DOTsave proto((Bufpos *buf)),
 	unmodify proto((void));
 
 extern UnivPtr
-freealloc proto((UnivPtr obj, size_t size));
+	freealloc proto((UnivPtr obj, size_t size));
 
 #if defined(IPROCS) || defined(SUBSHELL)
 
@@ -120,9 +120,9 @@ typedef struct {
 } Env;
 
 extern const char **
-jenvdata proto((Env *envp));
+	jenvdata proto((Env *envp));
 extern void
-jputenv proto((Env *envp, const char *def)),
+	jputenv proto((Env *envp, const char *def)),
 	junsetenv proto((Env *envp, const char *name));
 #endif /* defined(IPROCS) */
 
@@ -133,9 +133,9 @@ jputenv proto((Env *envp, const char *def)),
 #define truncstr(buf, str)	truncstrsub(buf, str, sizeof(buf))
 #define jamstr(buf, str)	jamstrsub(buf, str, sizeof(buf))
 extern void
-truncstrsub proto((char *buf, const char *str, size_t bufsz)),
-	    jamstrsub proto((char *buf, const char *str, size_t bufsz)),
-	    jamstrcat proto((char *buf, const char *str, size_t bufsz));
+	truncstrsub proto((char *buf, const char *str, size_t bufsz)),
+	jamstrsub proto((char *buf, const char *str, size_t bufsz)),
+	jamstrcat proto((char *buf, const char *str, size_t bufsz));
 
 /* Variables: */
 

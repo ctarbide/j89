@@ -38,35 +38,35 @@
 
 struct screenline
 	*Screen = NULL,	/* the screen (a bunch of screenline) */
-	 *Curline = NULL;	/* current line */
+	*Curline = NULL;	/* current line */
 
 private void
-DeTab proto((char *, int, char *, char *, bool)),
-      DoIDline proto((int)),
-      do_cl_eol proto((int)),
-      ModeLine proto((Window *, char *, int)),
-      GotoDot proto((void)),
-      UpdLine proto((int)),
-      UpdWindow proto((Window *, int));
+	DeTab proto((char *, int, char *, char *, bool)),
+	DoIDline proto((int)),
+	do_cl_eol proto((int)),
+	ModeLine proto((Window *, char *, int)),
+	GotoDot proto((void)),
+	UpdLine proto((int)),
+	UpdWindow proto((Window *, int));
 
 #ifdef ID_CHAR
 private void
-DelChar proto((int, int, int)),
+	DelChar proto((int, int, int)),
 	InsChar proto((int, int, int, char *));
 
 private bool
-IDchar proto((char *, int)),
-       OkayDelete proto((int, int, bool)),
-       OkayInsert proto((int, int));
+	IDchar proto((char *, int)),
+	OkayDelete proto((int, int, bool)),
+	OkayInsert proto((int, int));
 
 private int
-NumSimilar proto((char *, char *, int)),
-	   IDcomp proto((char *, char *, int));
+	NumSimilar proto((char *, char *, int)),
+	IDcomp proto((char *, char *, int));
 #endif /* ID_CHAR */
 
 private bool
-AddLines proto((int, int)),
-	 DelLines proto((int, int));
+	AddLines proto((int, int)),
+	DelLines proto((int, int));
 
 bool	DisabledRedisplay = NO;
 
@@ -1006,10 +1006,11 @@ NumSimilar(char *s, char *t, int n)
 {
 	int	num = 0;
 
-	while (n--)
+	while (n--) {
 		if (*s++ == *t++) {
 			num += 1;
 		}
+	}
 
 	return num;
 }

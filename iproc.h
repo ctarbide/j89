@@ -52,24 +52,24 @@ extern void	reap_procs proto((void));
 # endif /* !PIPEPROCS */
 
 extern void
-closeiprocs proto((void)),
-	    untieDeadProcess proto((Buffer *));
+	closeiprocs proto((void)),
+	untieDeadProcess proto((Buffer *));
 
 extern bool
-KillProcs proto((void));
+	KillProcs proto((void));
 
 extern const char
-*pstate proto((Process));
+	*pstate proto((Process));
 
 extern pid_t	DeadPid;	/* info about ChildPid, if reaped by kill_off */
 extern wait_status_t	DeadStatus;
 
 extern void
-kill_off proto((pid_t, wait_status_t));
+	kill_off proto((pid_t, wait_status_t));
 
 /* Commands: */
 extern void
-ProcInt proto((void)),
+	ProcInt proto((void)),
 	Iprocess proto((void)),
 	ShellProc proto((void)),
 	ProcQuit proto((void)),

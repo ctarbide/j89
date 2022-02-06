@@ -27,11 +27,11 @@
 #include "wind.h"
 
 private void
-DoNewline proto((bool indentp));
+	DoNewline proto((bool indentp));
 
 #ifdef LISP
 private Bufpos
-*lisp_indent proto((void));
+	*lisp_indent proto((void));
 #endif
 
 /* Make a new line after "after" in buffer "buf", unless "after" is NULL,

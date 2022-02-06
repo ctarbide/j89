@@ -76,9 +76,9 @@ STACK_DECL
 #endif
 
 private void
-UnsetTerm proto((bool)),
-	  DoKeys proto((bool firsttime)),
-	  ShowKeyStrokes proto((void));
+	UnsetTerm proto((bool)),
+	DoKeys proto((bool firsttime)),
+	ShowKeyStrokes proto((void));
 
 #ifdef NONBLOCKINGREAD
 private void	setblock proto((bool on));

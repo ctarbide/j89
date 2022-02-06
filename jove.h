@@ -386,42 +386,42 @@ extern void	jcloseall proto((void));
 #endif
 
 extern SIGRESTYPE
-finish proto((int code)) NEVER_RETURNS,	/* doesn't return at all! */
-       win_reshape proto((int /*junk*/));
+	finish proto((int code)) NEVER_RETURNS,	/* doesn't return at all! */
+	win_reshape proto((int /*junk*/));
 
 extern bool
-charp proto((void));
+	charp proto((void));
 
 extern ZXchar
-getch proto((void)),
-      kbd_getch proto((void)),
-      waitchar proto((void)),
-      ask_ks proto((void));
+	getch proto((void)),
+	kbd_getch proto((void)),
+	waitchar proto((void)),
+	ask_ks proto((void));
 
 extern void
-cmd_sync proto((void)),
-	 add_stroke proto((ZXchar)),
-	 error proto((const char *, ...)) NEVER_RETURNS,
-	 complain proto((const char *, ...)) NEVER_RETURNS,
-	 raw_complain proto((const char *, ...)),
-	 confirm proto((const char *, ...)),
-	 SitFor proto((int delay)),
-	 pp_key_strokes proto((char *buffer, size_t size)),
-	 tty_adjust proto((void)),
-	 Ungetc proto((ZXchar c)),
-	 kbd_ungetch proto((ZXchar c));
+	cmd_sync proto((void)),
+	add_stroke proto((ZXchar)),
+	error proto((const char *, ...)) NEVER_RETURNS,
+	complain proto((const char *, ...)) NEVER_RETURNS,
+	raw_complain proto((const char *, ...)),
+	confirm proto((const char *, ...)),
+	SitFor proto((int delay)),
+	pp_key_strokes proto((char *buffer, size_t size)),
+	tty_adjust proto((void)),
+	Ungetc proto((ZXchar c)),
+	kbd_ungetch proto((ZXchar c));
 
 /* Commands: */
 
 extern void
 #ifdef JOB_CONTROL
-PauseJove proto((void)),
+	PauseJove proto((void)),
 #endif
 #ifdef SUBSHELL
-	  Push proto((void)),
+	Push proto((void)),
 #endif
-	  Recur proto((void)),
-	  ShowVersion proto((void));
+	Recur proto((void)),
+	ShowVersion proto((void));
 
 /* Variables: */
 

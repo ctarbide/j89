@@ -499,7 +499,7 @@ kbd_kill()
 #  else
 #   include <sys/stropts.h>
 #  endif
-  extern char	*ptsname proto((int /*filedes*/));	/* get name of slave */
+extern char	*ptsname proto((int /*filedes*/));	/* get name of slave */
 # endif
 
 # ifdef IRIX_PTYS
@@ -744,11 +744,12 @@ send_xc(int c)
 			on = 1;
 			jdbg("TIOCREMOTE off pid %d %s\n", p->p_pid, p->p_name);
 
-			while (ioctl(p->p_fd, TIOCREMOTE, (UnivPtr) &off) < 0)
+			while (ioctl(p->p_fd, TIOCREMOTE, (UnivPtr) &off) < 0) {
 				if (errno != EINTR) {
 					complain("TIOCREMOTE OFF failed: %d %s", errno, strerror(errno));
 					/* NOTREACHED */
 				}
+			}
 
 #  endif /* !NO_TIOCREMOTE */
 
@@ -881,9 +882,10 @@ size_t	nbytes;
 		FD_ZERO(&mask);
 		FD_SET(p->p_fd, &mask);
 
-		while (write(p->p_fd, (UnivPtr) buf, nbytes) <  0)
+		while (write(p->p_fd, (UnivPtr) buf, nbytes) <  0) {
 			(void) select(p->p_fd + 1, (fd_set *)NULL, &mask, (fd_set *)NULL,
 				(struct timeval *)NULL);
+		}
 	}
 }
 
