@@ -213,7 +213,8 @@ void
 KillEos(void)
 {
 	LinePtr	line1;
-	int	char1;
+	INTPTR_T
+		char1;
 	line1 = curline;
 	char1 = curchar;
 	Eos();
@@ -224,7 +225,8 @@ void
 KillExpr(void)
 {
 	LinePtr	line1;
-	int	char1;
+	INTPTR_T
+		char1;
 	line1 = curline;
 	char1 = curchar;
 	FSexpr();

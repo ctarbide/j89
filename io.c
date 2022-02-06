@@ -356,13 +356,7 @@ File	*fp;
 bool	EndWNewline = 1;	/* VAR: end files with a blank line */
 
 void
-putreg(fp, line1, char1, line2, char2, makesure)
-register File	*fp;
-LinePtr	line1,
-	line2;
-int	char1,
-	char2;
-bool	makesure;
+putreg(File *fp, LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, bool makesure)
 {
 	if (makesure)
 		(void) fixorder(&line1, &char1, &line2, &char2);
@@ -370,8 +364,13 @@ bool	makesure;
 		register char	*lp = lcontents(line1) + char1;
 
 		if (line1 == line2) {
-			fputnchar(lp, (char2 - char1), fp);
-			io_chars += (char2 - char1);
+			if (char2 < char1) {
+				fprintf(stderr, "fatal: %s:%d: char2 < char1\n", __FILE__, __LINE__);
+				exit(1);
+			}
+			/* 'char2' guaranteed greater than or equal 'char1' */
+			fputnchar(lp, (size_t)(char2 - char1), fp);
+			io_chars += char2 - char1;
 		} else {
 			register char	c;
 
@@ -400,7 +399,8 @@ dofread(File *fp)
 	char	end[LBSIZE];
 	bool	xeof;
 	LinePtr	savel = curline;
-	int	savec = curchar;
+	INTPTR_T
+		savec = curchar;
 
 	strcpy(end, linebuf + curchar);
 	xeof = f_gets(fp, linebuf + curchar, (size_t) (LBSIZE - curchar));

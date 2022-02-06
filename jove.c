@@ -869,7 +869,7 @@ waitchar(void)
 	ZXchar	c;
 #ifdef WAITCHAR_CURSOR_DOWN
 	bool	oldAsking;
-	int	oldAskingWidth;
+	INTPTR_T	oldAskingWidth;
 #endif
 
 	/* short circuit, if we can */

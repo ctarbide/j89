@@ -16,8 +16,8 @@ struct window {
 		w_top,		/* top line */
 		w_line;		/* current line */
 	long	w_topnum;	/* buffer line number of the topline */
+	INTPTR_T	w_char;
 	int
-		w_char,
 		w_height,	/* window height (including mode line) */
 		w_dotcol,	/* screen column of w_line (set by UpdWindow) */
 		w_dotline,	/* screen line number of w_line (set by UpdWindow) */

@@ -312,7 +312,7 @@ suppress:
  * in LINE
  */
 private int
-find_pos(LinePtr line, int c_char)
+find_pos(LinePtr line, INTPTR_T c_char)
 {
 	return calc_pos(lcontents(line), c_char);
 }
@@ -324,7 +324,7 @@ find_pos(LinePtr line, int c_char)
  */
 
 int
-calc_pos(register char *lp, register int c_char)
+calc_pos(register char *lp, register INTPTR_T c_char)
 {
 	register int	pos = 0;
 	register ZXchar	c;

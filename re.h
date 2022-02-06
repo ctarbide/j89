@@ -25,7 +25,7 @@ struct RE_block {
 extern char	rep_search[128],	/* replace search string */
 		rep_str[128];		/* contains replacement string */
 
-extern int	REbom,		/* beginning and end columns of match */
+extern INTPTR_T	REbom,		/* beginning and end columns of match */
 		REeom,
 		REdelta;	/* increase in line length due to last re_dosub */
 
@@ -33,10 +33,10 @@ extern bool	okay_wrap;	/* Do a wrap search ... not when we're
 				   parsing errors ... */
 
 extern bool
-re_lindex proto((LinePtr line, int offset, int dir,
-		struct RE_block *re_blk, bool lbuf_okay, int crater)),
-		       LookingAt proto((const char *pattern, char *buf, int offset)),
-		       look_at proto((char *expr));
+re_lindex proto((LinePtr line, INTPTR_T offset, int dir,
+		struct RE_block *re_blk, bool lbuf_okay, INTPTR_T crater)),
+	LookingAt proto((const char *pattern, char *buf, INTPTR_T offset)),
+	look_at proto((char *expr));
 
 extern Bufpos
 *docompiled proto((int dir, struct RE_block *re_blk)),

@@ -27,7 +27,7 @@ lower proto((char *)),
 
 private void
 CaseReg proto((bool up)),
-	case_reg proto((LinePtr line1, int char1, LinePtr line2, int char2, bool up));
+	case_reg proto((LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, bool up));
 
 void
 CapChar(void)
@@ -148,7 +148,7 @@ lower(char *p)
 }
 
 private void
-case_reg(LinePtr line1, int char1, LinePtr line2, int char2, bool up)
+case_reg(LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, bool up)
 {
 	(void) fixorder(&line1, &char1, &line2, &char2);
 	DotTo(line1, char1);

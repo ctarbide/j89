@@ -66,15 +66,16 @@ DEFS += -DHAVE_SPEED_T
 # DEFS += -DSSIZE_T=long
 
 CC = gcc
-CFLAGS = -std=c99 -g -O2 -Wall -I${HOME}/local/include
+CFLAGS = -ansi -pedantic -g -O2 -Wall -I${HOME}/local/include
 # CFLAGS += -Werror -fmax-errors=3
 LIBS = -L${HOME}/local/lib64 -L${HOME}/local/lib
 LIBS += -lm -lncursesw -lutil
 
 OPTFLAGS = -ggdb3 -O0
 # OPTFLAGS = -g -O2
-WERROR = -pedantic -Werror -fmax-errors=5
-CFLAGS_QA = -std=c99 $(OPTFLAGS) \
+
+WERROR = -Werror -fmax-errors=5
+CFLAGS_QA = -ansi -pedantic $(OPTFLAGS) \
     -Wall -Wextra -Wstrict-prototypes -Wmissing-prototypes \
     -Wshadow -Wconversion -Wdeclaration-after-statement \
     -Wno-unused-parameter \

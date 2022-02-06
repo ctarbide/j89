@@ -37,8 +37,7 @@ blnkp(register char *buf)
 bool
 within_indent(void)
 {
-	register int	i;
-	i = curchar;
+	INTPTR_T	i = curchar;
 
 	for (;;) {
 		if (--i < 0) {
@@ -52,7 +51,7 @@ within_indent(void)
 }
 
 void
-DotTo(LinePtr line, int col)
+DotTo(LinePtr line, INTPTR_T col)
 {
 	Bufpos	bp;
 	bp.p_line = line;
@@ -105,7 +104,7 @@ int	MarkThresh = 22;	/* VAR: moves greater than MarkThresh will SetMark (avg scr
 private long	line_diff;
 
 long
-inorder(register LinePtr nextp, int char1, register LinePtr endp, int char2)
+inorder(register LinePtr nextp, INTPTR_T char1, register LinePtr endp, INTPTR_T char2)
 {
 	register LinePtr	prevp = nextp;
 	line_diff = 0;
@@ -286,6 +285,18 @@ jmax(register int a, register int b)
 	return (a > b) ? a : b;
 }
 
+INTPTR_T
+jminptr(INTPTR_T a, INTPTR_T b)
+{
+	return (a < b) ? a : b;
+}
+
+INTPTR_T
+jmaxptr(INTPTR_T a, INTPTR_T b)
+{
+	return (a > b) ? a : b;
+}
+
 size_t
 zumax(size_t a, size_t b)
 {
@@ -330,10 +341,11 @@ DOTsave(Bufpos *buf)
 /* Return YES iff we had to rearrange the order. */
 
 bool
-fixorder(register LinePtr *line1, register int *char1, register LinePtr *line2, register int *char2)
+fixorder(LinePtr *line1, INTPTR_T *char1, LinePtr *line2, INTPTR_T *char2)
 {
 	LinePtr	tline;
-	int	tchar;
+	INTPTR_T
+		tchar;
 
 	if (inorder(*line1, *char1, *line2, *char2)) {
 		return NO;
@@ -468,19 +480,19 @@ len_error(int flag)
 /* Insert num copies of character c at offset atchar in buffer buf of size max */
 
 void
-ins_c(DAPchar c, char *buf, int atchar, int num, int max)
+ins_c(DAPchar c, char *buf, INTPTR_T atchar, int num, INTPTR_T max)
 {
 	/* hint to reader: all copying and filling is done right to left */
 	char	*from,
 		*to;
-	int	taillen;
+	INTPTR_T	taillen;
 
 	if (num <= 0) {
 		return;
 	}
 
 	from = &buf[atchar];
-	taillen = *from == '\0' ? 1 : (int)strlen(from) + 1;	/* include NUL */
+	taillen = *from == '\0' ? 1 : (INTPTR_T)strlen(from) + 1;	/* include NUL */
 
 	if (atchar + taillen + num > max) {
 		len_error(JMP_COMPLAIN);
@@ -510,7 +522,7 @@ TwoBlank(void)
 }
 
 void
-linecopy(register char *onto, int atchar, register char *from)
+linecopy(register char *onto, INTPTR_T atchar, register char *from)
 {
 	register char	*endp = &onto[LBSIZE];
 	onto += atchar;

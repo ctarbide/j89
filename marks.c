@@ -19,7 +19,7 @@ private Mark	*FreeMarksList = NULL;
 }
 
 Mark *
-MakeMark(register LinePtr line, int column)
+MakeMark(register LinePtr line, INTPTR_T column)
 {
 	register Mark	*newmark;
 
@@ -112,7 +112,7 @@ AllMarkReset(Buffer *b, register LinePtr line)
 }
 
 void
-MarkSet(Mark *m, LinePtr line, int column)
+MarkSet(Mark *m, LinePtr line, INTPTR_T column)
 {
 	m->m_line = line;
 	m->m_char = column;
@@ -165,7 +165,7 @@ set_mark(void)
 }
 
 void
-do_set_mark(LinePtr l, int c)
+do_set_mark(LinePtr l, INTPTR_T c)
 {
 	Mark	**mr = curbuf->b_markring;
 	int	tm = curbuf->b_themark;
@@ -231,7 +231,8 @@ void
 ExchPtMark(void)
 {
 	LinePtr	mline;
-	int	mchar;
+	INTPTR_T
+		mchar;
 	Mark	*m = CurMark();
 	mline = curline;
 	mchar = curchar;
@@ -247,7 +248,7 @@ ExchPtMark(void)
 /* Fix marks after a deletion. */
 
 void
-DFixMarks(register LinePtr line1, int char1, register LinePtr line2, int char2)
+DFixMarks(register LinePtr line1, INTPTR_T char1, register LinePtr line2, INTPTR_T char2)
 {
 	register Mark	*m;
 	LinePtr	lp;
@@ -279,7 +280,7 @@ DFixMarks(register LinePtr line1, int char1, register LinePtr line2, int char2)
 /* Fix marks after an insertion. */
 
 void
-IFixMarks(register LinePtr line1, int char1, register LinePtr line2, int char2)
+IFixMarks(register LinePtr line1, INTPTR_T char1, register LinePtr line2, INTPTR_T char2)
 {
 	register Mark	*m;
 

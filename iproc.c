@@ -1721,7 +1721,8 @@ do_rtp(Mark *mp)
 	Process	p = curbuf->b_process;
 	LinePtr	line1 = curline,
 		line2 = mp->m_line;
-	int	char1 = curchar,
+	INTPTR_T
+		char1 = curchar,
 		char2 = mp->m_char;
 	char	*gp;
 	size_t	nbytes;

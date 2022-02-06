@@ -34,7 +34,7 @@ extern bool
 chkmail proto((bool force));
 
 extern int
-calc_pos proto((char *lp, int c_char));
+calc_pos proto((char *lp, INTPTR_T c_char));
 
 #define MAX_TYPEOUT	MAXCOLS	/* maximum width of typout (in chars) */
 

@@ -394,7 +394,8 @@ do_rfill(bool ulm)
 		 *endmark;
 	LinePtr	l1 = curline,
 		l2 = mp->m_line;
-	int	c1 = curchar,
+	INTPTR_T
+		c1 = curchar,
 		c2 = mp->m_char;
 	use_lmargin = ulm;
 	(void) fixorder(&l1, &c1, &l2, &c2);
@@ -404,7 +405,8 @@ do_rfill(bool ulm)
 		Mark	*tailmark;
 		LinePtr	rl1,
 			rl2;
-		int	rc1,
+		INTPTR_T
+			rc1,
 			rc2;
 		DotTo(l1, c1);
 		find_para(FORWARD);
@@ -439,12 +441,11 @@ do_rfill(bool ulm)
 private void
 do_space(void)
 {
-	int
-	c1,
-	diff,
-	nspace = 0;
-	bool
-	funny_space = NO;
+	INTPTR_T
+		c1,
+		diff,
+		nspace = 0;
+	bool	funny_space = NO;
 	skip_wht_space();
 
 	for (c1 = curchar; --c1 >= 0 && jiswhite(linebuf[c1]);) {
@@ -454,14 +455,14 @@ do_space(void)
 	}
 
 	c1 += 1;
-	diff = (curchar - c1);
+	diff = curchar - c1;
 
 	if (diff != 0) {
 		if (c1 > 0 && !eolp()) {
 			nspace = 1;
 
 			if (diff >= 2) {
-				int	topunct = c1;
+				INTPTR_T	topunct = c1;
 
 				do {
 					topunct -= 1;;
@@ -480,7 +481,12 @@ do_space(void)
 			 */
 			b_char(diff);
 			ins_str(&"  "[2 - nspace]);
-			del_char(FORWARD, diff, NO);
+			if ((UINTPTR_T)diff > INT_MAX) {
+				fprintf(stderr, "fatal: %s:%d: diff > INT_MAX\n", __FILE__, __LINE__);
+				exit(1);
+			}
+			/* 'diff' guaranteed within [0,INT_MAX] */
+			del_char(FORWARD, (int)diff, NO);
 		}
 	}
 }
@@ -490,11 +496,12 @@ do_space(void)
 #endif
 
 void
-DoJustify(LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
+DoJustify(LinePtr l1, INTPTR_T c1, LinePtr l2, INTPTR_T c2, bool scrunch, int indent)
 {
 	Mark	*savedot = MakeMark(curline, curchar),
 		 *endmark;
-	int	okay_char,	/* end of what fits */
+	INTPTR_T
+		okay_char,	/* end of what fits */
 		start_char;	/* where we started the line */
 	(void) fixorder(&l1, &c1, &l2, &c2);	/* l1/c1 will be before l2/c2 */
 	DotTo(l1, c1);
@@ -514,7 +521,7 @@ DoJustify(LinePtr l1, int c1, LinePtr l2, int c2, bool scrunch, int indent)
 
 	for (;;) {
 		/* for each word ... */
-		int word_start = curchar;
+		INTPTR_T	word_start = curchar;
 
 		/* skip to end of (possibly empty) input word */
 		while (!eolp() && !jiswhite(linebuf[curchar])) {

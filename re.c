@@ -77,8 +77,8 @@ REgetc(void)
 
 #define NPAR	10	/* [0-9] - 0th is the entire matched string, i.e. & */
 private char	*comp_ptr,
-		**alt_p,
-		**alt_endp;
+	   * *alt_p,
+	   * *alt_endp;
 
 void
 REcompile(const char *pattern, bool re, struct RE_block *re_blk)
@@ -261,7 +261,7 @@ toolong:
 
 				*comp_ptr++ = CLOSEP;
 				/* parenp[-1] probably within 0 and NPAR */
-				*comp_ptr++ = (char)*--parenp;
+				*comp_ptr++ = (char) * --parenp;
 				break;
 
 			case '|':
@@ -277,7 +277,7 @@ toolong:
 				/* close off previous alternate */
 				*comp_ptr++ = CLOSEP;
 				/* parenp[-1] probably within 0 and NPAR */
-				*comp_ptr++ = (char)*--parenp;
+				*comp_ptr++ = (char) * --parenp;
 
 				if (parenp != parens) {
 					complain("Unmatched \\(.");
@@ -409,7 +409,6 @@ toolong:
 						}
 
 						while (i < c) {
-
 							comp_ptr[SETBYTE(i)] |= (char)SETBIT(i);
 							i += 1;
 						}
@@ -498,7 +497,7 @@ outahere:
 	if (kind != IN_CB) {
 		*comp_ptr++ = CLOSEP;
 		/* parenp[-1] probably within 0 and NPAR */
-		*comp_ptr++ = (char)*--parenp;
+		*comp_ptr++ = (char) * --parenp;
 	}
 
 	if (parenp != parens) {
@@ -525,22 +524,24 @@ outahere:
 	return done_cb;
 }
 
-private char	*pstrtlst[NPAR],	/* index into re_blk->r_lbuf */
-		*pendlst[NPAR],
-		*REbolp,	/* begining-of-line pointer */
-		*locrater,	/* roof of last substitution */
-		*loc1,		/* start of matched text */
-		*loc2;		/* roof of matched text */
+private char
+	*pstrtlst[NPAR],	/* index into re_blk->r_lbuf */
+	*pendlst[NPAR],
+	*REbolp,	/* begining-of-line pointer */
+	*locrater,	/* roof of last substitution */
+	*loc1,		/* start of matched text */
+	*loc2;		/* roof of matched text */
 
-int	REbom,		/* beginning and end columns of match */
+INTPTR_T
+	REbom,		/* beginning and end columns of match */
 	REeom,
 	REdelta;	/* increase in line length due to last re_dosub */
 
 private bool
-backref(int n, register char *linep)
+backref(int n,  char *linep)
 {
-	register char	*backsp,
-		   *backep;
+	char	*backsp,
+		*backep;
 	backsp = pstrtlst[n];
 	backep = pendlst[n];
 
@@ -562,7 +563,7 @@ private bool
 REmatch(char *linep, char *a_comp_ptr)
 {
 	char	*first_p;
-	register int	n;
+	int	n;
 
 	for (;;) switch (*a_comp_ptr++) {
 		case NORMC:
@@ -585,18 +586,11 @@ REmatch(char *linep, char *a_comp_ptr)
 
 			continue;
 
-		case EOP: {
-			INTPTR_T diff = loc2 - REbolp;
-			if ((UINTPTR_T)diff > INT_MAX) {
-				fprintf(stderr, "fatal: %s:%d: diff > INT_MAX, diff: %li\n", __FILE__, __LINE__, diff);
-				exit(1);
-			}
-
+		case EOP:
 			loc2 = linep;
 			/* diff guaranteed within 0 and INT_MAX */
-			REeom = (int)diff;
+			REeom = loc2 - REbolp;
 			return YES;	/* Success! */
-		}
 
 		case AT_BOL:
 			if (linep == REbolp && linep != locrater) {
@@ -752,7 +746,7 @@ star:
 private void
 REreset(void)
 {
-	register int	i;
+	int	i;
 
 	for (i = 0; i < NPAR; i++) {
 		pstrtlst[i] = pendlst[i] = NULL;
@@ -774,11 +768,11 @@ REreset(void)
 bool
 re_lindex(
 	LinePtr line,
-	int offset,
+	INTPTR_T offset,
 	int dir,
 	struct RE_block *re_blk,
 	bool lbuf_okay,
-	int crater	/* offset of previous substitute (or -1) */
+	INTPTR_T crater	/* offset of previous substitute (or -1) */
 )
 {
 	char	*p;
@@ -791,7 +785,7 @@ re_lindex(
 		REbolp = lbptr(line);
 
 		if (offset == -1) {
-			offset = (int)strlen(REbolp);        /* arg! */
+			offset = (INTPTR_T)strlen(REbolp);        /* arg! */
 		}
 	} else {
 		REbolp = ltobuf(line, re_blk->r_lbuf);
@@ -848,17 +842,7 @@ success:
 	}
 
 	loc1 = p;
-	{
-		INTPTR_T diff = loc1 - REbolp;
-
-		if ((UINTPTR_T)diff > INT_MAX) {
-			fprintf(stderr, "fatal: %s:%d: diff > INT_MAX\n", __FILE__, __LINE__);
-			exit(1);
-		}
-
-		/* diff guaranteed within 0 and INT_MAX */
-		REbom = (int)diff;
-	}
+	REbom = loc1 - REbolp;
 	return YES;
 }
 
@@ -881,11 +865,12 @@ dosearch(const char *pattern, int dir, bool re)
 }
 
 Bufpos *
-docompiled(int dir, register struct RE_block *re_blk)
+docompiled(int dir,  struct RE_block *re_blk)
 {
 	static Bufpos	ret;
-	register LinePtr	lp;
-	register int	offset;
+	LinePtr	lp;
+	INTPTR_T
+		offset;
 	bool	we_wrapped = NO;
 	lsave();
 	/* Search now lsave()'s so it doesn't make any assumptions on
@@ -998,8 +983,8 @@ insert(char *off, char *endp, int which)
 void
 re_dosub(struct RE_block *re_blk, char *tobuf, bool delp)
 {
-	register char	*tp,
-		   *rp;
+	char	*tp,
+		*rp;
 	char	*endp;
 	tp = tobuf;
 	endp = tp + LBSIZE;
@@ -1010,7 +995,7 @@ re_dosub(struct RE_block *re_blk, char *tobuf, bool delp)
 	}
 
 	if (!delp) {
-		register char	c;
+		char	c;
 		rp = rep_str;
 
 		while ((c = *rp++) != '\0') {
@@ -1040,7 +1025,6 @@ re_dosub(struct RE_block *re_blk, char *tobuf, bool delp)
 
 	rp = loc2;
 	REdelta = -REeom;
-
 	{
 		INTPTR_T diff = tp - tobuf;
 
@@ -1052,7 +1036,6 @@ re_dosub(struct RE_block *re_blk, char *tobuf, bool delp)
 		/* diff guaranteed within 0 and INT_MAX */
 		REeom = (int)diff;
 	}
-
 	REdelta += REeom;
 
 	if (loc1 == rp && *rp != '\0') {
@@ -1103,7 +1086,7 @@ RErecur(void)
 /* Do we match PATTERN at OFFSET in BUF? */
 
 bool
-LookingAt(const char *pattern, char *buf, int offset)
+LookingAt(const char *pattern, char *buf, INTPTR_T offset)
 {
 	struct RE_block	re_blk;
 	char	**alt = re_blk.r_alternates;
@@ -1112,10 +1095,11 @@ LookingAt(const char *pattern, char *buf, int offset)
 	locrater = NULL;
 	REbolp = buf;
 
-	while (*alt)
+	while (*alt) {
 		if (REmatch(buf + offset, *alt++)) {
 			return YES;
 		}
+	}
 
 	return NO;
 }

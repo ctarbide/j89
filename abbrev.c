@@ -107,7 +107,7 @@ AbbrevExpand(void)
 	char
 	*wp = wordbuf,
 	 *cp;
-	int	col;
+	INTPTR_T	col;
 	char	c;
 	int	UC_count = 0;
 	struct abbrev	*ap;

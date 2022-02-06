@@ -72,7 +72,7 @@ LineInsert(register long num)
 	char	newline[LBSIZE];
 	register LinePtr	newdot,
 			olddot;
-	int	oldchar;
+	INTPTR_T	oldchar;
 	olddot = curline;
 	oldchar = curchar;
 	newdot = curline;
@@ -202,7 +202,7 @@ SelfInsert(void)
 		}
 
 		DoJustify(curline, 0, curline,
-			curchar + (int)strlen(&linebuf[curchar]), YES, margin);
+			curchar + (INTPTR_T)strlen(&linebuf[curchar]), YES, margin);
 	}
 }
 
@@ -227,7 +227,7 @@ Tab(void)
 #ifdef LISP
 
 	if (MajorMode(LISPMODE) && (bolp() || !eolp())) {
-		int	dotchar = curchar;
+		INTPTR_T	dotchar = curchar;
 		ToIndent();
 
 		if (dotchar > curchar) {
@@ -480,14 +480,14 @@ OpenLine(void)
  * ATLINE/ATCHAR in WHATBUF.
  */
 Bufpos *
-DoYank(LinePtr fline, int fchar, LinePtr tline, int tchar, LinePtr atline, int atchar, Buffer *whatbuf)
+DoYank(LinePtr fline, INTPTR_T fchar, LinePtr tline, INTPTR_T tchar, LinePtr atline, INTPTR_T atchar, Buffer *whatbuf)
 {
 	register LinePtr	newline;
 	static Bufpos	bp;
 	char	save[LBSIZE],
 		buf[LBSIZE];
 	LinePtr	startline = atline;
-	int	startchar = atchar;
+	INTPTR_T	startchar = atchar;
 	lsave();
 
 	if (whatbuf != NULL) {
@@ -945,7 +945,7 @@ lisp_indent(void)
 		}
 
 		if (lp == NULL) {	/* not special */
-			int	c_char = curchar;
+			INTPTR_T	c_char = curchar;
 
 			while (jisident(linebuf[curchar])) {
 				curchar += 1;

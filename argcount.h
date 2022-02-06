@@ -10,10 +10,12 @@
 #define arg_value()		arg_count
 #define arg_value_as_unsigned()	arg_count_as_unsigned(__FILE__, __LINE__)
 #define arg_value_as_int()	arg_count_as_int(__FILE__, __LINE__)
+#define arg_value_as_intptr_t()	arg_count_as_intptr_t(__FILE__, __LINE__)
 
 #define arg_or_default(x)	(is_an_arg()? arg_count : (x))
 #define arg_or_default_as_unsigned(x)	(is_an_arg()? arg_value_as_unsigned() : (x))
 #define arg_or_default_as_int(x)	(is_an_arg()? arg_value_as_int() : (x))
+#define arg_or_default_as_intptr_t(x)	(is_an_arg()? arg_value_as_intptr_t() : (x))
 
 #define set_arg_value(n)	{ arg_state = AS_NUMERIC; arg_count = (n); }
 #define clr_arg_value()		{ arg_state = AS_NONE; arg_count = 1; }
@@ -43,10 +45,13 @@ Digit proto((void)),
       TimesFour proto((void));
 
 extern unsigned
-arg_count_as_unsigned proto((char *file, int line));
+	arg_count_as_unsigned proto((char *file, int line));
 
 extern int
-arg_count_as_int proto((char *file, int line));
+	arg_count_as_int proto((char *file, int line));
+
+extern INTPTR_T
+	arg_count_as_intptr_t proto((char *file, int line));
 
 /* private to macros */
 

@@ -24,9 +24,9 @@ private void
 FindMatch proto((int));
 
 private bool
-backslashed(register char *lp, register int cpos)
+backslashed(char *lp, INTPTR_T cpos)
 {
-	register int	cnt = 0;
+	int	cnt = 0;
 
 	while (cpos > 0 && lp[--cpos] == '\\') {
 		cnt += 1;
@@ -85,9 +85,9 @@ m_paren(DAPchar p_type, register int dir, bool can_mismatch, bool can_stop)
 	int	count = 0;
 	register char	c = '\0';	/* avoid uninitialized complaint from gcc -W */
 	char
-	p_match,	/* kind of paren matching p_type */
-	quote_c = '\0';
-	register int	c_char;
+		p_match,	/* kind of paren matching p_type */
+		quote_c = '\0';
+	INTPTR_T	c_char;
 	int	in_comment = -1;	/* -1, YES, or NO */
 	bool	stopped = NO;
 	REcompile(MajorMode(CMODE) ? "[(){}[\\]/\"']" : "[(){}[\\]\"]",
@@ -517,7 +517,7 @@ private void
 re_indent(int incr)
 {
 	LinePtr	l1, l2, lp;
-	int	c1, c2;
+	INTPTR_T	c1, c2;
 	Mark	*m = CurMark();
 	Bufpos	savedot;
 	DOTsave(&savedot);

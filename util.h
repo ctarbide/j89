@@ -37,7 +37,7 @@ extern const char
 *filename proto((const Buffer *b));
 
 extern long
-inorder proto((LinePtr nextp, int char1, LinePtr endp, int char2)),
+inorder proto((LinePtr nextp, INTPTR_T char1, LinePtr endp, INTPTR_T char2)),
 	LineDist proto((LinePtr nextp, LinePtr endp)),
 	LinesTo proto((LinePtr from, LinePtr to));
 
@@ -51,6 +51,10 @@ extern int
 	numcomp proto((const char *s1, const char *s2)),
 	numcompcase proto((const char *s1, const char *s2));
 
+extern INTPTR_T
+	jmaxptr proto((INTPTR_T a, INTPTR_T b)),
+	jminptr proto((INTPTR_T a, INTPTR_T b));
+
 extern size_t
 zumax proto((size_t a, size_t b)),
 	zumin proto((size_t a, size_t b));
@@ -63,21 +67,21 @@ caseeqn proto((const char *s1, const char *s2, size_t n)),
 	TwoBlank proto((void)),
 	blnkp proto((char *buf)),
 	within_indent proto((void)),
-	fixorder proto((LinePtr  *line1, int *char1, LinePtr  *line2, int *char2)),
+	fixorder proto((LinePtr  *line1, INTPTR_T *char1, LinePtr  *line2, INTPTR_T *char2)),
 	inlist proto((LinePtr first, LinePtr what)),
 	sindex proto((const char *pattern, const char *string)),
 	ModBufs proto((bool allp));
 
 extern void
 DOTsave proto((Bufpos *buf)),
-	DotTo proto((LinePtr line, int col)),
+	DotTo proto((LinePtr line, INTPTR_T col)),
 	PushPntp proto((LinePtr line)),
 	SetDot proto((Bufpos *bp)),
 	ToFirst proto((void)),
 	ToLast proto((void)),
-	ins_c proto((DAPchar c, char *buf, int atchar, int num, int max)),
+	ins_c proto((DAPchar c, char *buf, INTPTR_T atchar, int num, INTPTR_T max)),
 	len_error proto((int flag)) NEVER_RETURNS,
-	linecopy proto((char *onto, int atchar, char *from)),
+	linecopy proto((char *onto, INTPTR_T atchar, char *from)),
 	modify proto((void)),
 	diverge proto((Buffer *buf, bool d)),
 	null_ncpy proto((char *to, const char *from, size_t n)),

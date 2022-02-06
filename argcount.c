@@ -31,6 +31,16 @@ arg_count_as_int(char *file, int line)
 	return (int)arg_count;
 }
 
+INTPTR_T
+arg_count_as_intptr_t(char *file, int line)
+{
+	if (arg_count < INTPTR_MIN || arg_count > INTPTR_MAX) {
+		fprintf(stderr, "fatal: %s:%d: arg_count cannot be cast to intptr_t\n", file, line);
+		exit(1);
+	}
+	return (INTPTR_T)arg_count;
+}
+
 void
 negate_arg(void)
 {

@@ -63,9 +63,9 @@ struct error {
 	Buffer		*er_buf;	/* Buffer error is in */
 	LinePtr		er_mess,	/* Actual error message */
 			er_text;	/* Actual error */
-	int		er_char;	/* char pos of error */
+	INTPTR_T	er_char;	/* char pos of error */
 	struct error	*er_prev,	/* List of errors */
-			  *er_next;
+			*er_next;
 };
 
 private struct error	*cur_error = NULL,
@@ -115,7 +115,7 @@ ChkErrorLines(void)
  * parse-{C,LINT}-errors and for the spell-buffer command
  */
 private struct error *
-AddError(struct error *laste, LinePtr errline, Buffer *buf, LinePtr line, int charpos)
+AddError(struct error *laste, LinePtr errline, Buffer *buf, LinePtr line, INTPTR_T charpos)
 {
 	struct error	*new = (struct error *) emalloc(sizeof * new);
 	new->er_prev = laste;

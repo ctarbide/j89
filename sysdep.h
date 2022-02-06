@@ -389,6 +389,18 @@ C89_STATIC_ASSERT(sizeof(SSIZE_T) == sizeof(size_t), "size_t can hold a SSIZE_T 
 #define LONG_MIN (long)(~LONG_MAX)
 #endif
 
+#ifndef UINTPTR_MAX
+#define UINTPTR_MAX ((UINTPTR_T)-1)
+#endif
+
+#ifndef INTPTR_MAX
+#define INTPTR_MAX (INTPTR_T)(UINTPTR_MAX>>1)
+#endif
+
+#ifndef INTPTR_MIN
+#define INTPTR_MIN (INTPTR_T)(~INTPTR_MAX)
+#endif
+
 /* jmode_t: the type for file modes
  * Really old systems might use "int" or perhaps "unsigned".
  */

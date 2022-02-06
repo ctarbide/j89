@@ -104,11 +104,12 @@ RSrchND(void)
 }
 
 private int
-substitute(struct RE_block *re_blk, bool query, LinePtr l1, int char1, LinePtr l2, int char2)
+substitute(struct RE_block *re_blk, bool query, LinePtr l1, INTPTR_T char1, LinePtr l2, INTPTR_T char2)
 {
 	LinePtr	lp;
 	int	numdone = 0,
-		UNDO_nd = 0,
+		UNDO_nd = 0;
+	INTPTR_T
 		offset = char1;
 	bool	stop = NO;
 	daddr	UNDO_da = NULL_DADDR;
@@ -116,7 +117,8 @@ substitute(struct RE_block *re_blk, bool query, LinePtr l1, int char1, LinePtr l
 	lsave();
 
 	for (lp = l1; lp != l2->l_next; lp = lp->l_next) {
-		int	crater = -1;	/* end of last substitution on this line */
+		INTPTR_T
+			crater = -1;	/* end of last substitution on this line */
 		bool	LineDone = NO;	/* already replaced last empty string on line? */
 
 		while (!LineDone
@@ -263,9 +265,10 @@ replace(bool query, bool inreg)
 {
 	LinePtr	l1 = curline,
 		l2 = curbuf->b_last;
-	int	char1 = curchar,
-		char2 = length(curbuf->b_last),
-		numdone;
+	INTPTR_T
+		char1 = curchar,
+		char2 = length(curbuf->b_last);
+	int	numdone;
 	struct RE_block	re_blk;
 
 	if (inreg) {
@@ -541,7 +544,8 @@ FindTag(void)
 void
 FDotTag(void)
 {
-	int	c1 = curchar,
+	INTPTR_T
+		c1 = curchar,
 		c2 = c1;
 	char	tagname[50];
 

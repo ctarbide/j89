@@ -34,29 +34,28 @@
 #endif
 
 #ifdef AUTO_BUFS
-char
-*iobuff,
-*genbuf,
-*linebuf;
+char	*iobuff,
+	*genbuf,
+	*linebuf;
 #else
-char
-iobuff[LBSIZE],
-       genbuf[LBSIZE],
-       linebuf[LBSIZE];
+char	iobuff[LBSIZE],
+	genbuf[LBSIZE],
+	linebuf[LBSIZE];
 #endif
 
 private void
 setbname proto((Buffer *, const char *));
 
-private const char	Mainbuf[] = "Main",
+private const char
+	Mainbuf[] = "Main",
 	NoName[] = "Sans un nom!";
 
 Buffer
-*world = NULL,		/* First in the list */
- *curbuf = NULL,		/* pointer into world for current buffer */
-  *lastbuf = NULL,	/* Last buffer we were in so we have a default
+	*world = NULL,		/* First in the list */
+	*curbuf = NULL,		/* pointer into world for current buffer */
+	*lastbuf = NULL,	/* Last buffer we were in so we have a default
 				   buffer during a select buffer. */
-	  *perr_buf = NULL;	/* Buffer with error messages */
+	*perr_buf = NULL;	/* Buffer with error messages */
 
 /* Toggle BIT in the current buffer's minor mode flags.  If argument is
  * supplied, a positive one always turns on the mode and zero argument

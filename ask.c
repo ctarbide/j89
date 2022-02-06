@@ -33,7 +33,7 @@ ZXchar	AbortChar = CTL('G');	/* VAR: cancels command input */
 bool	DispDefFs = YES;	/* VAR: display default filenames in prompt? */
 
 bool	Asking = NO;
-int	AskingWidth;
+INTPTR_T	AskingWidth;
 
 char	Minibuf[LBSIZE];
 private LinePtr	CurAskPtr = NULL;	/* points at some line in mini-buffer */
@@ -93,11 +93,11 @@ real_ask(
 {
 	jmp_buf	savejmp;
 	ZXchar	c;
-	volatile int
+	INTPTR_T
 		prompt_len,
 		prompt_off = 0,
 		line_off = 0;
-	volatile const char
+	const char
 		*prompt_leftchar = "",
 		*line_leftchar = "";
 	Buffer	*saveb = curbuf;
@@ -124,7 +124,7 @@ real_ask(
 		CurAskPtr = curline;
 	}
 
-	prompt_len = (int)strlen(prompt);
+	prompt_len = (INTPTR_T)strlen(prompt);
 	ToFirst();	/* Beginning of buffer. */
 	linebuf[0] = '\0';
 	modify();
@@ -140,8 +140,9 @@ real_ask(
 	this_cmd = OTHER_CMD;	/* probably redundant */
 
 	for (;;) {
-		int COMAX = CO - 3,
-		    nw;
+		INTPTR_T
+			COMAX = CO - 3,
+			nw;
 		cmd_sync();
 		jdbg("prompt=\"%s\" plen=%d poff=%d cc=%d loff=%d linebuf=\"%s\"\n", prompt, prompt_len, prompt_off, curchar, line_off, linebuf);
 
@@ -158,7 +159,7 @@ real_ask(
 		nw = ASKWIDTH;
 
 		if (nw > COMAX) {
-			int COMID = COMAX / 2;
+			INTPTR_T COMID = COMAX / 2;
 
 			if (prompt_len > COMID) {
 				/* offset into prompt so it ends at center */

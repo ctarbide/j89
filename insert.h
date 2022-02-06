@@ -8,9 +8,9 @@
 /* ??? Why, for example, are GCchunks, lfreelist, and lfreereg here? -- DHR */
 
 extern Bufpos *DoYank proto((
-		LinePtr fline, int fchar,
-		LinePtr tline, int tchar,
-		LinePtr atline, int atchar,
+		LinePtr fline, INTPTR_T fchar,
+		LinePtr tline, INTPTR_T tchar,
+		LinePtr atline, INTPTR_T atchar,
 		Buffer *whatbuf));
 
 extern void

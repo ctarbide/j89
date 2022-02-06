@@ -6,14 +6,14 @@
  **************************************************************************/
 
 extern bool
-Asking,		/* are we on read a string from the terminal? */
-InRealAsk;	/* are we currently executing real_ask()? */
+	Asking,		/* are we on read a string from the terminal? */
+	InRealAsk;	/* are we currently executing real_ask()? */
 
-extern int
-AskingWidth;	/* width of question being asked */
+extern INTPTR_T
+	AskingWidth;	/* width of question being asked */
 
 extern char
-Minibuf[LBSIZE];
+	Minibuf[LBSIZE];
 
 #define NULL_ASK_EXT	((bool (*) ptrproto((ZXchar))) NULL)
 

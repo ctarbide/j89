@@ -225,10 +225,11 @@ putstr(register const char *s)
 }
 
 void
-fputnchar(register char *s, register int n, register File *fp)
+fputnchar(register char *s, size_t n, register File *fp)
 {
-	while (--n >= 0) {
+	while (n) {
 		f_putc(*s++, fp);
+		n--;
 	}
 }
 

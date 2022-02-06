@@ -67,7 +67,7 @@ struct line {
 
 struct mark {
 	LinePtr	m_line;
-	int	m_char;
+	INTPTR_T	m_char;
 	bool	m_big_delete;	/* mark was within the range of a multi-line delete */
 	Mark	*m_next;	/* list of marks */
 };
@@ -93,7 +93,7 @@ struct buffer {
 	LinePtr	b_first,		/* pointer to first line in list */
 		b_dot,			/* current line */
 		b_last;		/* last line in list */
-	int	b_char;			/* current character in line */
+	INTPTR_T	b_char;		/* current character in line */
 
 #define NMARKS	8			/* number of marks in the ring */
 
@@ -116,11 +116,11 @@ struct buffer {
 };
 
 extern Buffer
-*world,		/* first buffer */
-*curbuf,	/* pointer into world for current buffer */
-*lastbuf,	/* Last buffer we were in so we have a default
+	*world,		/* first buffer */
+	*curbuf,	/* pointer into world for current buffer */
+	*lastbuf,	/* Last buffer we were in so we have a default
 			   buffer during a select buffer. */
-*perr_buf;	/* Buffer with error messages */
+	*perr_buf;	/* Buffer with error messages */
 
 #define curline	(curbuf->b_dot)
 #define curchar (curbuf->b_char)
@@ -129,7 +129,7 @@ extern Buffer
 
 struct position {
 	LinePtr	p_line;
-	int	p_char;
+	INTPTR_T	p_char;
 };
 
 extern bool

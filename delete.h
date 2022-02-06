@@ -7,10 +7,10 @@
 
 extern void
 del_char proto((int dir, int num, bool OK_kill)),
-	 reg_kill proto((LinePtr line2, int char2, bool dot_moved));
+	 reg_kill proto((LinePtr line2, INTPTR_T char2, bool dot_moved));
 
 extern LinePtr
-reg_delete proto((LinePtr line1, int char1, LinePtr line2, int char2)),
+reg_delete proto((LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)),
 	   new_kill proto((void));
 
 /* kill buffer */

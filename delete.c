@@ -19,7 +19,7 @@
  * put its result into linebuf.
  */
 private void
-patchup(LinePtr line1, register int char1, LinePtr line2, register int char2)
+patchup(LinePtr line1, register INTPTR_T char1, LinePtr line2, register INTPTR_T char2)
 {
 	if (line1 != line2) {
 		ChkWindows(line1, line2);
@@ -43,7 +43,7 @@ patchup(LinePtr line1, register int char1, LinePtr line2, register int char2)
  * order.
  */
 LinePtr
-reg_delete(LinePtr line1, int char1, LinePtr line2, int char2)
+reg_delete(LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)
 {
 	register LinePtr	retline;
 
@@ -128,7 +128,7 @@ DelPChar(void)
 		 * but control characters displayed as two are not handled.
 		 */
 		int	rightcol = calc_pos(linebuf, curchar);
-		int	charcount = jmin(arg_value_as_int(), curchar);
+		INTPTR_T	charcount = jminptr(arg_value_as_intptr_t(), curchar);
 		int	colcount = rightcol - calc_pos(linebuf, curchar - charcount);
 		b_char(charcount);
 		overwrite(' ', colcount);
@@ -228,11 +228,12 @@ AddKillRing(  /* add a new entry */
  * the region is appended (prepended if backwards) to the last entry.
  */
 void
-reg_kill(LinePtr line2, int char2, bool dot_moved)
+reg_kill(LinePtr line2, INTPTR_T char2, bool dot_moved)
 {
 	LinePtr	nl,
 		line1 = curline;
-	int	char1 = curchar;
+	INTPTR_T
+		char1 = curchar;
 	bool	backwards;
 	backwards = !fixorder(&line1, &char1, &line2, &char2);
 

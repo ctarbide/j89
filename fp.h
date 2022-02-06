@@ -80,7 +80,7 @@ f_close proto((File *fp)),
 	f_seek proto((File *fp, off_t offset)),
 	f_toNL proto((File *fp)),
 	flushout proto((File *fp)),
-	fputnchar proto((char *s, int n, File *fp)),
+	fputnchar proto((char *s, size_t n, File *fp)),
 	gc_openfiles proto((void)),
 	putstr proto((const char *s));
 
