@@ -361,7 +361,7 @@ putreg(File *fp, LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, b
 	if (makesure)
 		(void) fixorder(&line1, &char1, &line2, &char2);
 	while (line1 != line2->l_next) {
-		register char	*lp = lcontents(line1) + char1;
+		char	*lp = lcontents(line1) + char1;
 
 		if (line1 == line2) {
 			if (char2 < char1) {
@@ -372,7 +372,7 @@ putreg(File *fp, LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2, b
 			fputnchar(lp, (size_t)(char2 - char1), fp);
 			io_chars += char2 - char1;
 		} else {
-			register char	c;
+			char	c;
 
 			while ((c = *lp++) != '\0') {
 				f_putc(c, fp);
@@ -702,7 +702,7 @@ getCWD()
 void
 prDIRS()
 {
-	register List	*lp;
+	List	*lp;
 
 	s_mess(ProcFmt);
 	for (lp = DirStack; lp != NULL; lp = list_next(lp))
@@ -789,7 +789,7 @@ Popd()
 #include <pwd.h>
 
 private void
-get_hdir(register char *user, register char *buf)
+get_hdir(char *user, char *buf)
 {
 	struct passwd	*p;
 	p = getpwnam(user);
@@ -1104,8 +1104,8 @@ JWriteFile(void)
 #ifdef MAC
 		static const char	badchars[] = ":";
 #endif
-		register char	*cp = fnamebuf;
-		register char	c;
+		char	*cp = fnamebuf;
+		char	c;
 
 		while ((c = *cp++) != '\0') {
 			if (!jisprint(c) || strchr(badchars, c) != NULL) {
@@ -1135,8 +1135,8 @@ WtModBuf(void)
 void
 put_bufs(bool askp)
 {
-	register Buffer	*oldb = curbuf,
-			 *b;
+	Buffer	*oldb = curbuf,
+		*b;
 
 	for (b = world; b != NULL; b = b->b_next) {
 		if (!IsModified(b) || b->b_type != B_FILE) {
@@ -1181,9 +1181,9 @@ put_bufs(bool askp)
  *	  absolute pathname.  But this is a start.
  */
 File *
-open_file(register char *fname, char *buf, register int how, bool complainifbad)
+open_file(char *fname, char *buf, int how, bool complainifbad)
 {
-	register File	*fp;
+	File	*fp;
 	io_chars = 0;
 	io_lines = 0;
 	fp = f_open(pr_name(fname, NO), how, buf, LBSIZE);
@@ -1451,9 +1451,9 @@ jgetline proto((daddr addr, char *buf))
 daddr
 jputline(char *buf)
 {
-	register char	*bp,
-		   *lp;
-	register int	nl;
+	char	*bp,
+		*lp;
+	int	nl;
 	daddr	line_daddr;
 	lp = buf;
 	bp = getblock(DFree, YES);
@@ -1608,8 +1608,8 @@ private void blkio proto((Block *, JSSIZE_T(*) ptrproto((int, UnivPtr, size_t)))
 
 private void
 blkio(b, iofcn)
-register Block	*b;
-register JSSIZE_T(*iofcn) ptrproto((int, UnivPtr, size_t));
+Block	*b;
+JSSIZE_T(*iofcn) ptrproto((int, UnivPtr, size_t));
 {
 	off_t boff = bno_to_seek_off(b->b_bno);
 	JSSIZE_T nb;
@@ -1635,9 +1635,9 @@ register JSSIZE_T(*iofcn) ptrproto((int, UnivPtr, size_t));
 void
 d_cache_init(void)
 {
-	register Block	*bp,	/* Block pointer */
-		  **hp;	/* Hash pointer */
-	register daddr	bno;
+	Block	*bp,	/* Block pointer */
+		**hp;	/* Hash pointer */
+	daddr	bno;
 	jdbg("MAX_BLOCKS=%D\n", (long)MAX_BLOCKS);
 	jdbg("CHNK_CHARS=%D\n", (long)CHNK_CHARS);
 	jdbg("BLK_CHNKS=%D\n", (long)BLK_CHNKS);
@@ -1678,9 +1678,9 @@ d_cache_init(void)
 void
 SyncTmp(void)
 {
-	register Block	*b;
+	Block	*b;
 #ifdef MSDOS
-	register daddr	bno = 0;
+	daddr	bno = 0;
 
 	/* sync the blocks in order, for file systems that don't allow
 	 * holes (MSDOS).  Perhaps this benefits floppy-based file systems.
@@ -1710,13 +1710,13 @@ SyncTmp(void)
 
 private Block *
 #ifdef USE_PROTOTYPES
-lookup_block proto((register daddr bno))
+lookup_block proto((daddr bno))
 #else
 lookup_block(bno)
-register daddr	bno;
+daddr	bno;
 #endif
 {
-	register Block	*bp;
+	Block	*bp;
 
 	for (bp = bht[B_HASH(bno)]; bp != NULL; bp = bp->b_HASHnext) {
 		if (bp->b_bno == bno) {
@@ -1728,7 +1728,7 @@ register daddr	bno;
 }
 
 private void
-LRUunlink(register Block *b)
+LRUunlink(Block *b)
 {
 	if (b->b_LRUprev == NULL) {
 		f_block = b->b_LRUnext;
@@ -1744,10 +1744,10 @@ LRUunlink(register Block *b)
 }
 
 private Block *
-b_unlink(register Block *bp)
+b_unlink(Block *bp)
 {
-	register Block	*hp,
-		  *prev = NULL;
+	Block	*hp,
+		*prev = NULL;
 	LRUunlink(bp);
 
 	/* Now that we have the block, we remove it from its position

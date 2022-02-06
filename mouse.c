@@ -244,7 +244,7 @@ SelectWind(
 	Window *winforce	/* if non-null, must be within this window */
 )
 {
-	register Window *wp = fwind;
+	Window *wp = fwind;
 	int	total_lines = wp->w_height;
 
 	/* Find which window mouse pointer is in. */
@@ -1096,7 +1096,7 @@ xjMouseYank(void)
 void
 xjMouseCopyCut(void)
 {
-	register Mark	*mp = curmark;
+	Mark	*mp = curmark;
 
 	if (MouseParams(MPROTO_JOVETOOL)) {
 		if (mp != NULL

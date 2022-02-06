@@ -137,7 +137,7 @@ private void
 fmt_puts(const char *str)
 {
 	int	len;
-	register const char	*cp;
+	const char	*cp;
 
 	if (str == NULL) {
 		str = "(null)";
@@ -175,7 +175,7 @@ pad(DAPchar c, int amount)
 }
 
 private void
-doformat(register File *sp, register const char *fmt, va_list ap)
+doformat(File *sp, const char *fmt, va_list ap)
 {
 	char	c;
 	struct fmt_state	prev_fmt;

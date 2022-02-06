@@ -19,9 +19,9 @@ private Mark	*FreeMarksList = NULL;
 }
 
 Mark *
-MakeMark(register LinePtr line, INTPTR_T column)
+MakeMark(LinePtr line, INTPTR_T column)
 {
-	register Mark	*newmark;
+	Mark	*newmark;
 
 	if ((newmark = FreeMarksList) != NULL) {
 		FreeMarksList = newmark->m_next;
@@ -39,8 +39,8 @@ MakeMark(register LinePtr line, INTPTR_T column)
 void
 flush_marks(Buffer *b)
 {
-	register Mark	*m,
-		   *next;
+	Mark	*m,
+		*next;
 
 	for (m = b->b_marks; m != NULL; m = next) {
 		next = m->m_next;
@@ -49,9 +49,9 @@ flush_marks(Buffer *b)
 }
 
 private void
-DelBufMark(Buffer *b, register Mark *m)
+DelBufMark(Buffer *b, Mark *m)
 {
-	register Mark	*mp = b->b_marks;
+	Mark	*mp = b->b_marks;
 
 	if (MarkHighlighting) {
 		makedirty(m->m_line);
@@ -76,7 +76,7 @@ DelBufMark(Buffer *b, register Mark *m)
 }
 
 void
-DelMark(register Mark *m)
+DelMark(Mark *m)
 {
 	DelBufMark(curbuf, m);
 }
@@ -88,10 +88,10 @@ DelMark(register Mark *m)
  */
 
 void
-AllMarkReset(Buffer *b, register LinePtr line)
+AllMarkReset(Buffer *b, LinePtr line)
 {
 	{
-		register Mark	**mpp;
+		Mark	**mpp;
 
 		for (mpp = &b->b_markring[0]; mpp != &b->b_markring[NMARKS]; mpp++) {
 			if (*mpp != NULL) {
@@ -103,7 +103,7 @@ AllMarkReset(Buffer *b, register LinePtr line)
 		b->b_themark = 0;
 	}
 	{
-		register Mark	*mp;
+		Mark	*mp;
 
 		for (mp = b->b_marks; mp != NULL; mp = mp->m_next) {
 			MarkSet(mp, line, 0);
@@ -248,9 +248,9 @@ ExchPtMark(void)
 /* Fix marks after a deletion. */
 
 void
-DFixMarks(register LinePtr line1, INTPTR_T char1, register LinePtr line2, INTPTR_T char2)
+DFixMarks(LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)
 {
-	register Mark	*m;
+	Mark	*m;
 	LinePtr	lp;
 
 	if (curbuf->b_marks == NULL) {
@@ -280,9 +280,9 @@ DFixMarks(register LinePtr line1, INTPTR_T char1, register LinePtr line2, INTPTR
 /* Fix marks after an insertion. */
 
 void
-IFixMarks(register LinePtr line1, INTPTR_T char1, register LinePtr line2, INTPTR_T char2)
+IFixMarks(LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)
 {
-	register Mark	*m;
+	Mark	*m;
 
 	for (m = curbuf->b_marks; m != NULL; m = m->m_next) {
 		if (m->m_line == line1 && m->m_char > char1) {

@@ -23,9 +23,9 @@
 #endif
 
 bool
-blnkp(register char *buf)
+blnkp(char *buf)
 {
-	register char	c;
+	char	c;
 
 	do {
 		c = *buf++;
@@ -63,9 +63,9 @@ DotTo(LinePtr line, INTPTR_T col)
  * to bp->p_line, and if they weren't equal get that line into linebuf.
  */
 void
-SetDot(register Bufpos *bp)
+SetDot(Bufpos *bp)
 {
-	register bool	notequal;
+	bool	notequal;
 
 	if (bp == NULL) {
 		return;
@@ -104,9 +104,9 @@ int	MarkThresh = 22;	/* VAR: moves greater than MarkThresh will SetMark (avg scr
 private long	line_diff;
 
 long
-inorder(register LinePtr nextp, INTPTR_T char1, register LinePtr endp, INTPTR_T char2)
+inorder(LinePtr nextp, INTPTR_T char1, LinePtr endp, INTPTR_T char2)
 {
-	register LinePtr	prevp = nextp;
+	LinePtr	prevp = nextp;
 	line_diff = 0;
 
 	if (nextp == endp) {
@@ -192,7 +192,7 @@ LinesToAsInt(LinePtr from, LinePtr to)
 }
 
 void
-PushPntp(register LinePtr line)
+PushPntp(LinePtr line)
 {
 	if (LineDist(curline, line) >= MarkThresh) {
 		set_mark();
@@ -212,11 +212,11 @@ length(LinePtr line)
 }
 
 void
-to_word(register int dir)
+to_word(int dir)
 {
 	if (dir == FORWARD) {
 		for (;;) {
-			register ZXchar	c = ZXC(linebuf[curchar]);
+			ZXchar	c = ZXC(linebuf[curchar]);
 
 			if (c == '\0') {
 				if (curline->l_next == NULL) {
@@ -254,7 +254,7 @@ to_word(register int dir)
 bool
 ModBufs(bool allp)
 {
-	register Buffer	*b;
+	Buffer	*b;
 
 	for (b = world; b != NULL; b = b->b_next) {
 		if (b->b_type != B_SCRATCH
@@ -268,19 +268,19 @@ ModBufs(bool allp)
 }
 
 const char *
-filename(register const Buffer *b)
+filename(const Buffer *b)
 {
 	return b->b_fname ? pr_name(b->b_fname, YES) : "[No file]";
 }
 
 int
-jmin(register int a, register int b)
+jmin(int a, int b)
 {
 	return (a < b) ? a : b;
 }
 
 int
-jmax(register int a, register int b)
+jmax(int a, int b)
 {
 	return (a > b) ? a : b;
 }
@@ -310,7 +310,7 @@ zumin(size_t a, size_t b)
 }
 
 char *
-lcontents(register LinePtr line)
+lcontents(LinePtr line)
 {
 	return line == curline ? linebuf : lbptr(line);
 }
@@ -413,9 +413,9 @@ diverge(Buffer *buf, bool d)
 }
 
 int
-numcomp(register const char *s1, register const char *s2)
+numcomp(const char *s1, const char *s2)
 {
-	register int	count = 0;
+	int	count = 0;
 
 	while (*s1 != '\0' && *s1++ == *s2++) {
 		count += 1;
@@ -426,9 +426,9 @@ numcomp(register const char *s1, register const char *s2)
 
 #ifdef FILENAME_CASEINSENSITIVE
 int
-numcompcase(register const char *s1, register const char *s2)
+numcompcase(const char *s1, const char *s2)
 {
-	register int	count = 0;
+	int	count = 0;
 
 	while (*s1 != '\0' && CharDowncase(*s1++) == CharDowncase(*s2++)) {
 		count += 1;
@@ -450,10 +450,10 @@ void
 byte_copy(from, to, count)
 UnivConstPtr	*from;
 UnivPtr		*to;
-register size_t	count;
+size_t	count;
 {
-	register const char	*p = from;
-	register char		*q = to;
+	const char	*p = from;
+	char		*q = to;
 
 	if (count != 0) {
 		do {
@@ -514,7 +514,7 @@ ins_c(DAPchar c, char *buf, INTPTR_T atchar, int num, INTPTR_T max)
 bool
 TwoBlank(void)
 {
-	register LinePtr	next = curline->l_next;
+	LinePtr	next = curline->l_next;
 	return (next != NULL
 			&& *(lcontents(next)) == '\0'
 			&& next->l_next != NULL
@@ -522,9 +522,9 @@ TwoBlank(void)
 }
 
 void
-linecopy(register char *onto, INTPTR_T atchar, register char *from)
+linecopy(char *onto, INTPTR_T atchar, char *from)
 {
-	register char	*endp = &onto[LBSIZE];
+	char	*endp = &onto[LBSIZE];
 	onto += atchar;
 
 	do {
@@ -565,7 +565,7 @@ UnivPtr
 emalloc(size)
 size_t	size;
 {
-	register UnivPtr	ptr;
+	UnivPtr	ptr;
 
 	if ((ptr = malloc(size)) == NULL) {
 		/* Try garbage collecting lines */
@@ -620,9 +620,9 @@ size_t	size;
  */
 
 const char *
-jbasename(register const char *f)
+jbasename(const char *f)
 {
-	register char	*cp;
+	char	*cp;
 #ifdef MSFILESYSTEM
 
 	if (f[0] != '\0'  && f[1] == ':') {
@@ -692,10 +692,7 @@ int	from,
 /* Are s1 and s2 equal, at least for the first n chars, ignoring case? */
 
 bool
-caseeqn(s1, s2, n)
-register const char	*s1,
-	     *s2;
-register size_t	n;
+caseeqn(const char *s1, const char *s2, size_t n)
 {
 	if (s1 == NULL || s2 == NULL) {
 		return NO;
@@ -787,9 +784,9 @@ size_t bufsz;
 }
 
 bool
-sindex(register const char *pattern, register const char *string)
+sindex(const char *pattern, const char *string)
 {
-	register size_t	len = strlen(pattern);
+	size_t	len = strlen(pattern);
 
 	if (len == 0) {
 		return YES;
@@ -812,7 +809,7 @@ sindex(register const char *pattern, register const char *string)
 
 UnivPtr
 freealloc(obj, size)
-register UnivPtr	obj;
+UnivPtr	obj;
 size_t	size;
 {
 	if (obj != NULL) {

@@ -19,7 +19,7 @@
  * put its result into linebuf.
  */
 private void
-patchup(LinePtr line1, register INTPTR_T char1, LinePtr line2, register INTPTR_T char2)
+patchup(LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)
 {
 	if (line1 != line2) {
 		ChkWindows(line1, line2);
@@ -45,7 +45,7 @@ patchup(LinePtr line1, register INTPTR_T char1, LinePtr line2, register INTPTR_T
 LinePtr
 reg_delete(LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)
 {
-	register LinePtr	retline;
+	LinePtr	retline;
 
 	if ((line1 == line2 && char1 == char2) || line2 == NULL) {
 		complain((char *)NULL);
@@ -90,7 +90,7 @@ reg_delete(LinePtr line1, INTPTR_T char1, LinePtr line2, INTPTR_T char2)
 }
 
 private void
-lremove(register LinePtr line1, register LinePtr line2)
+lremove(LinePtr line1, LinePtr line2)
 {
 	LinePtr	next = line1->l_next;
 
@@ -269,7 +269,7 @@ reg_kill(LinePtr line2, INTPTR_T char2, bool dot_moved)
 void
 DelReg(void)
 {
-	register Mark	*mp = CurMark();
+	Mark	*mp = CurMark();
 	reg_kill(mp->m_line, mp->m_char, NO);
 }
 
@@ -277,7 +277,7 @@ DelReg(void)
 LinePtr
 new_kill(void)
 {
-	register LinePtr	nl = nbufline();
+	LinePtr	nl = nbufline();
 	AddKillRing(nl);
 	SavLine(nl, NullStr);
 	nl->l_next = nl->l_prev = NULL;
@@ -353,7 +353,7 @@ DelWtSpace(void)
 void
 DelBlnkLines(void)
 {
-	register Mark	*dot;
+	Mark	*dot;
 	bool	all;
 
 	if (!blnkp(&linebuf[curchar])) {

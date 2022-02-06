@@ -50,7 +50,7 @@ private Buffer *
 get_minibuf(void)
 {
 	if (AskBuffer) {		/* make sure it still exists */
-		register Buffer	*b;
+		Buffer	*b;
 
 		for (b = world; b != NULL; b = b->b_next) {
 			if (b == AskBuffer) {
@@ -69,7 +69,7 @@ get_minibuf(void)
 void
 minib_add(char *str, bool movedown)
 {
-	register Buffer	*saveb = curbuf;
+	Buffer	*saveb = curbuf;
 	SetBuf(get_minibuf());
 	LineInsert(1);
 	ins_str(str);

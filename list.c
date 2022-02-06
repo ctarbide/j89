@@ -20,7 +20,7 @@ list_new(void)
 /* push an object to the beginning of list */
 
 UnivPtr
-list_push(register List **list, UnivPtr element)
+list_push(List **list, UnivPtr element)
 {
 	List	*new;
 	new = list_new();

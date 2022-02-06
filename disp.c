@@ -77,9 +77,9 @@ bool	DisabledRedisplay = NO;
 void
 ChkWindows(LinePtr line1, LinePtr line2)
 {
-	register Window	*w = fwind;
-	register LinePtr	lp,
-			lend = line2->l_next;
+	Window	*w = fwind;
+	LinePtr	lp,
+		lend = line2->l_next;
 
 	do {
 		if (w->w_bufp == curbuf) {
@@ -116,8 +116,8 @@ resize(void)
 	ttsize();	/* update line (LI and ILI) and col (CO) info. */
 
 	if (oldILI != ILI || oldCO != CO) {
-		register int	total;
-		register Window	*wp;
+		int	total;
+		Window	*wp;
 		/* Go through the window list, changing each window size in
 		 * proportion to the resize.  If the window would become too
 		 * small, we delete it.
@@ -195,14 +195,14 @@ redisplay(void)
 	do
 #endif
 	{
-		register Window	*w;
+		Window	*w;
 		int
 		lineno,
 		i;
 		bool
 		done_ID = NO,
 		old_UpdModLine;
-		register struct scrimage
+		struct scrimage
 			*des_p,
 			*phys_p;
 #ifdef WINRESIZE
@@ -324,10 +324,10 @@ find_pos(LinePtr line, INTPTR_T c_char)
  */
 
 int
-calc_pos(register char *lp, register INTPTR_T c_char)
+calc_pos(char *lp, INTPTR_T c_char)
 {
-	register int	pos = 0;
-	register ZXchar	c;
+	int	pos = 0;
+	ZXchar	c;
 
 	while ((--c_char >= 0) && (c = ZXC(*lp++)) != 0) {
 		if (c == '\t' && tabstop != 0) {
@@ -352,10 +352,10 @@ bool	UpdMesg = NO;
 private void
 DoIDline(int start)
 {
-	register struct scrimage	*des_p = &DesiredScreen[start];
+	struct scrimage	*des_p = &DesiredScreen[start];
 	struct scrimage	*phys_p = &PhysScreen[start];
-	register int	i,
-		    j;
+	int	i,
+		j;
 	/* Some changes have been made.  Try for insert or delete lines.
 	 * If either case has happened, Addlines and/or DelLines will do
 	 * necessary scrolling, also CONVERTING PhysScreen to account for the
@@ -647,10 +647,11 @@ GotoDot(void)
 }
 
 private int
-UntilEqual(register int start)
+UntilEqual(int start)
 {
-	register struct scrimage	*des_p = &DesiredScreen[start],
-						 *phys_p = &PhysScreen[start];
+	struct scrimage
+		*des_p = &DesiredScreen[start],
+		*phys_p = &PhysScreen[start];
 
 	while ((start < ILI) && (des_p->s_id != phys_p->s_id)) {
 		des_p += 1;
@@ -665,9 +666,9 @@ UntilEqual(register int start)
  * reflect those changes.
  */
 private bool
-AddLines(register int at, register int num)
+AddLines(int at, int num)
 {
-	register int	i;
+	int	i;
 	int	bottom = UntilEqual(at + num);
 
 	if (num == 0 || num >= ((bottom - 1) - at)) {
@@ -690,9 +691,9 @@ AddLines(register int at, register int num)
 }
 
 private bool
-DelLines(register int at, register int num)
+DelLines(int at, int num)
 {
-	register int	i;
+	int	i;
 	int	bottom = UntilEqual(at + num);
 
 	if (num == 0 || num >= ((bottom - 1) - at)) {
@@ -830,7 +831,7 @@ UpdLine(int linenum)
 }
 
 private void
-do_cl_eol(register int linenum)
+do_cl_eol(int linenum)
 {
 	cl_eol();
 	PhysScreen[linenum] = DesiredScreen[linenum];
@@ -1001,9 +1002,9 @@ IDchar(char *new, int lineno)
 }
 
 private int
-NumSimilar(register char *s, register char *t, int n)
+NumSimilar(char *s, char *t, int n)
 {
-	register int	num = 0;
+	int	num = 0;
 
 	while (n--)
 		if (*s++ == *t++) {
@@ -1015,12 +1016,12 @@ NumSimilar(register char *s, register char *t, int n)
 
 private int
 IDcomp(
-	register char *s,	/* NUL terminated */
-	register char *t,	/* len chars */
+	char *s,	/* NUL terminated */
+	char *t,	/* len chars */
 	int len
 )
 {
-	register int	i;
+	int	i;
 	int	num = 0,
 		nonspace = 0;
 
@@ -1059,7 +1060,7 @@ OkayInsert(int Saved, int num)
 	/* Note: with the ncurses version of termcap/terminfo, we must use
 	 * any one of insert mode, insert character, or multiple insert character.
 	 */
-	register int	n = INFINITY;
+	int	n = INFINITY;
 
 	if (IC != NULL) {	/* Per character prefixes */
 		n = num * IClen;
@@ -1072,7 +1073,7 @@ OkayInsert(int Saved, int num)
 	 * IC and IM to insert, but normally only one will be defined.
 	 * See terminfo(5), under the heading "Insert/Delete Character".
 	 */
-	register int	n = 0;
+	int	n = 0;
 
 	if (IC != NULL) {	/* Per character prefixes */
 		n = jmin(num * IClen, MIClen);
@@ -1113,9 +1114,9 @@ DelChar(int lineno, int col, int num)
 private void
 InsChar(int lineno, int col, int num, char *new)
 {
-	register char	*sp1,
-		   *sp2,	/* To push over the array. */
-		   *sp3;	/* Last character to push over. */
+	char	*sp1,
+		*sp2,	/* To push over the array. */
+		*sp3;	/* Last character to push over. */
 	int	i;
 	i_set(lineno, 0);
 	sp2 = Curline->s_roof + num;
@@ -1270,13 +1271,13 @@ ModeLine(
 		glue = 0;
 	bool	ign_some = NO;
 	bool	td = NO;	/* is time (kludge: or mail status) displayed? */
-	char
-	*fmt = ModeFmt,
-	 fillc,
-	 c;
-	register Buffer	*thisbuf = w->w_bufp;
-	register Buffer *bp;
-	LineEffects highlighting;
+	char	*fmt = ModeFmt,
+		fillc,
+		c;
+	Buffer	*thisbuf = w->w_bufp;
+	Buffer	*bp;
+	LineEffects
+		highlighting;
 	mode_p = line;
 	mend_p = &line[CO - 1];
 #ifdef TERMCAP
@@ -1782,7 +1783,7 @@ private void
 TOprompt(char *s)
 {
 	if (!TOabort) {
-		register ZXchar	c;
+		ZXchar	c;
 		TOlineFits(s);
 		c = kbd_getch();
 		TOlineFits("");

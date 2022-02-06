@@ -16,7 +16,7 @@
 private int	line_pos;
 
 void
-f_char(register long n)
+f_char(long n)
 {
 	if (n < 0) {
 		b_char(-n);
@@ -303,7 +303,7 @@ Eos(void)
 }
 
 void
-f_word(register long num)
+f_word(long num)
 {
 	if (num < 0) {
 		while (++num <= 0) {
@@ -319,7 +319,7 @@ f_word(register long num)
 		}
 	} else {
 		while (--num >= 0) {
-			register char	c;
+			char	c;
 			to_word(FORWARD);
 
 			while ((c = linebuf[curchar]) != '\0' && jisword(c)) {

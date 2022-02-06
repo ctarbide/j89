@@ -183,7 +183,7 @@ CasRegUpper(void)
 private void
 CaseReg(bool up)
 {
-	register Mark	*mp = CurMark();
+	Mark	*mp = CurMark();
 	Bufpos	savedot;
 	DOTsave(&savedot);
 	case_reg(curline, curchar, mp->m_line, mp->m_char, up);

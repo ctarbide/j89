@@ -331,10 +331,10 @@ RepSearch(void)
 private bool
 lookup_tag(bool *ispat, char *searchbuf, size_t sbsize, char *filebuf, char *tag, char *file)
 {
-	register size_t	taglen = strlen(tag);
+	size_t	taglen = strlen(tag);
 	char	line[JBUFSIZ],
 		pattern[200];
-	register File	*fp;
+	File	*fp;
 	struct stat	stbuf;
 	bool	success = NO;
 	fp = open_file(file, iobuff, F_READ, NO);
@@ -403,8 +403,8 @@ lookup_tag(bool *ispat, char *searchbuf, size_t sbsize, char *filebuf, char *tag
 		 * past the next newline (unless lower is 0), and fall
 		 * into the sequential search.
 		 */
-		register off_t	lower = 0;
-		register off_t	upper = stbuf.st_size;
+		off_t	lower = 0;
+		off_t	upper = stbuf.st_size;
 
 		for (;;) {
 			off_t	mid;
@@ -493,8 +493,8 @@ find_tag(char *tag, bool localp)
 	char	filebuf[FILESIZE],
 		sstr[200],	/* 100 wasn't big enough */
 		tfbuf[FILESIZE];
-	register Bufpos	*bp;
-	register Buffer	*b;
+	Bufpos	*bp;
+	Buffer	*b;
 	bool ispat;
 
 	if (lookup_tag(&ispat, sstr, sizeof(sstr), filebuf, tag,
@@ -594,7 +594,7 @@ ISbuf[128],
 ZXchar	SExitChar = CR;	/* VAR: type this to stop i-search */
 
 private Bufpos *
-doisearch(register int dir, register ZXchar c, bool failing)
+doisearch(int dir, ZXchar c, bool failing)
 {
 	static Bufpos	buf;
 	Bufpos	*bp;

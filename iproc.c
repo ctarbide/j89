@@ -69,7 +69,7 @@ private void
 	proc_rec proto((Process, char *, size_t)),
 	proc_close proto ((Process)),
 	SendData proto((bool)),
-	obituary proto((register Process child, wait_status_t w));
+	obituary proto((Process child, wait_status_t w));
 
 private bool
 	proc_kill proto((Process, int));
@@ -958,7 +958,7 @@ va_dcl
 	 * prepared to catch a SIGCHLD for an unknown child and ignore it ...
 	 */
 	{
-		register char	*s = _getpty(&ptyfd, O_RDWR | O_NDELAY, 0600, 0);
+		char	*s = _getpty(&ptyfd, O_RDWR | O_NDELAY, 0600, 0);
 
 		if (s == NULL)
 		{
@@ -1014,7 +1014,7 @@ va_dcl
 	jdbg("SVR4_PTYS TIOCGPTPEER ptyfd %d slv %d\n", ptyfd, slvptyfd);
 #endif
 	{
-		register char	*s = ptsname(ptyfd);
+		char	*s = ptsname(ptyfd);
 
 		if (s == NULL)
 		{
@@ -1042,11 +1042,11 @@ va_dcl
 	jdbg("openpty ptyfd %d slv %d %s\n", ptyfd, slvptyfd, ttybuf);
 #  else /* !USE_OPENPTY */
 	{
-		register const char	*s;
+		const char	*s;
 
 		for (s = "pqrs"; ptyfd < 0; s++)
 		{
-			register const char	*t;
+			const char	*t;
 
 			if (*s == '\0') {
 				message("[Out of ptys in /dev/pty*!]");
@@ -1421,7 +1421,7 @@ void
 reap_procs(void)
 {
 	wait_status_t	w;
-	register pid_t	pid;
+	pid_t	pid;
 
 	for (;;) {
 		pid = wait_opt(&w, (WNOHANG | WUNTRACED));
@@ -1491,7 +1491,7 @@ pstate(Process p)
 bool
 KillProcs(void)
 {
-	register Process	p;
+	Process	p;
 	bool	asked = NO;
 
 	for (p = procs; p != NULL; p = p->p_next) {
@@ -1547,13 +1547,13 @@ watch_input(Mark *m)
  */
 private void
 proc_rec(p, buf, len)
-register Process	p;
+Process	p;
 char	*buf;
 size_t	len;
 {
 	Buffer	*saveb = curbuf;
-	register Window	*w;
-	register Mark	*savepoint;
+	Window	*w;
+	Mark	*savepoint;
 	bool	sameplace,
 		do_disp;
 
@@ -1610,7 +1610,7 @@ size_t	len;
 }
 
 private bool
-proc_kill(register Process p, int sig)
+proc_kill(Process p, int sig)
 {
 	if (p == NULL) {
 		complain("[no process]");
@@ -1634,9 +1634,9 @@ proc_kill(register Process p, int sig)
 private void
 free_proc(Process child)
 {
-	register Process
-	p,
-	prev = NULL;
+	Process
+		p,
+		prev = NULL;
 
 	if (!dead(child)) {
 		return;
@@ -1659,10 +1659,10 @@ free_proc(Process child)
 }
 
 void
-untieDeadProcess(register Buffer *b)
+untieDeadProcess(Buffer *b)
 {
 	if (b != NULL) {
-		register Process	p = b->b_process;
+		Process	p = b->b_process;
 
 		if (p != NULL) {
 			Buffer	*old = curbuf;
@@ -1685,12 +1685,12 @@ untieDeadProcess(register Buffer *b)
 void
 ProcList(void)
 {
-	register Process
-	p,
-	next;
-	const char	*fmt = "%-15s  %-15s  %-8s %s";
-	char
-	pidstr[16];
+	Process
+		p,
+		next;
+	const char
+		*fmt = "%-15s  %-15s  %-8s %s";
+	char	pidstr[16];
 
 	if (procs == NULL) {
 		message("[No subprocesses]");
@@ -1773,9 +1773,9 @@ ProcSendData(void)
 private void
 SendData(bool newlinep)
 {
-	register Process	p = curbuf->b_process;
-	register char	*lp,
-		   *gp;	/* JF fix for better prompt handling */
+	Process	p = curbuf->b_process;
+	char	*lp,
+		*gp;	/* JF fix for better prompt handling */
 
 	if (dead(p)) {
 		return;
@@ -1862,7 +1862,7 @@ void
 ShellProc(void)
 {
 	char	shbuf[20];
-	register Buffer	*b;
+	Buffer	*b;
 	swritef(shbuf, sizeof(shbuf), "[shell-%d]", arg_value());
 	b = buf_exists(shbuf);
 
@@ -1906,11 +1906,11 @@ kill_off(pid_t pid, wait_status_t w)
 #else
 void
 kill_off(pid, w)
-register pid_t	pid;
+pid_t	pid;
 wait_status_t	w;
 #endif
 {
-	register Process	child;
+	Process	child;
 
 	if (pid == ChildPid) {
 		/* we are reaping the non-iproc process: record info */
@@ -1971,11 +1971,11 @@ wait_status_t	w;
 
 #ifdef USE_PROTOTYPES
 private void
-obituary(register Process child, wait_status_t w)
+obituary(Process child, wait_status_t w)
 #else
 private void
 obituary(child, w)
-register Process	child;
+Process	child;
 wait_status_t	w;
 #endif
 {

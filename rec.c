@@ -86,9 +86,9 @@ recremove(void)
 /* Write out the line pointers for buffer B. */
 
 private void
-dmppntrs(register Buffer *b)
+dmppntrs(Buffer *b)
 {
-	register LinePtr	lp;
+	LinePtr	lp;
 
 	for (lp = b->b_first; lp != NULL; lp = lp->l_next) {
 		dmpobj(lp->l_dline);
@@ -98,7 +98,7 @@ dmppntrs(register Buffer *b)
 /* dump the buffer info and then the actual line pointers. */
 
 private void
-dmp_buf_header(register Buffer *b)
+dmp_buf_header(Buffer *b)
 {
 	struct rec_entry	record;
 	byte_zero(&record, sizeof(struct rec_entry));	/* clean out holes for purify */
@@ -119,7 +119,7 @@ int	SyncFreq = 50;	/* VAR: how often to sync the file pointers */
 void
 SyncRec(void)
 {
-	register Buffer	*b;
+	Buffer	*b;
 	static bool	beenhere = NO;
 	time_t		tupd;
 	/* Count number of interesting buffers.  If none, don't bother syncing. */

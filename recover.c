@@ -137,7 +137,7 @@ UnivPtr
 emalloc(size)
 size_t size;
 {
-	register UnivPtr ptr;
+	UnivPtr ptr;
 
 	if ((ptr = malloc(size)) == NULL) {
 		fprintf(stderr, "couldn't malloc(%ld)\n", (long)size);
@@ -190,9 +190,9 @@ private char	*getblock proto((daddr atl));
 void
 jgetline(daddr tl, char *buf)
 {
-	register char	*bp,
-		   *lp;
-	register long	nl;
+	char	*bp,
+		*lp;
+	long	nl;
 	lp = buf;
 	bp = getblock(tl);
 	nl = nleft;
@@ -576,7 +576,7 @@ private void	get proto((long src, char *dest));
 private void
 restore(void)
 {
-	register long	i;
+	long	i;
 	char	tofile[FILESIZE + 1], /* leading # */
 		answer[SMALLSTRSIZE];
 	int	nrecovered = 0;
@@ -665,7 +665,7 @@ get(long src, char *dest)
 }
 
 private char **
-scanvec(register char **args, register char *str)
+scanvec(char **args, char *str)
 {
 	while (*args) {
 		if (strcmp(*args, str) == 0) {

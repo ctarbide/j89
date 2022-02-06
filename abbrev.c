@@ -63,9 +63,9 @@ def_abbrev(struct abbrev *table[HASHSIZE])
 }
 
 private struct abbrev *
-lookup_abbrev(register struct abbrev *table[HASHSIZE], register const char *abbrev)
+lookup_abbrev(struct abbrev *table[HASHSIZE], const char *abbrev)
 {
-	register struct abbrev	*ap;
+	struct abbrev	*ap;
 	unsigned int	h;
 	h = hash(abbrev);
 
@@ -79,13 +79,13 @@ lookup_abbrev(register struct abbrev *table[HASHSIZE], register const char *abbr
 }
 
 private void
-define(register struct abbrev *table[HASHSIZE], char *abbrev, char *phrase)
+define(struct abbrev *table[HASHSIZE], char *abbrev, char *phrase)
 {
-	register struct abbrev	*ap;
+	struct abbrev	*ap;
 	ap = lookup_abbrev(table, abbrev);
 
 	if (ap == NULL) {
-		register unsigned int	h = hash(abbrev);
+		unsigned int	h = hash(abbrev);
 		ap = (struct abbrev *) emalloc(sizeof * ap);
 		ap->a_hash = h;
 		ap->a_abbrev = copystr(abbrev);

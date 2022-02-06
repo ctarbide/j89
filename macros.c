@@ -31,8 +31,9 @@ bool	InMacDefine = NO;
 private void
 add_mac(struct macro *new)
 {
-	register struct macro	*mp,
-			   *prev = NULL;
+	struct macro
+		*mp,
+		*prev = NULL;
 
 	for (mp = macros; mp != NULL; prev = mp, mp = mp->m_nextm) {
 		if (mp == new) {
@@ -86,7 +87,7 @@ unwind_macro_stack(void)
 private void
 pop_macro_stack(void)
 {
-	register struct m_thread	*m;
+	struct m_thread	*m;
 
 	if ((m = mac_stack) == NULL) {
 		return;
@@ -97,9 +98,9 @@ pop_macro_stack(void)
 }
 
 private void
-push_macro_stack(register struct macro *m, int count)
+push_macro_stack(struct macro *m, int count)
 {
-	register struct m_thread	*t;
+	struct m_thread	*t;
 
 	for (t = mac_stack; t != NULL; t = t->mt_prev) {
 		if (t->mt_mp == m) {
@@ -405,9 +406,9 @@ private struct macro *
 ask_macname(const char *prompt, int flags)
 {
 	const char	*strings[100];
-	register const char	**strs = strings;
-	register int	com;
-	register struct macro	*m;
+	const char	**strs = strings;
+	struct macro	*m;
+	int		com;
 
 	for (m = macros; m != NULL; m = m->m_nextm) {
 		if (strs == &strings[elemsof(strings) - 1]) {

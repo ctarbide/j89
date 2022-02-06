@@ -35,8 +35,8 @@ private File	openfiles[MAXFILES];	/* must be zeroed initially */
 File *
 fd_open(const char *name, int flags, int fd, char *buffer, int buf_size)
 {
-	register File	*fp;
-	register int	i;
+	File	*fp;
+	int	i;
 
 	for (fp = openfiles, i = 0; i < MAXFILES; i++, fp++) {
 		if (fp->f_flags == 0) {
@@ -67,7 +67,7 @@ fd_open(const char *name, int flags, int fd, char *buffer, int buf_size)
 void
 gc_openfiles(void)
 {
-	register File	*fp;
+	File	*fp;
 
 	for (fp = openfiles; fp < &openfiles[MAXFILES]; fp++) {
 		if (fp->f_flags != 0 && (fp->f_flags & F_LOCKED) == 0) {
@@ -79,7 +79,7 @@ gc_openfiles(void)
 File *
 f_open(const char *name, int flags, char *buffer, int buf_size)
 {
-	register int	fd;
+	int	fd;
 
 	switch (F_MODE(flags)) {
 	case F_READ:
@@ -215,9 +215,9 @@ f_filbuf(File *fp)
 }
 
 void
-putstr(register const char *s)
+putstr(const char *s)
 {
-	register char	c;
+	char	c;
 
 	while ((c = *s++) != '\0') {
 		scr_putchar(c);
@@ -225,7 +225,7 @@ putstr(register const char *s)
 }
 
 void
-fputnchar(register char *s, size_t n, register File *fp)
+fputnchar(char *s, size_t n, File *fp)
 {
 	while (n) {
 		f_putc(*s++, fp);
@@ -242,7 +242,7 @@ flushscreen()
 #endif /* !NO_JSTDOUT */
 
 void
-f_seek(register File *fp, off_t offset)
+f_seek(File *fp, off_t offset)
 {
 	if (fp->f_flags & (F_WRITE | F_APPEND)) {
 		flushout(fp);
@@ -254,7 +254,7 @@ f_seek(register File *fp, off_t offset)
 }
 
 void
-flushout(register File *fp)
+flushout(File *fp)
 {
 	if (fp->f_flags & (F_READ | F_STRING | F_ERR)) {
 		if (fp->f_flags != F_STRING) {
@@ -318,12 +318,12 @@ flushout(register File *fp)
 
 bool
 f_gets(fp, buf, max)
-register File	*fp;
+File	*fp;
 char	*buf;
 size_t	max;
 {
-	register char	*cp = buf;
-	register ZXchar	c;
+	char	*cp = buf;
+	ZXchar	c;
 	char	*endp = buf + max - 1;
 
 	if (fp->f_flags & F_EOF) {
@@ -382,7 +382,7 @@ size_t	max;
  * character of new line
  */
 void
-f_toNL(register File *fp)
+f_toNL(File *fp)
 {
 	if (fp->f_flags & F_EOF) {
 		return;

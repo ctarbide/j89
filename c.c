@@ -77,13 +77,13 @@ mp_error(void)
  * only ones that insist on getting the "true" story.
  */
 Bufpos *
-m_paren(DAPchar p_type, register int dir, bool can_mismatch, bool can_stop)
+m_paren(DAPchar p_type, int dir, bool can_mismatch, bool can_stop)
 {
 	static Bufpos	ret;
 	Bufpos	savedot;
 	struct RE_block	re_blk;
 	int	count = 0;
-	register char	c = '\0';	/* avoid uninitialized complaint from gcc -W */
+	char	c = '\0';	/* avoid uninitialized complaint from gcc -W */
 	char
 		p_match,	/* kind of paren matching p_type */
 		quote_c = '\0';
@@ -112,7 +112,7 @@ m_paren(DAPchar p_type, register int dir, bool can_mismatch, bool can_stop)
 	 */
 	do {
 		Bufpos	*sp = docompiled(dir, &re_blk);
-		register char	*lp;
+		char	*lp;
 
 		if (sp == NULL) {
 			break;
@@ -381,8 +381,8 @@ FDownList(void)
 private void
 FindMatch(int dir)
 {
-	register Bufpos	*bp;
-	register char	c = linebuf[curchar];
+	Bufpos	*bp;
+	char	c = linebuf[curchar];
 
 	if (strchr(p_types, c) == NULL || backslashed(linebuf, curchar)) {
 		complain((char *)NULL);
@@ -562,10 +562,10 @@ char	CmtFmt[80] = "/*%n%! * %c%!%n */";	/* VAR: comment format */
 private void
 strip_c(char *from, char *to)
 {
-	register char
-	*fr_p = from,
-	 *to_p = to,
-	  c;
+	char
+		*fr_p = from,
+		*to_p = to,
+		c;
 
 	while ((c = *fr_p) == '\n' || jiswhite(c)) {
 		fr_p += 1;
@@ -609,10 +609,10 @@ parse_cmt_fmt(void)
 		l_trailer,
 		close_c
 	};
-	register char	*fmtp = CmtFmt;
-	register char	*const *c_body = component,
-				*body_p = *c_body,
-				 *body_limit = body_p + CMT_STR_BOUND - 1;
+	char	*fmtp = CmtFmt;
+	char	*const *c_body = component,
+		*body_p = *c_body,
+		*body_limit = body_p + CMT_STR_BOUND - 1;
 	char	c;
 	int	comp_no = 0;
 	/* pick apart the comment string */
@@ -697,7 +697,7 @@ FillComment(void)
 	char	*trimmed_header;	/* l_header without leading spaces */
 	int	trimmed_header_len,	/* length without leading or trailing spaces */
 		trailer_len;
-	register char	*cp;
+	char	*cp;
 	Bufpos	open_c_pt,
 		close_c_pt,
 		tmp_bp,

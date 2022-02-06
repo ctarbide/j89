@@ -38,9 +38,9 @@ private Bufpos
  * in which case we insert the new line before first line.
  */
 LinePtr
-listput(register Buffer *buf, register LinePtr after)
+listput(Buffer *buf, LinePtr after)
 {
-	register LinePtr	newline = nbufline();
+	LinePtr	newline = nbufline();
 	newline->l_prev = after;
 
 	if (after == NULL) {	/* Before the first line */
@@ -67,10 +67,10 @@ listput(register Buffer *buf, register LinePtr after)
 /* Divide the current line and move the current line to the next one */
 
 void
-LineInsert(register long num)
+LineInsert(long num)
 {
 	char	newline[LBSIZE];
-	register LinePtr	newdot,
+	LinePtr	newdot,
 			olddot;
 	INTPTR_T	oldchar;
 	olddot = curline;
@@ -106,7 +106,7 @@ LineInsert(register long num)
  * was there beforehand.
  */
 void
-n_indent(register int goal)
+n_indent(int goal)
 {
 	int	dotcol;
 	DelWtSpace();
@@ -154,7 +154,7 @@ Insert(int c)
 void
 overwrite(DAPchar c, int n)
 {
-	register int	i;
+	int	i;
 
 	for (i = 0; i < n; i++) {
 		/* Delete one *column* forward (except that we don't
@@ -482,7 +482,7 @@ OpenLine(void)
 Bufpos *
 DoYank(LinePtr fline, INTPTR_T fchar, LinePtr tline, INTPTR_T tchar, LinePtr atline, INTPTR_T atchar, Buffer *whatbuf)
 {
-	register LinePtr	newline;
+	LinePtr	newline;
 	static Bufpos	bp;
 	char	save[LBSIZE],
 		buf[LBSIZE];
@@ -616,7 +616,7 @@ private LinePtr	ffline = NULL;	/* First free line */
 private LinePtr	faline = NULL;	/* First available line */
 
 private void
-freeline(register LinePtr line)
+freeline(LinePtr line)
 {
 	line->l_dline = NULL_DADDR;
 	line->l_next = ffline;
@@ -656,7 +656,7 @@ RecycleLines(void)
 }
 
 void
-lfreelist(register LinePtr first)
+lfreelist(LinePtr first)
 {
 	if (first != NULL) {
 		lfreereg(first, lastline(first));
@@ -666,9 +666,9 @@ lfreelist(register LinePtr first)
 /* Append region from line1 to line2 onto the free list of lines */
 
 void
-lfreereg(register LinePtr line1, register LinePtr line2)
+lfreereg(LinePtr line1, LinePtr line2)
 {
-	register LinePtr	next,
+	LinePtr	next,
 			last = line2->l_next;
 
 	while (line1 != last) {
@@ -730,7 +730,7 @@ newchunk(void)
 LinePtr
 nbufline(void)
 {
-	register LinePtr	newline;
+	LinePtr	newline;
 
 	if (faline == NULL) {
 		RecycleLines();
@@ -891,7 +891,7 @@ void
 AddSpecial(void)
 {
 	const char	*word;
-	register List	*lp;
+	List	*lp;
 
 	if (specials == NULL) {
 		init_specials();
@@ -930,7 +930,7 @@ lisp_indent(void)
 	f_char(1);
 
 	if (linebuf[curchar] != '(') {
-		register List	*lp;
+		List	*lp;
 
 		if (specials == NULL) {
 			init_specials();

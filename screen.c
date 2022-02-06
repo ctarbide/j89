@@ -44,9 +44,9 @@ i_col;
 void
 make_scr(void)
 {
-	register int	i;
-	register struct screenline	*ns;
-	register char	*nsp;
+	int	i;
+	struct screenline	*ns;
+	char	*nsp;
 	static char	*screenchars = NULL;
 	static volatile int	oldLI = 0;
 
@@ -113,7 +113,7 @@ make_scr(void)
 		 * a sledge hammer.  What is the correct fix?
 		 */
 		{
-			register struct scrimage	*p;
+			struct scrimage	*p;
 			p = &PhysScreen[i];
 			p->s_offset = 0;
 			p->s_flags = 0;
@@ -140,7 +140,7 @@ make_scr(void)
 }
 
 void
-clrline(register char *cp1, register char *cp2)
+clrline(char *cp1, char *cp2)
 {
 	while (cp1 < cp2) {
 		*cp1++ = ' ';
@@ -252,8 +252,8 @@ private void	(*real_effect) ptrproto((bool));
 
 private void
 do_hlsputc(
-	register const struct LErange *hl,	/* desired highlighting */
-	register const struct LErange *oldhl,	/* previous highlighting */
+	const struct LErange *hl,	/* desired highlighting */
+	const struct LErange *oldhl,	/* previous highlighting */
 	int c
 )
 {
@@ -327,7 +327,7 @@ cl_eol(void)
 			clrline(cursor, Curline->s_roof);
 		} else {
 			/* Ugh.  The slow way for dumb terminals. */
-			register char *savecp = cursor;
+			char *savecp = cursor;
 
 			while (cursor < Curline->s_roof) {
 				sputc(' ');
@@ -348,8 +348,8 @@ cl_eol(void)
 void
 cl_scr(bool doit)
 {
-	register int	i;
-	register struct screenline	*sp = Screen;
+	int	i;
+	struct screenline	*sp = Screen;
 
 	for (i = 0; i < LI; i++, sp++) {
 		LEclear(sp);
@@ -501,7 +501,7 @@ swrite(char *line, LineEffects hl, bool abortable)
 #endif /* !HIGHLIGHTING */
 
 	if (n > 0) {
-		register ZXchar	c;
+		ZXchar	c;
 		int	col = i_col;
 #ifdef HIGHLIGHTING
 		/* nnhl: non-NULL version of hl (possibly
@@ -617,7 +617,7 @@ swrite(char *line, LineEffects hl, bool abortable)
 }
 
 void
-i_set(register int nline, register int ncol)
+i_set(int nline, int ncol)
 {
 	Curline = &Screen[nline];
 	cursor = Curline->s_line + ncol;
@@ -671,7 +671,7 @@ US_effect(bool on)
 void
 v_ins_line(int num, int top, int bottom)
 {
-	register int	i;
+	int	i;
 
 	/* assert(num <= bottom-top+1) */
 
@@ -707,7 +707,7 @@ v_ins_line(int num, int top, int bottom)
 void
 v_del_line(int num, int top, int bottom)
 {
-	register int	i;
+	int	i;
 
 	/* assert(num <= bottom-top+1) */
 
@@ -797,7 +797,7 @@ private struct cursaddr	WarpDirect[] = {
 # define PrintHo()	{ putpad(HO, 1); CapLine = CapCol = 0; }
 
 private void
-GoDirect(register int line, register int col)
+GoDirect(int line, int col)
 {
 	putpad(Cmstr, 1);
 	CapLine = line;
@@ -821,7 +821,7 @@ HomeGo(int line, int col)
 }
 
 private void
-BottomUp(register int line, register int col)
+BottomUp(int line, int col)
 {
 	LowLine();
 	UpMotion(line, -1 /* unused */);
@@ -837,9 +837,9 @@ private void
 ForTab(int to, int unused)
 {
 	if ((to > CapCol + 1) && TABS && (phystab > 0)) {
-		register int	tabgoal,
-			    ntabs,
-			    pts = phystab;
+		int	tabgoal,
+			ntabs,
+			pts = phystab;
 		tabgoal = to + (pts / 2);
 		tabgoal -= (tabgoal % pts);
 
@@ -867,7 +867,7 @@ ForTab(int to, int unused)
 	}
 
 	if (to > CapCol) {
-		register char	*cp = &Screen[CapLine].s_line[CapCol];
+		char	*cp = &Screen[CapLine].s_line[CapCol];
 # ifdef ID_CHAR
 		INSmode(NO);	/* we're not just a motion */
 # endif
@@ -912,9 +912,9 @@ void
 Placur(int line, int col)
 {
 # define CursMin(which,addrs,max)	{ \
-	register int	best = 0, \
-			i; \
-	register struct cursaddr	*cp; \
+	int	best = 0, \
+		i; \
+	struct cursaddr	*cp; \
 	for (cp = &(addrs)[1], i = 1; i < (max); i++, cp++) \
 		if (cp->cm_numchars < (addrs)[best].cm_numchars) \
 			best = i; \
@@ -1021,11 +1021,11 @@ Placur(int line, int col)
  * accounted for by our caller.
  */
 private int
-ForNum(register int from, int to)
+ForNum(int from, int to)
 {
-	register int	tabgoal,
-		    pts = phystab;
-	int		ntabs = 0;
+	int	tabgoal,
+		pts = phystab;
+	int	ntabs = 0;
 
 	if ((to > from + 1) && TABS && (pts > 0)) {
 		tabgoal = to + (pts / 2);

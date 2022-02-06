@@ -1148,7 +1148,7 @@ Ungetc(ZXchar c)
 ZXchar
 getch(void)
 {
-	register ZXchar	c;
+	ZXchar	c;
 
 	if (Inputp != NULL) {
 		if ((c = ZXC(*Inputp++)) != '\0') {
@@ -1605,7 +1605,7 @@ DoKeys(bool firsttime)
 }
 
 private char **
-scanvec(register char **args, register char *str)
+scanvec(char **args, char *str)
 {
 	while (*args) {
 		if (strcmp(*args, str) == 0) {

@@ -79,7 +79,7 @@ private struct error	*cur_error = NULL,
 void
 ChkErrorLines(void)
 {
-	register struct error	*e;
+	struct error	*e;
 	struct error	*prev = NULL;
 
 	for (e = errorlist; e != NULL;) {
@@ -237,7 +237,7 @@ ErrorHasReferents(void)
 private void
 ToError(bool forward)
 {
-	register struct error	*e = cur_error;
+	struct error	*e = cur_error;
 	int	num = arg_value_as_int();
 	NeedErrors();
 
@@ -337,8 +337,8 @@ char *
 MakeName(char *command)
 {
 	static char	bnm[FILESIZE];
-	register char	*cp = bnm,
-			 c;
+	char	*cp = bnm,
+		c;
 	const char	*bp;
 
 	do {

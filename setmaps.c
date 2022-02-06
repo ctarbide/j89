@@ -32,9 +32,9 @@ extern void	exit proto((int));
 #include "vars.tab"
 
 private int
-matchcmd(register const struct cmd choices[], register char *what)
+matchcmd(const struct cmd choices[], char *what)
 {
-	register int	i;
+	int	i;
 
 	for (i = 0; choices[i].Name != NULL; i++) {
 		if (what[0] == choices[i].Name[0]
@@ -48,9 +48,9 @@ matchcmd(register const struct cmd choices[], register char *what)
 
 #ifdef MAC
 int
-matchvar(register const struct variable choices[], register char *what)
+matchvar(const struct variable choices[], char *what)
 {
-	register int	len;
+	int	len;
 	int	i;
 	len = strlen(what);
 

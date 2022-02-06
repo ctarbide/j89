@@ -90,8 +90,8 @@ findcom(const char *prompt)
 		static int	last = -1;
 
 		if (strings[0] == NULL) {
-			register const char	**strs = strings;
-			register const struct cmd	*c = commands;
+			const char	**strs = strings;
+			const struct cmd	*c = commands;
 			do {} while ((*strs++ = (*c++).Name) != NULL);
 		}
 
@@ -102,9 +102,9 @@ findcom(const char *prompt)
 }
 
 const struct cmd *
-FindCmd(register cmdproc_t proc)
+FindCmd(cmdproc_t proc)
 {
-	register const struct cmd	*cp;
+	const struct cmd	*cp;
 
 	for (cp = commands; cp->Name; cp++) {
 		if (cp->c_proc == proc) {
@@ -116,7 +116,7 @@ FindCmd(register cmdproc_t proc)
 }
 
 void
-ExecCmd(register const data_obj *cp)
+ExecCmd(const data_obj *cp)
 {
 	LastCmd = cp;
 
@@ -130,7 +130,7 @@ ExecCmd(register const data_obj *cp)
 			break;
 
 		case COMMAND: {
-			register struct cmd	*cmd = (struct cmd *) cp;
+			struct cmd	*cmd = (struct cmd *) cp;
 
 			if (cmd->c_proc != NULL) {
 				if ((cmd->Type & MODIFIER)

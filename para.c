@@ -159,10 +159,10 @@ i_bsblank(LinePtr lp)
 }
 
 private int
-get_indent(register LinePtr lp)
+get_indent(LinePtr lp)
 {
 	Bufpos	save;
-	register int	indent;
+	int	indent;
 	bslash = NO;
 
 	if (lp == NULL) {
@@ -196,7 +196,7 @@ get_indent(register LinePtr lp)
 }
 
 private LinePtr
-tailrule(register LinePtr lp)
+tailrule(LinePtr lp)
 {
 	int	i;
 	i = get_indent(lp);

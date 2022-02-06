@@ -66,7 +66,7 @@ const data_obj	*(*proc) ptrproto((const char *));
 {
 	const data_obj	*d = (*proc)(ProcFmt);
 	const char	*pattern;
-	register struct AutoExec	*p;
+	struct AutoExec	*p;
 	pattern = do_ask("\r\n", NULL_ASK_EXT, (char *) NULL, ": %f %s ", d->Name);
 
 	for (p = AutoExecs; p != &AutoExecs[ExecIndex]; p++) {
@@ -97,9 +97,9 @@ const data_obj	*(*proc) ptrproto((const char *));
  * the command associated with that kind of file.
  */
 void
-DoAutoExec(register char *new, register char *old)
+DoAutoExec(char *new, char *old)
 {
-	register struct AutoExec	*p;
+	struct AutoExec	*p;
 
 	for (p = AutoExecs; p != &AutoExecs[ExecIndex]; p++) {
 		if (p->a_pattern == NULL
@@ -196,7 +196,7 @@ chr_to_long(const char *cp, int base, bool allints, long *result)
  * we stop reading at the first nondigit and return YES (success).
  */
 bool
-chr_to_int(register const char *cp, int base, bool allints, register int *result)
+chr_to_int(const char *cp, int base, bool allints, int *result)
 {
 	long	value;
 	bool ret = chr_to_long(cp, base, allints, &value);
@@ -238,7 +238,7 @@ ask_int(const char *def, const char *prompt, int base)
 
 void
 vpr_aux(vp, buf, size)
-register const struct variable	*vp;
+const struct variable	*vp;
 char	*buf;
 size_t	size;
 {
@@ -589,7 +589,7 @@ aux_complete(ZXchar c)
 }
 
 int
-complete(register const char *const *possible, const char *def, const char *prompt, int flags)
+complete(const char *const *possible, const char *def, const char *prompt, int flags)
 {
 	/* protect static "Possible" etc. from being overwritten due to recursion */
 	if (InRealAsk) {
@@ -647,12 +647,11 @@ calc_percent(long a, long b)
 void
 BufPos(void)
 {
-	register LinePtr	lp = curbuf->b_first;
-	register long
-	i,
-	dotline = 0;	/* avoid uninitialized complaint from gcc -W */
-	long	dotchar = 0;	/* avoid uninitialized complaint from gcc -W */
-	long	nchars;
+	LinePtr	lp = curbuf->b_first;
+	long	i,
+		dotline = 0,	/* avoid uninitialized complaint from gcc -W */
+		dotchar = 0,	/* avoid uninitialized complaint from gcc -W */
+		nchars;
 
 	for (i = nchars = 0; lp != NULL; i++, lp = lp->l_next) {
 		if (lp == curline) {

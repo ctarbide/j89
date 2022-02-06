@@ -883,9 +883,9 @@ DescVar(void)
 void
 Apropos(void)
 {
-	register const struct cmd *cp;
-	register struct macro *m;
-	register const struct variable *v;
+	const struct cmd *cp;
+	struct macro *m;
+	const struct variable *v;
 	const char *ans;
 	bool
 	anyfs = NO,
