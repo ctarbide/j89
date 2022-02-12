@@ -33,6 +33,9 @@
 #include "version.h"
 #include "wind.h"
 
+#include "commands.h"
+#include "misc.h"
+
 #ifdef IPROCS
 # include "iproc.h"
 #endif
@@ -1133,11 +1136,11 @@ tty_adjust(void)
 bool	Interactive = NO;	/* True when we invoke with the command handler? */
 
 ZXchar
-peekchar = EOF,	/* holds pushed-back getch output */
-LastKeyStruck;	/* used by SelfInsert and friends */
+	peekchar = EOF,	/* holds pushed-back getch output */
+	LastKeyStruck;	/* used by SelfInsert and friends */
 
 bool
-MetaKey = NO;		/* VAR: this terminal has a meta key */
+	MetaKey = NO;		/* VAR: this terminal has a meta key */
 
 void
 Ungetc(ZXchar c)
@@ -1852,6 +1855,30 @@ main(int argc, char *argv[])
 	jdbg("NBUF=%d\n", NBUF);
 	jdbg("JBUFSIZ=%d\n", JBUFSIZ);
 	jdbg("NCHARS=%d\n", NCHARS);
+
+#ifdef COMMANDS_SANITY_CHECK
+	{
+		const struct cmd
+			*cmd1,
+			*cmd2;
+		cmd1 = FindCmd(Yank);
+		if (cmd1 == NULL) {
+			fprintf(stderr, "fatal: %s:%d: sanity check failed, "
+				"command \"Yank\" not found\n", __FILE__, __LINE__);
+			exit(1);
+		}
+		cmd2 = searchcmd("yank", SEARCHCMD_TYPE_EXACT_MATCH);
+		if (cmd2 != cmd1) {
+			fprintf(stderr, "fatal: %s:%d: sanity check failed, "
+				"command \"yank\" not found %p %p [%s] [%s]\n",
+				__FILE__, __LINE__,
+				(void*)cmd1, (void*)cmd2,
+				cmd1->Name, cmd2->Name
+				);
+			exit(1);
+		}
+	}
+#endif
 
 	if (setjmp(mainjmp)) {
 		ttysetattr(NO);

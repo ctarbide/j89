@@ -168,11 +168,12 @@ private data_obj *
 km_getkey(struct keymap *km, ZXchar key)
 {
 	if (km->Type == FULL_KEYMAP) {
-		return (km->u.full.map[key]);
+		return km->u.full.map[key];
 	} else {
-		struct keybinding	*b = km->u.sparse.bindings;
-		int	lwb = 0;	/* closed lower bound */
-		int upb = km->u.sparse.nused;	/* open upper bound */
+		struct keybinding
+			*b = km->u.sparse.bindings;
+		int	lwb = 0,	/* closed lower bound */
+			upb = km->u.sparse.nused;	/* open upper bound */
 
 		for (;;) {
 			int mid = (lwb + upb) >> 1;	/* fast average */
@@ -656,7 +657,7 @@ DescMap(struct keymap *map, char *pref)
 
 					for (pc = km_nextkey(pcm, 0); pc < NCHARS; pc = km_nextkey(pcm, pc + 1)) {
 						data_obj	*pcobj = km_getkey(pcm, pc);
-						const char	*as = pc < elemsof(altseq) ? altseq[pc] : NULL;
+						const char	*as = pc < (ZXchar)elemsof(altseq) ? altseq[pc] : NULL;
 						char pckeydescbuf[40];
 
 						if (as == NULL)
@@ -721,7 +722,7 @@ fb_aux(const data_obj *cp, struct keymap *map, char *prefix, char *buf, size_t r
 					fprintf(stderr, "fatal: %s:%d: bufp < buf\n", __FILE__, __LINE__);
 					exit(1);
 				}
-				/* bufp guaranteed greater or equal than buf */
+				/* 'bufp' guaranteed greater or equal than 'buf' */
 				swritef(bufp, room - (size_t)(bufp - buf),
 					c1 == c2 ? "%s%p, " : c1 + 1 == c2 ? "%s{%p,%p}, " : "%s[%p-%p], ",
 					prefix, c1, c2);
@@ -734,35 +735,49 @@ fb_aux(const data_obj *cp, struct keymap *map, char *prefix, char *buf, size_t r
 
 				/* horrible kludge to handle PC non-ASCII keys */
 				if (c1 == PCNONASCII) {
-					struct keymap	*pcm = (struct keymap *)c1obj;
+					struct keymap
+						*pcm = (struct keymap *)c1obj;
 					ZXchar	pc;
 					c2 = c1;	/* don't handle range */
 
 					for (pc = km_nextkey(pcm, 0); pc < NCHARS; pc = km_nextkey(pcm, pc + 1)) {
-						const char	*as = pc < elemsof(altseq) ? altseq[pc] : NULL;
+						const char	*as = pc < (ZXchar)elemsof(altseq) ? altseq[pc] : NULL;
 						data_obj	*pcobj = km_getkey(pcm, pc);
 
 						if (pcobj == cp) {
-							if (as == NULL)
-								swritef(bufp, room - (bufp - buf),
+							if (bufp < buf) {
+								fprintf(stderr, "fatal: %s:%d: bufp < buf\n", __FILE__, __LINE__);
+								exit(1);
+							}
+
+							if (as == NULL) {
+								/* 'bufp' guaranteed greater or equal than 'buf' */
+								swritef(bufp, room - (size_t)(bufp - buf),
 									"%s%p %p, ", prefix, PCNONASCII, pc);
-							else
-								swritef(bufp, room - (bufp - buf),
+							} else {
+								/* 'bufp' guaranteed greater or equal than 'buf' */
+								swritef(bufp, room - (size_t)(bufp - buf),
 									"%s%s, ", prefix, as);
+							}
 
 							bufp += strlen(bufp);
 						}
 
 						if (IsKeymap(pcobj)) {
-							if (as == NULL)
+							if (as == NULL) {
 								swritef(prefbuf, sizeof(prefbuf),
 									"%s%p %p ", prefix, PCNONASCII, pc);
-							else
+							} else {
 								swritef(prefbuf, sizeof(prefbuf),
 									"%s%s ", prefix, as);
-
+							}
+							if (bufp < buf) {
+								fprintf(stderr, "fatal: %s:%d: bufp < buf\n", __FILE__, __LINE__);
+								exit(1);
+							}
+							/* 'bufp' guaranteed greater or equal than 'buf' */
 							bufp = fb_aux(cp, (struct keymap *) pcobj,
-									prefbuf, bufp, room - (bufp - buf));
+									prefbuf, bufp, room - (size_t)(bufp - buf));
 						}
 					}
 

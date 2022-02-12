@@ -1,11 +1,17 @@
 
 SHELL = /bin/sh
-CMP = cmp
+CMP_S = cmp -s
 INSTALL = ./tools/install.sh
+NROFF = nroff -Tascii
+SED = sed
+MV_F = mv -f
+RM_F = rm -f
+CHMOD_0444 = chmod 444
 
 PREFIX = $(HOME)/local
-TMPDIR = /var/tmp
+TMPDIR = /tmp
 BINDIR = $(PREFIX)/bin
+ETCDIR = $(PREFIX)/etc
 LIBDIR = $(PREFIX)/lib/jove
 SHAREDIR = $(PREFIX)/share/jove
 MANDIR = $(PREFIX)/share/man/man1
@@ -54,6 +60,12 @@ DEFS += -DUSE_STDINT_H
 
 DEFS += -DTERMIOS
 DEFS += -DHAVE_SPEED_T
+
+DEFS += -DPCNONASCII=0xFF
+DEFS += -DJOB_CONTROL
+DEFS += -DNO_IPROCS
+
+DEFS += -DCOMMANDS_SANITY_CHECK
 
 # 32-bit
 # DEFS += -DINTPTR_T=int
@@ -191,7 +203,10 @@ SRCS_OTHERS = \
     recover.c \
     setmaps.c
 
-all: jove
+PROGS = jove portsrv recover teachjove
+
+.PHONY: all
+all: maybe-update-jpaths $(PROGS)
 
 .SUFFIXES: .o
 .c.o:
@@ -201,33 +216,122 @@ jove.o: jpaths.h
 recover.o: jpaths.h
 teachjove.o: jpaths.h
 
+setmaps.o: sysdep.h commands.tab vars.tab
+commands.o: sysdep.h commands.tab vars.tab
+vars.o: sysdep.h commands.tab vars.tab
+
 jove: $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBS)
 
-protos.h: *.nw
-	nofake.sh -L -Rprotos -oprotos.h *.nw
+portsrv: portsrv.o
+	$(CC) $(CFLAGS) -o $@ portsrv.o $(LIBS)
+
+recover: recover.o
+	$(CC) $(CFLAGS) -o $@ recover.o $(LIBS)
+
+teachjove: teachjove.o
+	$(CC) $(CFLAGS) -o $@ teachjove.o $(LIBS)
 
 .PHONY: install
-install: jove
-	$(INSTALL) -D -m 755 jove '$(DESTDIR)$(BINDIR)/jove'
+install: all doc/jove.rc doc/jove.doc doc/jove.1 doc/teachjove.1 doc/jovetool.1
+	$(INSTALL) -D -m 555 jove '$(DESTDIR)$(BINDIR)/jove'
+	$(INSTALL) -D -m 555 teachjove '$(DESTDIR)$(BINDIR)/teachjove'
+	$(INSTALL) -D -m 555 recover '$(DESTDIR)$(LIBDIR)/recover'
+	$(INSTALL) -D -m 555 portsrv '$(DESTDIR)$(LIBDIR)/portsrv'
+	$(INSTALL) -D -m 444 doc/README '$(DESTDIR)$(SHAREDIR)/README'
+	$(INSTALL) -D -m 444 doc/XTermresource '$(DESTDIR)$(SHAREDIR)/XTermresource'
+	$(INSTALL) -D -m 444 doc/cmds.macros.nr '$(DESTDIR)$(SHAREDIR)/cmds.macros.nr'
+	$(INSTALL) -D -m 444 doc/cmds.nr '$(DESTDIR)$(SHAREDIR)/cmds.nr'
+	$(INSTALL) -D -m 444 doc/contents.nr '$(DESTDIR)$(SHAREDIR)/contents.nr'
+	$(INSTALL) -D -m 444 doc/example.rc '$(DESTDIR)$(SHAREDIR)/example.rc'
+	$(INSTALL) -D -m 444 doc/intro.nr '$(DESTDIR)$(SHAREDIR)/intro.nr'
+	$(INSTALL) -D -m 444 doc/jove.nr '$(DESTDIR)$(SHAREDIR)/jove.nr'
+	$(INSTALL) -D -m 444 doc/jove.qref '$(DESTDIR)$(SHAREDIR)/jove.qref'
+	$(INSTALL) -D -m 444 doc/jove.rc.3022 '$(DESTDIR)$(SHAREDIR)/jove.rc.3022'
+	$(INSTALL) -D -m 444 doc/jove.rc.in '$(DESTDIR)$(SHAREDIR)/jove.rc.in'
+	$(INSTALL) -D -m 444 doc/jove.rc.sun '$(DESTDIR)$(SHAREDIR)/jove.rc.sun'
+	$(INSTALL) -D -m 444 doc/jove.rc.sun-cmd '$(DESTDIR)$(SHAREDIR)/jove.rc.sun-cmd'
+	$(INSTALL) -D -m 444 doc/jove.rc.vt100 '$(DESTDIR)$(SHAREDIR)/jove.rc.vt100'
+	$(INSTALL) -D -m 444 doc/jove.rc.wyse '$(DESTDIR)$(SHAREDIR)/jove.rc.wyse'
+	$(INSTALL) -D -m 444 doc/jove.rc.xterm '$(DESTDIR)$(SHAREDIR)/jove.rc.xterm'
+	$(INSTALL) -D -m 444 doc/jove.rc.xterm-256color '$(DESTDIR)$(SHAREDIR)/jove.rc.xterm-256color'
+	$(INSTALL) -D -m 444 doc/jove.rc.z29 '$(DESTDIR)$(SHAREDIR)/jove.rc.z29'
+	$(INSTALL) -D -m 444 doc/jovetool.nr '$(DESTDIR)$(SHAREDIR)/jovetool.nr'
+	$(INSTALL) -D -m 444 doc/keychart. '$(DESTDIR)$(SHAREDIR)/keychart.'
+	$(INSTALL) -D -m 444 doc/keychart.3022 '$(DESTDIR)$(SHAREDIR)/keychart.3022'
+	$(INSTALL) -D -m 444 doc/keychart.sun '$(DESTDIR)$(SHAREDIR)/keychart.sun'
+	$(INSTALL) -D -m 444 doc/keychart.sun-cmd '$(DESTDIR)$(SHAREDIR)/keychart.sun-cmd'
+	$(INSTALL) -D -m 444 doc/keychart.vt100 '$(DESTDIR)$(SHAREDIR)/keychart.vt100'
+	$(INSTALL) -D -m 444 doc/keychart.wyse '$(DESTDIR)$(SHAREDIR)/keychart.wyse'
+	$(INSTALL) -D -m 444 doc/keychart.xterm '$(DESTDIR)$(SHAREDIR)/keychart.xterm'
+	$(INSTALL) -D -m 444 doc/keychart.xterm-256color '$(DESTDIR)$(SHAREDIR)/keychart.xterm-256color'
+	$(INSTALL) -D -m 444 doc/keychart.z29 '$(DESTDIR)$(SHAREDIR)/keychart.z29'
+	$(INSTALL) -D -m 444 doc/teach-jove '$(DESTDIR)$(SHAREDIR)/teach-jove'
+	$(INSTALL) -D -m 444 doc/teachjove.nr '$(DESTDIR)$(SHAREDIR)/teachjove.nr'
+	$(INSTALL) -D -m 444 doc/xjove.nr '$(DESTDIR)$(SHAREDIR)/xjove.nr'
+	$(INSTALL) -D -m 444 doc/jove.rc '$(DESTDIR)$(SHAREDIR)/jove.rc'
+	$(INSTALL) -D -m 444 doc/jove.doc '$(DESTDIR)$(SHAREDIR)/jove.doc'
+	$(INSTALL) -D -m 444 doc/jove.1 '$(DESTDIR)$(MANDIR)/jove.1'
+	$(INSTALL) -D -m 444 doc/teachjove.1 '$(DESTDIR)$(MANDIR)/teachjove.1'
+	$(INSTALL) -D -m 444 doc/jovetool.1 '$(DESTDIR)$(MANDIR)/jovetool.1'
+	$(INSTALL) -D -m 444 doc/xjove.nr '$(DESTDIR)$(MANDIR)/xjove.1'
 
-jpaths.h: Makefile
-	@-rm -f jpaths.tmp
-	@echo "/* Changes should be made in Makefile, not to this file! */" > jpaths.tmp
-	@echo "" >> jpaths.tmp
-	@echo \#define TMPDIR \"$(TMPDIR)\" >> jpaths.tmp
-	@echo \#define RECDIR \"$(JRECDIR)\" >> jpaths.tmp
-	@echo \#define LIBDIR \"$(LIBDIR)\" >> jpaths.tmp
-	@echo \#define SHAREDIR \"$(SHAREDIR)\" >> jpaths.tmp
-	@echo \#define DFLTSHELL \"$(DFLTSHELL)\" >> jpaths.tmp
-	if ! $(CMP) -s $@ jpaths.tmp 2> /dev/null; then mv jpaths.tmp $@; else rm jpaths.tmp; fi
+.PHONY: maybe-update-jpaths
+maybe-update-jpaths:
+	@echo "/* Changes should be made in Makefile, not to this file! */" >jpaths.tmp
+	@echo "" >>jpaths.tmp
+	@echo \#define TMPDIR \"$(TMPDIR)\" >>jpaths.tmp
+	@echo \#define RECDIR \"$(JRECDIR)\" >>jpaths.tmp
+	@echo \#define LIBDIR \"$(LIBDIR)\" >>jpaths.tmp
+	@echo \#define SHAREDIR \"$(SHAREDIR)\" >>jpaths.tmp
+	@echo \#define DFLTSHELL \"$(DFLTSHELL)\" >>jpaths.tmp
+	@set -x; if ! $(CMP_S) jpaths.h jpaths.tmp 2>/dev/null; \
+		then $(MV_F) jpaths.tmp jpaths.h; $(CHMOD_0444) jpaths.h; \
+		else $(RM_F) jpaths.tmp; \
+	fi
+
+doc/jove.rc: doc/jove.rc.in
+	$(SED) "s,__ETCDIR__,$(ETCDIR)," doc/jove.rc.in >doc/jove.rc.tmp
+	if ! $(CMP_S) doc/jove.rc.tmp doc/jove.rc 2>/dev/null; \
+		then $(MV_F) doc/jove.rc.tmp doc/jove.rc; $(CHMOD_0444) jpaths.h; \
+		else $(RM_F) doc/jove.rc.tmp; \
+	fi
 
 setmaps: setmaps.o
 	$(CC) $(CFLAGS) -o $@ setmaps.o
 
 keys.c: setmaps keys.txt
-	@-rm -f keys.c
-	./setmaps < keys.txt > keys.c
+	./setmaps <keys.txt >keys.tmp
+	$(MV_F) keys.tmp $@
+	$(CHMOD_0444) $@
+
+doc/jove.doc: doc/jove.nr
+	@-$(RM_F) doc/jove.doc
+	LANG=C $(NROFF) -man doc/jove.nr >doc/jove.doc
+
+doc/jove.1: doc/jove.nr
+	@-$(RM_F) doc/jove.1
+	$(SED) -e 's;<TMPDIR>;$(TMPDIR);' \
+		-e 's;<LIBDIR>;$(LIBDIR);' \
+		-e 's;<SHAREDIR>;$(SHAREDIR);' \
+		-e 's;<SHELL>;$(DFLTSHELL);' \
+		doc/jove.nr >doc/jove.1
+
+doc/teachjove.1: doc/teachjove.nr
+	@-$(RM_F) doc/teachjove.1
+	$(SED) -e 's;<TMPDIR>;$(JTMPDIR);' \
+		-e 's;<LIBDIR>;$(JLIBDIR);' \
+		-e 's;<SHAREDIR>;$(JSHAREDIR);' \
+		-e 's;<SHELL>;$(DFLTSHELL);' \
+		doc/teachjove.nr >doc/teachjove.1
+
+doc/jovetool.1: doc/jovetool.nr
+	@-$(RM_F) doc/jovetool.1
+	$(SED) -e 's;<MANDIR>;$(MANDIR);' \
+		-e 's;<MANEXT>;1;' \
+		doc/jovetool.nr > doc/jovetool.1
 
 clean:
-	rm -f $(OBJS) jove jpaths.h
+	$(RM_F) $(OBJS)
+	$(RM_F) $(OBJS_OTHERS) $(OBJS_TEACHJOVE)
+	$(RM_F) $(PROGS) jpaths.h keys.c

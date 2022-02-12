@@ -10,6 +10,7 @@
 #include "extend.h"
 #include "macros.h"
 #include "mouse.h"
+#include "fmt.h"
 
 /* included for command routine declarationss */
 #include "abbrev.h"
@@ -42,14 +43,44 @@
 const data_obj	*LastCmd;
 const char	*ProcFmt = ": %f ";
 
-private int cmdcmp proto((UnivConstPtr p1, UnivConstPtr p2)); /* Needed to comfort MS Visual C */
+private int
+	cmdcmp_prefix proto((UnivConstPtr p1, UnivConstPtr p2)),
+	cmdcmp_exact proto((UnivConstPtr p1, UnivConstPtr p2));
 
 private int
-cmdcmp(UnivConstPtr p1, UnivConstPtr p2)
+cmdcmp_prefix(UnivConstPtr p1, UnivConstPtr p2)
 {
 	const struct cmd *c1 = (const struct cmd *) p1;
 	const struct cmd *c2 = (const struct cmd *) p2;
 	return strncmp(c1->Name, c2->Name, strlen(c1->Name));
+}
+
+private int
+cmdcmp_exact(UnivConstPtr p1, UnivConstPtr p2)
+{
+	const struct cmd *c1 = (const struct cmd *) p1;
+	const struct cmd *c2 = (const struct cmd *) p2;
+	return strcmp(c1->Name, c2->Name);
+}
+
+const struct cmd *
+searchcmd(char *name, int type)
+{
+	const struct cmd	*res;
+	struct cmd	ckey;
+	int (*cmdcmp)(UnivConstPtr a, UnivConstPtr b);
+	ckey.Name = name;
+	cmdcmp = type == SEARCHCMD_TYPE_EXACT_MATCH? cmdcmp_exact : cmdcmp_prefix;
+	res = (const struct cmd *)bsearch((UnivConstPtr)&ckey,
+			(UnivConstPtr)commands, elemsof(commands) - 1,/* ignore NULL */
+			sizeof(struct cmd), cmdcmp);
+	if (res && type == SEARCHCMD_TYPE_FIRST_PREFIX) {
+		size_t len = strlen(name);
+		while (res > commands && strncmp(ckey.Name, (res-1)->Name, len) == 0) {
+			res--;
+		}
+	}
+	return res;
 }
 
 const data_obj *
@@ -61,7 +92,6 @@ findcom(const char *prompt)
 		char	*cp = cmdbuf;
 		ZXchar	c;
 		const struct cmd	*which;
-		struct cmd	ckey;
 
 		/* gather the cmd name */
 		while (jisprint(c = getch()) && c != ' ') {
@@ -74,10 +104,11 @@ findcom(const char *prompt)
 		}
 
 		*cp = '\0';
-		ckey.Name = cmdbuf;
-		which = (const struct cmd *)bsearch((UnivConstPtr)&ckey,
-				(UnivConstPtr)commands, elemsof(commands) - 1,/* ignore NULL */
-				sizeof(struct cmd), cmdcmp);
+
+		/* TODO: random prefix is the original implementation, maybe
+		 * revise this
+		 */
+		which = searchcmd(cmdbuf, SEARCHCMD_TYPE_RANDOM_PREFIX);
 
 		if (which == NULL) {
 			complain("[\"%s\" unknown]", cmdbuf);
@@ -124,24 +155,27 @@ ExecCmd(const data_obj *cp)
 		SetMajor((cp->Type >> MAJOR_SHIFT));
 	} else if (cp->Type & MINOR_MODE) {
 		TogMinor((cp->Type >> MAJOR_SHIFT));
-	} else	switch (cp->Type & TYPEMASK) {
-		case MACRO:
-			do_macro((struct macro *) cp);
-			break;
+	} else {
+		switch (cp->Type & TYPEMASK) {
+			case MACRO:
+				do_macro((struct macro *) cp);
+				break;
 
-		case COMMAND: {
-			struct cmd	*cmd = (struct cmd *) cp;
+			case COMMAND: {
+				struct cmd	*cmd = (struct cmd *) cp;
 
-			if (cmd->c_proc != NULL) {
-				if ((cmd->Type & MODIFIER)
-					&& BufMinorMode(curbuf, BReadOnly)) {
-					rbell();
-					message("[Buffer is read-only]");
-				} else {
-					(*cmd->c_proc)();
+				if (cmd->c_proc != NULL) {
+					if ((cmd->Type & MODIFIER)
+					    && BufMinorMode(curbuf, BReadOnly)) {
+						rbell();
+						message("[Buffer is read-only]");
+						} else {
+							(*cmd->c_proc)();
+							}
+					}
 				}
-			}
+
+				break;
 		}
-		break;
-		}
+	}
 }

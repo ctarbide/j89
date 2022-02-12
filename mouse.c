@@ -90,20 +90,22 @@
  */
 
 bool	XtermMouse = NO;	/* VAR: should we enable xterm mouse? */
-private bool	xtMouseState = NO;	/* have we enabled the mouse? */
+private bool
+	xtMouseState = NO;	/* have we enabled the mouse? */
 
 /* sequences to enable/disable mouse hilite tracking in xterm */
 private const char
-xtMouseEnable[] = "\033[?1001h",
+	xtMouseEnable[] = "\033[?1001h",
 	xtMouseDisable[] = "\033[?1001l";
 
-private int	but_state;	/* button state (and more) at mouse event */
-private int	x_coord;	/* mouse x-coordinate, in pixels, origin 0 */
-private int	y_coord;	/* mouse y-coordinate, in characters, origin 0 */
-private int		/* xterm drag range coordinates */
-startx, starty,
-	endx, endy;
-private int	font_width;	/* width of a character in pixels */
+private int
+	but_state,	/* button state (and more) at mouse event */
+	x_coord,	/* mouse x-coordinate, in pixels, origin 0 */
+	y_coord,	/* mouse y-coordinate, in characters, origin 0 */
+	startx, starty,	/* xterm drag range coordinates */
+	endx, endy,	/* xterm drag range coordinates */
+	font_width;	/* width of a character in pixels */
+
 private Window	*oldwind;
 private Mark	*oldpos = NULL;	/* Use a Mark so it is adjusted automatically */
 
@@ -114,9 +116,11 @@ private Mark	*oldpos = NULL;	/* Use a Mark so it is adjusted automatically */
 #define LMA_CHAR	0020
 #define LMA_WORD	0030
 #define LMA_LINE	0040
-private int last_mouse_act = LMA_NONE;
+private int
+	last_mouse_act = LMA_NONE;
 
-private const char *saved_M_SR = NULL;	/* KLUDGE for xterm/termcap bug */
+private const char
+	*saved_M_SR = NULL;	/* KLUDGE for xterm/termcap bug */
 
 void
 MouseOn(void)
@@ -340,7 +344,8 @@ xtGetXY(int *xp, int *yp)
 static void
 hl_mode(int hl_setting, int a_startx, int a_starty, int a_endx, int a_endy)
 {
-	static const char	hl_fmt[] = "\033[%d;%d;%d;%d;%dT";
+	static const char
+		hl_fmt[] = "\033[%d;%d;%d;%d;%dT";
 	char	buf[sizeof(hl_fmt) + 4 * (5 - 2)];
 	swritef(buf, sizeof(buf), hl_fmt, hl_setting, a_startx, a_starty, a_endx, a_endy);
 	putstr(buf);

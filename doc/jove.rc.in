@@ -86,10 +86,14 @@ ifvar jove-features :proc:
 endif
 
 # This makes the arrow keys work on most terminals.
+
+# arrow keys prefix: ^[[
 bind-to-key previous-line ^[[A
 bind-to-key next-line ^[[B
 bind-to-key forward-character ^[[C
 bind-to-key backward-character ^[[D
+
+# arrow keys prefix: ^[O
 bind-to-key previous-line ^[OA
 bind-to-key next-line ^[OB
 bind-to-key forward-character ^[OC

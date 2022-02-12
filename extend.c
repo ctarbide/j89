@@ -61,8 +61,7 @@ MAutoExec(void)
 }
 
 private void
-DefAutoExec(proc)
-const data_obj	*(*proc) ptrproto((const char *));
+DefAutoExec(const data_obj *(*proc) ptrproto((const char *)))
 {
 	const data_obj	*d = (*proc)(ProcFmt);
 	const char	*pattern;
@@ -237,10 +236,7 @@ ask_int(const char *def, const char *prompt, int base)
 }
 
 void
-vpr_aux(vp, buf, size)
-const struct variable	*vp;
-char	*buf;
-size_t	size;
+vpr_aux(const struct variable *vp, char *buf, size_t size)
 {
 	switch (vp->v_flags & V_TYPEMASK) {
 	case V_INT:
@@ -269,7 +265,8 @@ size_t	size;
 void
 PrVar(void)
 {
-	struct variable	*vp = (struct variable *) findvar(ProcFmt);
+	struct variable
+		*vp = (struct variable *) findvar(ProcFmt);
 	char	prbuf[MAXCOLS];
 	vpr_aux(vp, prbuf, sizeof(prbuf));
 	f_mess(": %f %s => %s", vp->Name, prbuf);
@@ -279,7 +276,8 @@ PrVar(void)
 void
 InsVar(void)
 {
-	struct variable	*vp = (struct variable *) findvar(ProcFmt);
+	struct variable
+		*vp = (struct variable *) findvar(ProcFmt);
 	char	prbuf[MAXCOLS];
 	vpr_aux(vp, prbuf, sizeof(prbuf));
 	ins_str(prbuf);
@@ -321,7 +319,8 @@ vset_aux(const struct variable *vp, char *prompt)
 	}
 
 	case V_BOOL: {
-		static const char	*possible[/*bool*/] = {"off", "on", NULL };
+		static const char
+			*possible[/*bool*/] = {"off", "on", NULL };
 		bool	*valp = (bool *) vp->v_value;
 		int	newval = complete(possible, possible[!*valp], prompt,
 				CASEIND | ALLOW_OLD | ALLOW_EMPTY);
@@ -441,12 +440,14 @@ SetVar(void)
  * perhaps we should simulate them.
  */
 
-private const char	*const *Possible;	/* possible arg of complete */
+private const char
+	*const *Possible;	/* possible arg of complete */
 private int
-comp_flags,	/* flags arg of complete */
-comp_value;	/* return value for complete; set by aux_complete */
+	comp_flags,	/* flags arg of complete */
+	comp_value;	/* return value for complete; set by aux_complete */
 
-private bool aux_complete proto((ZXchar c));	/* needed to comfort dumb MS Visual C */
+private bool
+	aux_complete proto((ZXchar c));
 
 private bool
 aux_complete(ZXchar c)
@@ -845,9 +846,9 @@ joverc(char *file)
 	File	*volatile fp;
 	volatile bool	eof = NO;
 	volatile unsigned int	/* bitstrings */
-	finger = 1,
-	skipping = 0,
-	inelse = 0;
+		finger = 1,
+		skipping = 0,
+		inelse = 0;
 	fp = open_file(file, buf, F_READ, NO);
 
 	if (fp == NULL) {

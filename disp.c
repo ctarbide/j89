@@ -1246,6 +1246,11 @@ mode_app(const char *str)
 {
 	ZXchar	c;
 
+	if (str == NULL) {
+		fprintf(stderr, "fatal: %s:%d: str == NULL\n", __FILE__, __LINE__);
+		exit(1);
+	}
+
 	while (mode_p < mend_p && (c = ZXC(*str++)) != '\0') {
 		/* don't expand tabs: treat them as suspects */
 		if (jisprint(c)) {
@@ -1384,12 +1389,19 @@ ModeLine(
 #ifdef IPROCS
 				" DBX",
 #endif
+				NULL,	/* sentinel */
 			};
 			unsigned minors = thisbuf->b_minor;
 			const char  *const *p;
+
 			mode_app(majname[thisbuf->b_major]);
 
 			for (p = minname; minors != 0; p++) {
+				if (*p == NULL) {
+					fprintf(stderr, "fatal: %s:%d: reached sentinel\n", __FILE__, __LINE__);
+					exit(1);
+				}
+
 				if (minors & 01) {
 					mode_app(*p);
 				}

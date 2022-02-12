@@ -90,7 +90,7 @@ extern void
 /* Variables: */
 
 extern char
-proc_prompt[128],	/* VAR: process prompt */
-	    dbx_parse_fmt[128];	/* VAR: dbx-mode parse string */
+	proc_prompt[128],	/* VAR: process prompt */
+	dbx_parse_fmt[128];	/* VAR: dbx-mode parse string */
 
 #endif /* IPROCS */

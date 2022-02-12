@@ -11,7 +11,7 @@ struct cmd {
 	/* Type and Name must match data_obj */
 	unsigned	Type;
 	const char	*Name;
-	const cmdproc_t 	c_proc;
+	const cmdproc_t		c_proc;
 #ifdef MAC
 	char c_map;			/* prefix map for About Jove... */
 	char c_key;			/* key binding for About Jove... */
@@ -20,7 +20,13 @@ struct cmd {
 
 extern const struct cmd	commands[];
 
+#define SEARCHCMD_TYPE_INVALID	0
+#define SEARCHCMD_TYPE_RANDOM_PREFIX	1
+#define SEARCHCMD_TYPE_FIRST_PREFIX	2
+#define SEARCHCMD_TYPE_EXACT_MATCH	3
+
 extern const struct cmd
+	*searchcmd proto((char *name, int type)),
 	*FindCmd proto((cmdproc_t));
 
 extern void

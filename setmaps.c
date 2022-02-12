@@ -115,29 +115,26 @@ extract(char *into, char *from)
 int
 main(void)
 {
-	FILE
-	*ifile,
-	*of;
-	char
-	line[LINESIZE],
-	     comname[LINESIZE];
-	int
-	comnum,
-	lino,
-	ch;
+	FILE	*ifile,
+		*of;
+	char	line[LINESIZE],
+		comname[LINESIZE];
+	int	comnum,
+		lino,
+		ch;
 	struct {
 		int	first;
 		int	last;
 		char	condition[LINESIZE];
-	}
-	stackspace[STACKLIMIT],	/* first entry not used */
-		   *sp = stackspace;
+	}	stackspace[STACKLIMIT],	/* first entry not used */
+		*sp = stackspace;
 #ifdef MAC
 	char	*which;
 	int	filecnt = 0;
 	bool	inmenu = NO;
 	struct fname {
-		char	*in, *out;
+		char	*in,
+			*out;
 	};
 	static const struct fname	fnt[] = {
 		{ "keys.txt", "keys.c" },

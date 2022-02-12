@@ -98,6 +98,7 @@ buf_alloc(void)
 		free_bufs = b->b_next;
 	} else {
 		b = (Buffer *) emalloc(sizeof(Buffer));
+		byte_zero(b, sizeof(Buffer));
 	}
 
 	if (lastbp) {

@@ -300,15 +300,8 @@ reswitch:
 	current_fmt = prev_fmt;
 }
 
-#ifdef STDARGS
 char *
 sprint(const char *fmt, ...)
-#else
-/*VARARGS1*/ char *
-sprint(fmt, va_alist)
-const char	*fmt;
-va_dcl
-#endif
 {
 	va_list	ap;
 	static char	line[LBSIZE];
@@ -319,15 +312,8 @@ va_dcl
 	return line;
 }
 
-#ifdef STDARGS
 void
 writef(const char *fmt, ...)
-#else
-/*VARARGS1*/ void
-writef(fmt, va_alist)
-const char	*fmt;
-va_dcl
-#endif
 {
 	va_list	ap;
 
@@ -348,16 +334,8 @@ va_dcl
 	va_end(ap);
 }
 
-#ifdef STDARGS
 void
 fwritef(File *fp, const char *fmt, ...)
-#else
-/*VARARGS2*/ void
-fwritef(fp, fmt, va_alist)
-File	*fp;
-const char	*fmt;
-va_dcl
-#endif
 {
 	va_list	ap;
 
@@ -366,17 +344,8 @@ va_dcl
 	va_end(ap);
 }
 
-#ifdef STDARGS
 void
 swritef(char *str, size_t size, const char *fmt, ...)
-#else
-/*VARARGS3*/ void
-swritef(str, size, fmt, va_alist)
-char	*str;
-size_t	size;
-const char	*fmt;
-va_dcl
-#endif
 {
 	va_list	ap;
 
@@ -387,15 +356,8 @@ va_dcl
 
 /* send a message (supressed if input pending) */
 
-#ifdef STDARGS
 void
 s_mess(const char *fmt, ...)
-#else
-/*VARARGS1*/ void
-s_mess(fmt, va_alist)
-const char	*fmt;
-va_dcl
-#endif
 {
 	va_list	ap;
 
@@ -414,15 +376,8 @@ va_dcl
  * If you wish it to stick, set stickymsg on after calling f_mess.
  */
 
-#ifdef STDARGS
 void
 f_mess(const char *fmt, ...)
-#else
-/*VARARGS1*/ void
-f_mess(fmt, va_alist)
-const char	*fmt;
-va_dcl
-#endif
 {
 	va_list	ap;
 
@@ -453,15 +408,8 @@ add_mess(const char *fmt, ...)
 bool jdebug	    = YES;  /* so that first jdprintf is called */
 const char *jdpath  = NULL; /* if non-NULL, will be opened on first jdprintf */
 
-#ifdef STDARGS
 void
 jdprintf(const char *fmt, ...)
-#else
-/*VARARGS1*/ void
-jdprintf(fmt, va_alist)
-const char	*fmt;
-va_dcl
-#endif
 {
 	static bool first_time = YES;
 	static File *dfp = NULL;

@@ -770,7 +770,7 @@ getaddr(FILE *fp)
 	char	*cp = (char *) &addr;
 
 	while (--nchars >= 0) {
-		*cp++ = getc(fp);
+		*cp++ = (char)getc(fp);
 	}
 
 	return addr & ~DDIRTY;

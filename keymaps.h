@@ -36,7 +36,7 @@ extern void InitKeymaps proto((void));
 extern void dispatch proto((ZXchar c));
 extern bool IsPrefixChar proto((ZXchar c));
 
-extern void	DelObjRef proto((data_obj *));
+extern void DelObjRef proto((data_obj *));
 
 /* Commands: */
 extern void Apropos proto((void));
