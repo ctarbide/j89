@@ -3,6 +3,9 @@ This is a fork of JOVE from [1] that I use to study and experiment.
 
 The canonical source for this version is https://github.com/ctarbide/j89.
 
+All my previous and future changes in this repository, unless explicitly
+stated otherwise in a per-file basis, are dedicated to the public domain.
+
 - [1]: https://github.com/jonmacs/jove
 
 Original README follows
