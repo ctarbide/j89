@@ -31,8 +31,8 @@ struct abbrev {
 	const data_obj	*a_cmdhook;
 };
 
-private	void
-	define proto((struct abbrev **, char *, char *));
+private void
+define(struct abbrev *table[HASHSIZE], char *abbrev, char *phrase);
 
 #define GLOBAL	NMAJORS
 private struct abbrev	*A_tables[NMAJORS + 1][HASHSIZE];	/* Must be zeroed! */
