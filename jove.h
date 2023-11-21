@@ -433,3 +433,6 @@ extern int	UpdFreq;		/* VAR: how often to update modeline */
 extern void	SetClockAlarm proto((bool unset));
 #endif
 extern bool	SaveOnExit;		/* VAR: offer to save buffers on exit */
+
+#define PRIuid_t "u"
+#define PRIpid_t "d"

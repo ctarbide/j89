@@ -848,10 +848,10 @@ doit(struct file_pair *fp)
 	}
 
 	if (Debug)
-		fprintf(dfp, "read header from %s, uid %ld, pid %ld, %ld bufs, %s\n",
+		fprintf(dfp, "read header from %s, uid %" PRIuid_t ", pid %" PRIpid_t ", %ld bufs, %s\n",
 			pntrfile, Header.Uid, Header.Pid, Header.Nbuffers, Header.TmpFileName);
 
-	if (Header.Uid != (long)UserID) {
+	if (Header.Uid != UserID) {
 		if (Debug)
 			fprintf(dfp, "different user %ld != %ld\n",
 				(long)Header.Uid, (long)UserID);
@@ -860,9 +860,9 @@ doit(struct file_pair *fp)
 	}
 
 	/* Ask about JOVE's that are still running ... */
-	if (kill((pid_t)Header.Pid, 0) == 0) {
+	if (kill(Header.Pid, 0) == 0) {
 		if (Debug) {
-			fprintf(dfp, "still running pid %ld\n", Header.Pid);
+			fprintf(dfp, "still running pid %" PRIpid_t "\n", Header.Pid);
 		}
 
 		return 0;

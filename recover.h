@@ -55,8 +55,8 @@ Error will not be able to encode recovery header LG_CHNK_CHARS safely
 
 struct rec_head {
 	long		RecMagic;	/* (partial) compatibility check */
-	long		Uid;		/* uid of owner */
-	long		Pid;		/* pid of jove process */
+	uid_t		Uid;		/* uid of owner */
+	pid_t		Pid;		/* pid of jove process */
 	long		UpdTime;	/* last time this was updated */
 	long		Nbuffers;	/* number of buffers */
 	daddr		FreePtr;	/* position of DFree */
